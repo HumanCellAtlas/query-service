@@ -24,17 +24,22 @@ services:
 - docker:dind
 
 stages:
-- infra
+- infra_test_build
 - deploy
 
 before_script:
   - export IMAGE_TAG=${CI_BUILD_REF_NAME}-$(git describe --tags --always)-${CI_PIPELINE_ID}
   - eval "$(aws ecr get-login --no-include-email)"
 
-infra:
-  stage: infra
+#infra:
+#  stage: infra_test_build
+#  script:
+#    - cd terraform/envs/${DEPLOYMENT_STAGE}/query-service-infra/ && make plan
+
+test:
+  stage: infra_test_build
   script:
-    - cd terraform/envs/${DEPLOYMENT_STAGE}/query-service-infra/ && make plan
+    - cd app/ && make install test
 
 deploy:
   stage: deploy
