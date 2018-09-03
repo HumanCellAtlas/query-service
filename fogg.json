@@ -1,0 +1,69 @@
+{
+  "defaults": {
+    "aws_profile_backend": "hca-id",
+    "aws_profile_provider": "hca-id",
+    "aws_provider_version": "1.27.0",
+    "aws_region_backend": "us-east-1",
+    "aws_region_provider": "us-east-1",
+    "extra_vars": {},
+    "infra_s3_bucket": "org-humancellatlas-634134578715-terraform",
+    "owner": "mweiden@chanzuckerberg.com",
+    "project": "query-service",
+    "terraform_version": "0.11.7"
+  },
+  "accounts": {
+    "hca-id": {},
+    "humancellatlas": {
+      "account_id": 861229788715,
+      "aws_profile_backend": "hca-id",
+      "aws_profile_provider": "hca"
+    },
+    "hca-prod": {
+      "account_id": 109067257620,
+      "aws_profile_backend": "hca-id",
+      "aws_profile_provider": "hca-prod"
+    }
+  },
+  "modules": {
+    "query-service-infra": {}
+  },
+  "envs": {
+    "dev": {
+      "account_id": 861229788715,
+      "aws_profile_provider": "hca",
+      "components": {
+        "query-service-infra": {
+          "module_source": "terraform/modules/query-service-infra"
+        }
+      }
+    },
+    "integration": {
+      "account_id": 861229788715,
+      "aws_profile_provider": "hca",
+      "components": {
+        "query-service-infra": {
+          "module_source": "terraform/modules/query-service-infra"
+        }
+      }
+    },
+    "staging": {
+      "account_id": 861229788715,
+      "aws_profile_provider": "hca",
+      "components": {
+        "query-service-infra": {
+          "module_source": "terraform/modules/query-service-infra"
+        }
+      }
+    },
+    "prod": {
+      "account_id": 109067257620,
+      "aws_profile_provider": "hca-prod",
+      "components": {
+        "query-service-infra": {
+          "module_source": "terraform/modules/query-service-infra"
+        }
+      }
+    }
+  },
+  "plugins": {}
+}
