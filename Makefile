@@ -2,10 +2,10 @@
 # Make improvements in fogg, so that everyone can benefit.
 
 ENVS=dev integration prod staging
-MODULES=query-service-infra
+MODULES=database query-service-infra
 ACCOUNTS=hca-id hca-prod humancellatlas
 
-figlet_docker = docker run -it --rm mbentley/figlet
+figlet_docker = docker run --rm mbentley/figlet
 
 all: check
 

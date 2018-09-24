@@ -4,8 +4,8 @@
 provider "aws" {
   version             = "~> 1.27.0"
   region              = "us-east-1"
-  profile             = "hca"
-  allowed_account_ids = [861229788715]
+  profile             = "hca-prod"
+  allowed_account_ids = [109067257620]
 }
 
 # Aliased Providers (for doing things in every region).
@@ -16,7 +16,7 @@ terraform {
   backend "s3" {
     bucket = "org-humancellatlas-634134578715-terraform"
 
-    key = "terraform/query-service/envs/staging/components/query-service-infra.tfstate"
+    key = "terraform/query-service/envs/prod/components/database.tfstate"
 
     encrypt = true
     region  = "us-east-1"
@@ -26,7 +26,7 @@ terraform {
 
 variable "env" {
   type    = "string"
-  default = "staging"
+  default = "prod"
 }
 
 variable "project" {
@@ -41,12 +41,12 @@ variable "region" {
 
 variable "component" {
   type    = "string"
-  default = "query-service-infra"
+  default = "database"
 }
 
 variable "aws_profile" {
   type    = "string"
-  default = "hca"
+  default = "hca-prod"
 }
 
 variable "owner" {
@@ -59,8 +59,8 @@ variable "tags" {
 
   default = {
     project   = "query-service"
-    env       = "staging"
-    service   = "query-service-infra"
+    env       = "prod"
+    service   = "database"
     owner     = "mweiden@chanzuckerberg.com"
     managedBy = "terraform"
   }
@@ -77,12 +77,12 @@ data "terraform_remote_state" "global" {
   }
 }
 
-data "terraform_remote_state" "database" {
+data "terraform_remote_state" "query-service-infra" {
   backend = "s3"
 
   config {
     bucket  = "org-humancellatlas-634134578715-terraform"
-    key     = "terraform/query-service/envs/staging/components/database.tfstate"
+    key     = "terraform/query-service/envs/prod/components/query-service-infra.tfstate"
     region  = "us-east-1"
     profile = "hca-id"
   }

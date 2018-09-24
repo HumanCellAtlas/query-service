@@ -25,7 +25,8 @@
     }
   },
   "modules": {
-    "query-service-infra": {}
+    "query-service-infra": {},
+    "database": {}
   },
   "envs": {
     "dev": {
@@ -34,6 +35,9 @@
       "components": {
         "query-service-infra": {
           "module_source": "terraform/modules/query-service-infra"
+        },
+        "database": {
+          "module_source": "terraform/modules/database"
         }
       }
     },
@@ -43,6 +47,9 @@
       "components": {
         "query-service-infra": {
           "module_source": "terraform/modules/query-service-infra"
+        },
+        "database": {
+          "module_source": "terraform/modules/database"
         }
       }
     },
@@ -52,6 +59,9 @@
       "components": {
         "query-service-infra": {
           "module_source": "terraform/modules/query-service-infra"
+        },
+        "database": {
+          "module_source": "terraform/modules/database"
         }
       }
     },
@@ -61,6 +71,9 @@
       "components": {
         "query-service-infra": {
           "module_source": "terraform/modules/query-service-infra"
+        },
+        "database": {
+          "module_source": "terraform/modules/database"
         }
       }
     }
