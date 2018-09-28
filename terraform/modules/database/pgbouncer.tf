@@ -1,5 +1,5 @@
 resource "aws_ecs_task_definition" "pgbouncer" {
-  family                   = "query-pgbouncer-service-${var.env}"
+  family                   = "query-pgbouncer-service-${var.deployment_stage}"
   requires_compatibilities = ["FARGATE"]
 
   container_definitions = <<DEFINITION
@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "pgbouncer" {
     "environment": [
       {
         "name": "DATABASE_URL",
-        "value": "postgresql://${var.db_username}:${var.db_password}@${aws_rds_cluster.query.endpoint}/query_${var.env}"
+        "value": "postgresql://${var.db_username}:${var.db_password}@${aws_rds_cluster.query.endpoint}/query_${var.deployment_stage}"
       },
       {
         "name": "DEFAULT_POOL_SIZE",
@@ -44,7 +44,7 @@ resource "aws_ecs_task_definition" "pgbouncer" {
     "memory": 1024,
     "cpu": 512,
     "image": "quay.io/humancellatlas/docker-pgbouncer:master",
-    "name": "pgbouncer-${var.env}"
+    "name": "pgbouncer-${var.deployment_stage}"
   }
 ]
 DEFINITION
@@ -55,11 +55,11 @@ DEFINITION
 }
 
 resource "aws_ecs_cluster" "pgbouncer" {
-  name = "query-pgbouncer-${var.env}"
+  name = "query-pgbouncer-${var.deployment_stage}"
 }
 
 resource "aws_ecs_service" "pgbouncer" {
-  name            = "query-pgbouncer-${var.env}"
+  name            = "query-pgbouncer-${var.deployment_stage}"
   cluster         = "${aws_ecs_cluster.pgbouncer.id}"
   task_definition = "${aws_ecs_task_definition.pgbouncer.arn}"
   desired_count   = 1
@@ -73,7 +73,7 @@ resource "aws_ecs_service" "pgbouncer" {
 
   load_balancer {
     target_group_arn = "${aws_lb_target_group.pgbouncer.id}"
-    container_name   = "pgbouncer-${var.env}"
+    container_name   = "pgbouncer-${var.deployment_stage}"
     container_port   = "5432"
   }
 
@@ -95,14 +95,14 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "main" {
-  name               = "query-pgbouncer-${var.env}"
+  name               = "query-pgbouncer-${var.deployment_stage}"
   subnets            = ["${var.lb_subnet_ids}"]
   load_balancer_type = "network"
   internal           = false
 }
 
 resource "aws_lb_target_group" "pgbouncer" {
-  name        = "query-pgbouncer-${var.env}"
+  name        = "query-pgbouncer-${var.deployment_stage}"
   port        = "5432"
   protocol    = "TCP"
   vpc_id      = "${var.vpc_id}"
@@ -110,6 +110,6 @@ resource "aws_lb_target_group" "pgbouncer" {
 }
 
 resource "aws_cloudwatch_log_group" "pgbouncer" {
-  name              = "/aws/service/query-pgbouncer-${var.env}"
+  name              = "/aws/service/query-pgbouncer-${var.deployment_stage}"
   retention_in_days = 90
 }

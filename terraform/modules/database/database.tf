@@ -1,6 +1,6 @@
 resource "aws_rds_cluster_instance" "cluster_instances" {
   count                        = "${var.db_instance_count}"
-  identifier                   = "query-cluster-${var.env}-${count.index}"
+  identifier                   = "query-cluster-${var.deployment_stage}-${count.index}"
   cluster_identifier           = "${aws_rds_cluster.query.id}"
   instance_class               = "db.r4.large"
   publicly_accessible          = "true"
@@ -13,11 +13,11 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
 
 resource "aws_rds_cluster" "query" {
   apply_immediately               = "false"
-  cluster_identifier              = "query-${var.env}"
+  cluster_identifier              = "query-${var.deployment_stage}"
   engine                          = "aurora-postgresql"
   engine_version                  = "9.6.3"
   availability_zones              = ["us-east-1a", "us-east-1c", "us-east-1d"]
-  database_name                   = "query_${var.env}"
+  database_name                   = "query_${var.deployment_stage}"
   master_username                 = "${var.db_username}"
   master_password                 = "${var.db_password}"
   backup_retention_period         = 7

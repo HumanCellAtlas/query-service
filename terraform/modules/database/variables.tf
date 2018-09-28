@@ -10,7 +10,7 @@ variable "vpc_id" {
   type = "string"
 }
 
-variable "env" {
+variable "deployment_stage" {
   type    = "string"
   default = "dev"
 }
