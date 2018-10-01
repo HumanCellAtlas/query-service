@@ -7,9 +7,6 @@ export AWS_ACCOUNT_ID=$(shell aws sts get-caller-identity | jq -r .Account)
 export TF_S3_BUCKET=tfstate-$(AWS_ACCOUNT_ID)
 export APP_NAME=query-service
 
-# Non dev deployments should be done through dcp-infra service
-export DEPLOYMENT_STAGE=dev
-
 default: plan
 
 init:

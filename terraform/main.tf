@@ -17,16 +17,16 @@ terraform {
 }
 
 module "database" {
-  source              = "../../modules/database"
-  db_instance_count   = "${local.db_instance_count}"
-  db_password         = "${local.db_password}"
-  db_username         = "${local.db_username}"
-  deployment_stage    = "${local.deployment_stage}"
-  lb_subnet_ids       = "${local.lb_subnet_ids}"
-  pgbouncer_subnet_id = "${local.pgbouncer_subnet_id}"
-  vpc_id              = "${local.vpc_id}"
+  source              = "modules/database"
+  db_instance_count   = "${var.db_instance_count}"
+  db_password         = "${var.db_password}"
+  db_username         = "${var.db_username}"
+  deployment_stage    = "${var.deployment_stage}"
+  lb_subnet_ids       = "${data.aws_subnet_ids.query_vpc.ids}"
+  pgbouncer_subnet_id = "${element(data.aws_subnet_ids.query_vpc.ids, 0)}"
+  vpc_id              = "${data.aws_vpc.selected.id}"
 }
 
 module "query-service-infra" {
-  source = "../../modules/query-service-infra"
+  source = "modules/query-service-infra"
 }
