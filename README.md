@@ -1,4 +1,6 @@
-# query-service
+# Query Service
+[![](https://status.dev.data.humancellatlas.org/build/HumanCellAtlas/query-service/master.svg)](https://allspark.dev.data.humancellatlas.org/HumanCellAtlas/query-service/pipelines)
+
 Placeholder for the Metadata Query Service
 
 ## Getting Started
