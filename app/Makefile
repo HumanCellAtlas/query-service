@@ -6,3 +6,7 @@ install:
 .PHONY: test
 test:
 	. venv/bin/activate && python -m unittest discover -s test -p 'test_*.py'
+
+.PHONY: deploy
+deploy:
+	@echo "Nothing to deploy yet!"
