@@ -4,7 +4,7 @@ GET_CREDS="import json, boto3.session as s; \
 
 export AWS_REGION=$(shell aws configure get region)
 export AWS_ACCOUNT_ID=$(shell aws sts get-caller-identity | jq -r .Account)
-export TF_S3_BUCKET=org-humancellatlas-$(ACCOUNT_ID)-terraform
+export TF_S3_BUCKET=org-humancellatlas-$(AWS_ACCOUNT_ID)-terraform
 export APP_NAME=query-service
 
 default: plan
@@ -16,16 +16,17 @@ secrets:
 		python -m json.tool > terraform.tfvars
 
 
-plan: secrets
+plan:
 	terraform plan -detailed-exitcode
 
-apply: secrets
+apply:
 	terraform apply --backup=-
 
-init: secrets
+init:
 	-rm -f .terraform/terraform.tfstate
 	terraform init \
   -backend-config="bucket=${TF_S3_BUCKET}" \
+  -backend-config="key=query-service/$(DEPLOYMENT_STAGE)/terraform.tfstate" \
   -backend-config="profile=${AWS_PROFILE}" \
   -backend-config="region=${AWS_REGION}"
 
