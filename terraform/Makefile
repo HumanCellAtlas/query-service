@@ -1,1 +1,1 @@
-include ../scripts/component.mk
+include ../common.mk
