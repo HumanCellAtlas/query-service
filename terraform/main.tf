@@ -3,17 +3,8 @@ provider "aws" {
   region              = "us-east-1"
   profile             = "hca"
 }
-# cant interpolate the key for the s3 bucket -> need to hard code for each deployment stage/environment
 terraform {
   required_version = "~>0.11.7"
-
-  backend "s3" {
-    bucket = "org-humancellatlas-861229788715-terraform"
-    key = "query-service/dev/state.tfstate"
-    encrypt = true
-    region  = "us-east-1"
-    profile = "hca-id"
-  }
 }
 
 module "database" {

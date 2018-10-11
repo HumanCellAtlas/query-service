@@ -4,34 +4,30 @@ GET_CREDS="import json, boto3.session as s; \
 
 export AWS_REGION=$(shell aws configure get region)
 export AWS_ACCOUNT_ID=$(shell aws sts get-caller-identity | jq -r .Account)
-export TF_S3_BUCKET=tfstate-$(AWS_ACCOUNT_ID)
+export TF_S3_BUCKET=org-humancellatlas-$(ACCOUNT_ID)-terraform
 export APP_NAME=query-service
 
 default: plan
 
-init:
-	terraform init
+secrets:
+	aws secretsmanager get-secret-value \
+		--secret-id query/$(DEPLOYMENT_STAGE)/config.json | \
+		jq -r .SecretString | \
+		python -m json.tool > terraform.tfvars
 
-plan:
-	make retrieve-vars
+
+plan: secrets
 	terraform plan -detailed-exitcode
 
-apply:
-	make retrieve-vars
+apply: secrets
 	terraform apply --backup=-
 
-retrieve-vars:
-	aws s3 cp s3://org-humancellatlas-861229788715-terraform/query-service/dev/terraform.tfvars terraform.tfvars
-
-upload-vars:
-	aws s3 cp terraform.tfvars s3://org-humancellatlas-861229788715-terraform/query-service/dev/terraform.tfvars
-
-get-config:
-	@python -c $(GET_CREDS) | jq ".region=env.AWS_REGION | .bucket=env.TF_S3_BUCKET | .key=env.APP_NAME"
-
-init:
+init: secrets
 	-rm -f .terraform/terraform.tfstate
-	terraform init --backend-config <($(MAKE) get-config)
+	terraform init \
+  -backend-config="bucket=${TF_S3_BUCKET}" \
+  -backend-config="profile=${AWS_PROFILE}" \
+  -backend-config="region=${AWS_REGION}"
 
 destroy: init
 	terraform destroy
@@ -45,4 +41,4 @@ lint:
 test: lint
 	python ./test/test.py -v
 
-.PHONY: deploy package init destroy clean lint test
+.PHONY: deploy package init destroy clean lint test secrets

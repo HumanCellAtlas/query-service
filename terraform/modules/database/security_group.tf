@@ -1,5 +1,5 @@
 resource "aws_security_group" "rds-postgres" {
-  name        = "dcp-query-service-${var.deployment_stage}-rds-postgres-sg"
+  name        = "dcp-query-${var.deployment_stage}-rds-postgres-sg"
   description = "DCP Query Service Postgres"
   vpc_id      = "${var.vpc_id}"
 

@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "database-secrets" {
-  name = "dcp/query-service/${var.deployment_stage}/database"
+  name = "dcp/query/${var.deployment_stage}/database"
 }
 
 resource "aws_secretsmanager_secret_version" "database-secrets" {

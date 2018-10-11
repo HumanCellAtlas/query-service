@@ -3,7 +3,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier                   = "query-cluster-${var.deployment_stage}-${count.index}"
   cluster_identifier           = "${aws_rds_cluster.query.id}"
   instance_class               = "db.r4.large"
-  publicly_accessible          = "true"
+  publicly_accessible          = "false"
   engine                       = "aurora-postgresql"
   engine_version               = "9.6.3"
   auto_minor_version_upgrade   = "true"
