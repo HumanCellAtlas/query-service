@@ -10,7 +10,7 @@ TF=$(wildcard *.tf)
 IMAGE_VERSION=0.2.1_TF0.11.7
 
 docker_base = \
-	docker run -it --rm -e HOME=/home -v $$HOME/.aws:/home/.aws -v $(REPO_ROOT):/repo \
+	docker run --rm -e HOME=/home -v $$HOME/.aws:/home/.aws -v $(REPO_ROOT):/repo \
 	-v $(REPO_ROOT)/.bin:/usr/local/bin -v $(REPO_ROOT)/terraform.d:/repo/$(REPO_RELATIVE_PATH)/terraform.d \
 	-e GIT_SSH_COMMAND='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' \
 	-e RUN_USER_ID=$(shell id -u) -e RUN_GROUP_ID=$(shell id -g) \
@@ -19,7 +19,7 @@ docker_base = \
 docker_terraform = $(docker_base) chanzuckerberg/terraform:$(IMAGE_VERSION)
 docker_sh = $(docker_base) --entrypoint='/bin/sh' chanzuckerberg/terraform:$(IMAGE_VERSION)
 
-all:
+all: fmt lint doc
 
 fmt:
 	@$(docker_sh) -c 'for f in $(TF); do printf .; terraform fmt $$f; done'; \
@@ -30,43 +30,19 @@ lint: lint-tf
 lint-tf:
 	@$(docker_sh) -c 'for f in $(TF); do printf .; terraform fmt --check=true --diff=true $$f || exit $$? ; done'
 
-get: ssh-forward
-	$(docker_terraform) get --update=true
+readme:
+	bash ../../../scripts/update-readme.sh update
 
-plan: fmt get init ssh-forward
-	$(docker_terraform) plan
+docs: readme
 
-apply: fmt get init ssh-forward
-	$(docker_terraform) apply -auto-approve=false
-
-docs:
-	@echo
+check-docs:
+	@bash .update-readme.sh check; \
+	if [ ! $$? -eq 0 ];  then \
+		echo "Docs are out of date, run \`make docs\`"; \
+	fi
 
 clean:
-	-rm -rfv .terraform/modules
-	-rm -rfv .terraform/plugins
 
 test:
 
-init: ssh-forward
-	$(docker_terraform) init -input=false
-
-check-plan: init get ssh-forward
-	$(docker_terraform) plan -detailed-exitcode; \
-	ERR=$$?; \
-	if [ $$ERR -eq 0 ] ; then \
-		echo "Success"; \
-	elif [ $$ERR -eq 1 ] ; then \
-		echo "Error in plan execution."; \
-		exit 1; \
-	elif [ $$ERR -eq 2 ] ; then \
-		echo "Diff";  \
-	fi
-
-ssh-forward:
-	bash $(REPO_ROOT)/scripts/docker-ssh-forward.sh
-
-run:
-	$(docker_terraform) $(CMD)
-
-.PHONY: all apply clean docs fmt get lint plan run ssh-forward test
+.PHONY: all check-doc clean docs fmt lint lint-tf readme test

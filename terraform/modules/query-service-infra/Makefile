@@ -10,7 +10,7 @@ TF=$(wildcard *.tf)
 IMAGE_VERSION=0.2.1_TF0.11.7
 
 docker_base = \
-	docker run -it --rm -e HOME=/home -v $$HOME/.aws:/home/.aws -v $(REPO_ROOT):/repo \
+	docker run --rm -e HOME=/home -v $$HOME/.aws:/home/.aws -v $(REPO_ROOT):/repo \
 	-v $(REPO_ROOT)/.bin:/usr/local/bin -v $(REPO_ROOT)/terraform.d:/repo/$(REPO_RELATIVE_PATH)/terraform.d \
 	-e GIT_SSH_COMMAND='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' \
 	-e RUN_USER_ID=$(shell id -u) -e RUN_GROUP_ID=$(shell id -g) \
@@ -31,7 +31,7 @@ lint-tf:
 	@$(docker_sh) -c 'for f in $(TF); do printf .; terraform fmt --check=true --diff=true $$f || exit $$? ; done'
 
 readme:
-	bash .update-readme.sh update
+	bash ../../../scripts/update-readme.sh update
 
 docs: readme
 
