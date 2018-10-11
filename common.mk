@@ -25,10 +25,10 @@ apply:
 init:
 	-rm -f .terraform/terraform.tfstate
 	terraform init \
-  -backend-config="bucket=${TF_S3_BUCKET}" \
-  -backend-config="key=query-service/$(DEPLOYMENT_STAGE)/terraform.tfstate" \
-  -backend-config="profile=${AWS_PROFILE}" \
-  -backend-config="region=${AWS_REGION}"
+		-backend-config="bucket=${TF_S3_BUCKET}" \
+		-backend-config="key=query-service/$(DEPLOYMENT_STAGE)/terraform.tfstate" \
+		-backend-config="profile=${AWS_PROFILE}" \
+		-backend-config="region=${AWS_REGION}"
 
 destroy: init
 	terraform destroy
