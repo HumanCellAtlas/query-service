@@ -1,2 +1,3 @@
 boto3
 inflect
+psycopg2-binary==2.7.5

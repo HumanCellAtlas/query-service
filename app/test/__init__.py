@@ -1,12 +1,20 @@
+import functools
 import os
 import json
+import random
+import string
 import sys
+import time
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
 from lib.extract import Extractor
+from lib.config import Config
 from lib.model import Bundle, BundleManifest, File, FileMetadata
+from lib.logger import logger
+
+CONFIG = Config()
 
 
 def load_fixture(fixture_file):
@@ -42,3 +50,36 @@ class FixtureExtractor(Extractor):
     def extract(self, key: str):
         data = self._key_to_fixture_map[key]
         return self._deserialize(data)
+
+
+def gen_random_chars(n: int):
+    return ''.join(
+        [random.choice(string.ascii_lowercase)] +
+        [random.choice(string.ascii_lowercase + string.digits) for _ in range(n-1)]
+    )
+
+
+def eventually(timeout: float, interval: float, errors: set={AssertionError}):
+    """
+    @eventually runs a test until all assertions are satisfied or a timeout is reached.
+    :param timeout: time until the test fails
+    :param interval: time between attempts of the test
+    :param errors: the exceptions to catch and retry on
+    :return: the result of the function or a raised assertion error
+    """
+    def decorate(func):
+        @functools.wraps(func)
+        def call(*args, **kwargs):
+            timeout_time = time.time() + timeout
+            error_tuple = tuple(errors)
+            while True:
+                try:
+                    return func(*args, **kwargs)
+                except error_tuple as e:
+                    if time.time() >= timeout_time:
+                        raise
+                    logger.debug("Error in %s: %s. Retrying after %s s...", func, e, interval)
+                    time.sleep(interval)
+
+        return call
+    return decorate
