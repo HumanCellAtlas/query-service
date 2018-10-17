@@ -14,8 +14,8 @@ resource "aws_ecs_task_definition" "pgbouncer" {
     ],
     "environment": [
       {
-        "name": "DATABASE_URL",
-        "value": "postgresql://${var.db_username}:${var.db_password}@${aws_rds_cluster.query.endpoint}/query_${var.deployment_stage}"
+        "name": "DATABASE_URIS",
+        "value": "postgresql://${var.db_username}:${var.db_password}@${aws_rds_cluster.query.endpoint}:5432/query_${var.deployment_stage},postgresql://${var.db_username}:${var.db_password}@${aws_rds_cluster.query.endpoint}:5432/test"
       },
       {
         "name": "DEFAULT_POOL_SIZE",
@@ -43,7 +43,7 @@ resource "aws_ecs_task_definition" "pgbouncer" {
     ],
     "memory": 1024,
     "cpu": 512,
-    "image": "quay.io/humancellatlas/docker-pgbouncer:master",
+    "image": "docker.io/humancellatlas/pgbouncer:latest",
     "name": "pgbouncer-${var.deployment_stage}"
   }
 ]
