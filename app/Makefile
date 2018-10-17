@@ -5,7 +5,7 @@ install:
 
 .PHONY: test
 test:
-	. venv/bin/activate && python -m unittest discover -s test -p 'test_*.py'
+	. venv/bin/activate && python3 -m unittest discover -s test -p 'test_*.py'
 
 .PHONY: deploy
 deploy:
