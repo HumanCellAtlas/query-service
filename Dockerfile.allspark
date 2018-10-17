@@ -1,4 +1,4 @@
-# This is the build image for the DSS, intended for use with the allspark GitLab server
+# This is the build image intended for use with the allspark GitLab server
 # It may be built and uploaded with the commands:
 #   `docker login
 #   `docker build -f Dockerfile.allspark -t {docker_username}/{tag_key}:{tag_value} .`
@@ -14,7 +14,7 @@
 # Please see Docker startup guide for additional info:
 #   https://docs.docker.com/get-started/ 
 
-FROM debian:9.5
+FROM debian:buster-slim
 
 ENV DEBIAN_FRONTEND noninteractive
 
