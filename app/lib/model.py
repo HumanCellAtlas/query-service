@@ -1,4 +1,8 @@
+import re
 import typing
+import inflect
+
+from uuid import UUID
 from .extract import Extractor
 
 
@@ -23,7 +27,7 @@ class FileMetadata(dict):
 
     @property
     def uuid(self):
-        return self['uuid']
+        return UUID(self['uuid'])
 
     @property
     def version(self):
@@ -31,6 +35,8 @@ class FileMetadata(dict):
 
 
 class File(dict):
+
+    _inflect_engine = inflect.engine()
 
     def __init__(self, metadata: FileMetadata, **kwargs):
         self.metadata = metadata
@@ -40,19 +46,37 @@ class File(dict):
     def from_extractor(extractor: Extractor, metadata: FileMetadata):
         return File(metadata, **extractor.extract(metadata.key))
 
+    @property
+    def schema_module(self):
+        return '_'.join(self.metadata.name.split('_')[:-1])
+
+    @property
+    def schema_module_plural(self):
+        group_words = self.metadata.name.rsplit('_', 1)[0].split('_')
+        group_words[-1] = self._inflect_engine.plural(group_words[-1])
+        return '_'.join(group_words)
+
+    @property
+    def uuid(self) -> UUID:
+        return UUID(self['provenance']['document_id'])
+
 
 class BundleManifest(dict):
 
     @property
-    def file_metadata(self):
-        return [FileMetadata(f) for f in self['files'] if f['name'].endswith('.json')]
+    def file_metadata(self) -> typing.List[FileMetadata]:
+        return [FileMetadata(f) for f in self['files']]
 
 
 class Bundle:
 
+    _normalizable_file = re.compile('.*[0-9]+[.]json$')
+    _json_file = re.compile('.+[.]json$')
+
     def __init__(self, fqid: str, bundle_manifest: BundleManifest, files: typing.List[File]):
         self.fqid = fqid
-        self.uuid, self.version = fqid.split('.', 1)
+        tmp_uuid, self.version = fqid.split('.', 1)
+        self.uuid = UUID(tmp_uuid)
         self._bundle_manifest = bundle_manifest
         self._files = files
 
@@ -60,9 +84,10 @@ class Bundle:
     def from_extractor(extractor: Extractor, bundle_key: str):
         bundle_manifest = BundleManifest(**extractor.extract(bundle_key))
         _, bundle_fqid = bundle_key.split('/')
-        files = []
-        for metadata in bundle_manifest.file_metadata:
-            files += [File.from_extractor(extractor, metadata)]
+        files = [
+            File.from_extractor(extractor, m)
+            for m in bundle_manifest.file_metadata if Bundle._json_file.match(m.name)
+        ]
         return Bundle(fqid=bundle_fqid, bundle_manifest=bundle_manifest, files=files)
 
     @property
@@ -70,8 +95,12 @@ class Bundle:
         return self._bundle_manifest
 
     @property
-    def indexable_files(self):
+    def indexable_files(self) -> typing.List[File]:
         return [f for f in self._files if f.metadata.indexable]
+
+    @property
+    def normalizable_files(self) -> typing.List[File]:
+        return [f for f in self.indexable_files if self._normalizable_file.match(f.metadata.name)]
 
     def __eq__(self, other):
         if isinstance(other, Bundle):
