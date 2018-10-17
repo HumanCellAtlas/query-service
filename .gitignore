@@ -14,3 +14,7 @@ terraform/**/terraform.d
 
 # Pycharm folder
 .idea
+
+__pycache__/
+venv/
+virtualenv/
