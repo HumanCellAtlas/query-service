@@ -30,6 +30,11 @@ stages:
 before_script:
   - export IMAGE_TAG=${CI_BUILD_REF_NAME}-$(git describe --tags --always)-${CI_PIPELINE_ID}
   - eval "$(aws ecr get-login --no-include-email)"
+  - if [[ integration != "$CI_COMMIT_REF_NAME" && staging != "$CI_COMMIT_REF_NAME" ]]; then
+  -   export DEPLOYMENT_STAGE=dev
+  - else
+  -   export DEPLOYMENT_STAGE="$CI_COMMIT_REF_NAME"
+  - fi
 
 #infra:
 #  stage: infra_test_build
