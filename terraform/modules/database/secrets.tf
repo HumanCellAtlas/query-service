@@ -2,13 +2,17 @@ resource "aws_secretsmanager_secret" "database-secrets" {
   name = "dcp/query/${var.deployment_stage}/database"
 }
 
+# TODO: automate creation of test database
 resource "aws_secretsmanager_secret_version" "database-secrets" {
   secret_id = "${aws_secretsmanager_secret.database-secrets.id}"
 
   secret_string = <<SECRETS_JSON
 {
-  "database_uri": "postgresql://${aws_rds_cluster.query.master_username}:${aws_rds_cluster.query.master_password}@${aws_rds_cluster.query.endpoint}/${aws_rds_cluster.query.database_name}",
-  "pgbouncer_uri": "postgresql://${aws_rds_cluster.query.master_username}:${aws_rds_cluster.query.master_password}@${aws_lb.main.dns_name}/${aws_rds_cluster.query.database_name}"
+  "user": "${aws_rds_cluster.query.master_username}",
+  "password": "${aws_rds_cluster.query.master_password}",
+  "database": "${aws_rds_cluster.query.database_name}",
+  "rds_dns_name": "${aws_rds_cluster.query.endpoint}",
+  "pgbouncer_dns_name": "${aws_lb.main.dns_name}"
 }
 SECRETS_JSON
 
