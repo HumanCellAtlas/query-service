@@ -1,9 +1,7 @@
 import inflect
 import re
 
-from copy import deepcopy
-
-from .model import Bundle
+from lib.model import Bundle, FileMetadata
 
 
 class BundleDocumentTransform:
@@ -11,8 +9,8 @@ class BundleDocumentTransform:
     _inflect_engine = inflect.engine()
     _array_file_regexp = re.compile('^[a-zA-Z0-9_]*_[0-9]*[.]json$')
 
-    @staticmethod
-    def transform(bundle: Bundle):
+    @classmethod
+    def transform(cls, bundle: Bundle):
         """
         transform a bundle into an aggregated bundle document
 
@@ -29,25 +27,18 @@ class BundleDocumentTransform:
         :return: the bundle document as a dictionary
         """
         document = dict(
-            uuid=bundle.uuid,
+            uuid=str(bundle.uuid),
             version=bundle.version,
             manifest=bundle.bundle_manifest
         )
         for file_data in bundle.indexable_files:
             file_name = file_data.metadata.name
-            is_for_array = BundleDocumentTransform._array_file_regexp.match(file_name)
+            is_for_array = cls._array_file_regexp.match(file_name)
             if is_for_array:
-                group_name = BundleDocumentTransform._get_group_name(file_data.metadata.name)
-                if group_name not in document:
-                    document[group_name] = []
-                document[group_name] += [file_data]
+                if file_data.schema_module_plural not in document:
+                    document[file_data.schema_module_plural] = []
+                document[file_data.schema_module_plural] += [file_data]
             else:
                 key_name = re.sub('[.]json$', '', file_name)
                 document[key_name] = file_data
         return dict(**document)
-
-    @staticmethod
-    def _get_group_name(file_name):
-        group_words = file_name.rsplit('_', 1)[0].split('_')
-        group_words[-1] = BundleDocumentTransform._inflect_engine.plural(group_words[-1])
-        return '_'.join(group_words)
