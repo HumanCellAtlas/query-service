@@ -2,6 +2,8 @@
 import json
 import sys
 
+from functools import lru_cache
+
 from hca import HCAConfig
 from hca.dss import DSSClient
 

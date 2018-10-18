@@ -5,6 +5,7 @@ import random
 import string
 import sys
 import time
+import typing
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
@@ -51,11 +52,12 @@ class FixtureExtractor(Extractor):
         data = self._key_to_fixture_map[key]
         return self._deserialize(data)
 
-    def extract_bundle(self, key: str):
+    def extract_bundle(self, key: str, version: typing.Optional[str]=None):
         return self._extract(key)
 
-    def extract_file(self, key: str):
+    def extract_file(self, key: str, version: typing.Optional[str]=None):
         return self._extract(key)
+
 
 def gen_random_chars(n: int):
     return ''.join(
