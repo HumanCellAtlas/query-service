@@ -61,16 +61,14 @@ class Transaction:
         )
         self._cursor.execute(query)
 
-    def create_join_table(self, table_name: str):
+    def create_join_table(self):
         query = self._prepare_statement(
             """
-            CREATE TABLE IF NOT EXISTS bundles_{} (
+            CREATE TABLE IF NOT EXISTS bundles_metadata_files (
                 bundle_uuid UUID REFERENCES bundles(uuid),
-                other_uuid UUID REFERENCES {}(uuid)
+                file_uuid UUID NOT NULL
             );
-            """,
-            table_name,
-            table_name
+            """
         )
         self._cursor.execute(query)
 
@@ -106,15 +104,14 @@ class Transaction:
         result = self._cursor.rowcount
         return result
 
-    def insert_join(self, table_name: str, bundle_uuid: UUID, other_uuid: UUID) -> int:
-        query = self._prepare_statement(
+    def insert_join(self, table_name: str, bundle_uuid: UUID, file_uuid: UUID) -> int:
+        self._cursor.execute(
             """
-            INSERT INTO {}
+            INSERT INTO bundles_metadata_files
             VALUES (%s, %s)
             """,
-            table_name
+            (str(bundle_uuid), str(file_uuid))
         )
-        self._cursor.execute(query, (str(bundle_uuid), str(other_uuid)))
         result = self._cursor.rowcount
         return result
 

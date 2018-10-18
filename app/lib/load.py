@@ -32,22 +32,21 @@ class PostgresLoader(Loader):
     def _prepare_database(self, transaction, bundle: Bundle):
         # get table names for tables implied by the bundle manifest
         implied_table_names = set([f.schema_module_plural for f in bundle.normalizable_files])
-        implied_join_table_names = set(["bundles_{}".format(gn) for gn in implied_table_names])
         implied_table_names.add('bundles')
+        join_table_name = 'bundles_metadata_files'
 
         # if there are tables implied in the manifest not recorded in PostgresLoader, refresh
         if len(implied_table_names - self._existing_table_names) > 0 or \
-                len(implied_join_table_names - self._existing_table_names) > 0:
+                join_table_name not in self._existing_table_names:
             self._existing_table_names = set(transaction.list_tables())
 
         # create json tables still outstanding
         for table_name in implied_table_names - self._existing_table_names:
             transaction.create_json_table(table_name)
 
-        # create join tables still outstanding
-        for table_name in implied_join_table_names - self._existing_table_names:
-            normalized_table_name = table_name.split('_', 1)[-1]
-            transaction.create_join_table(normalized_table_name)
+        # create join table if DNE
+        if join_table_name not in self._existing_table_names:
+            transaction.create_join_table()
 
     @staticmethod
     def _insert_into_database(transaction, bundle: Bundle):
@@ -72,5 +71,5 @@ class PostgresLoader(Loader):
             transaction.insert_join(
                 table_name=f"bundles_{normalizable_file.schema_module_plural}",
                 bundle_uuid=bundle.uuid,
-                other_uuid=normalizable_file.uuid
+                file_uuid=normalizable_file.uuid
             )

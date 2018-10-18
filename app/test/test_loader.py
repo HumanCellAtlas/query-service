@@ -20,12 +20,7 @@ class TestPostgresLoader(unittest.TestCase):
 
     bundles_table = 'bundles'
     implied_join_tables = [
-        'bundles_sequence_files',
-        'bundles_dissociation_protocols',
-        'bundles_donor_organisms',
-        'bundles_cell_suspensions',
-        'bundles_processes',
-        'bundles_specimen_from_organisms',
+        'bundles_metadata_files',
     ]
     implied_json_tables = [
         'sequence_files',
@@ -65,14 +60,14 @@ class TestPostgresLoader(unittest.TestCase):
             self.assertEqual(result['uuid'], str(vx_bundle.uuid))
             self.assertEqual(result['json']['uuid'], str(vx_bundle.uuid))
             # json and join tables
-            for table_name, join_table_name in zip(self.implied_json_tables, self.implied_join_tables):
+            for table_name in self.implied_json_tables:
                 transaction._cursor.execute(
                     sql.SQL(
                         """
-                        SELECT join_table.* FROM {} join_table
-                        JOIN {} json_table on join_table.other_uuid = json_table.uuid
-                        WHERE join_table.bundle_uuid = %s
-                        """.format(join_table_name, table_name)
+                        SELECT bf.* FROM bundles_metadata_files AS bf
+                        JOIN {} AS json_table on bf.file_uuid = json_table.uuid
+                        WHERE bf.bundle_uuid = %s
+                        """.format(table_name)
                     ),
                     (str(vx_bundle.uuid),)
                 )
