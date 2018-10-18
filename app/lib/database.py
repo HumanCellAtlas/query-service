@@ -1,3 +1,4 @@
+import json
 import re
 from contextlib import contextmanager
 
@@ -92,10 +93,16 @@ class Transaction:
             """
             INSERT INTO {} (uuid, json)
             VALUES (%s, %s)
+            ON CONFLICT (uuid) DO NOTHING
             """,
             table_name
         )
-        self._cursor.execute(query, (str(uuid), Json(json_as_dict)))
+        try:
+            self._cursor.execute(query, (str(uuid), Json(json_as_dict)))
+        except Exception as e:
+            print(e)
+            raise e
+
         result = self._cursor.rowcount
         return result
 
