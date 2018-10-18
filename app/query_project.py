@@ -37,5 +37,7 @@ if __name__ == '__main__':
                 }
             }
         )
+        f = open('fqids.txt', 'w+')
         for r in results:
-            print(r['bundle_fqid'])
+            f.write(r['bundle_fqid']+"\n")
+        f.close()

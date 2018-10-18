@@ -1,9 +1,11 @@
 from datetime import datetime
 from uuid import UUID
-
+from psycopg2 import IntegrityError
 from lib.model import Bundle
 from lib.database import PostgresDatabase
 from lib.transform import BundleDocumentTransform
+
+from lib.logger import logger
 
 
 class Loader:
@@ -58,14 +60,17 @@ class PostgresLoader(Loader):
         )
 
         # insert file metadata, and join table entry
-        for bundle_file in bundle.normalizable_files:
-            transaction.insert(
-                table_name=bundle_file.schema_module_plural,
-                uuid=bundle_file.uuid,
-                json_as_dict=bundle_file,
-            )
+        for normalizable_file in bundle.normalizable_files:
+            try:
+                transaction.insert(
+                    table_name=normalizable_file.schema_module_plural,
+                    uuid=normalizable_file.uuid,
+                    json_as_dict=normalizable_file,
+                )
+            except IntegrityError:
+                print(f"already inserted: {normalizable_file.schema_module_plural} with uuid: {normalizable_file.uuid}")
             transaction.insert_join(
-                table_name=f"bundles_{bundle_file.schema_module_plural}",
+                table_name=f"bundles_{normalizable_file.schema_module_plural}",
                 bundle_uuid=bundle.uuid,
-                other_uuid=bundle_file.uuid
+                other_uuid=normalizable_file.uuid
             )

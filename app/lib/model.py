@@ -66,7 +66,6 @@ class BundleManifest(dict):
 
     @property
     def file_metadata(self) -> typing.List[FileMetadata]:
-        print(">> " + json.dumps(self, indent=4))
         return [FileMetadata(f) for f in self['files']]
 
 
@@ -83,8 +82,8 @@ class Bundle:
         self._files = files
 
     @staticmethod
-    def from_extractor(extractor: Extractor, bundle_uuid: UUID):
-        bundle_manifest = BundleManifest(**extractor.extract_bundle(bundle_uuid))
+    def from_extractor(extractor: Extractor, bundle_uuid: UUID, version: typing.Optional[str]=None):
+        bundle_manifest = BundleManifest(**extractor.extract_bundle(bundle_uuid, version))
         files = [
             File.from_extractor(extractor, m)
             for m in bundle_manifest.file_metadata if Bundle._json_file.match(m.name)
