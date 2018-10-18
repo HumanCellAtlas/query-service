@@ -5,6 +5,12 @@ import sys
 from hca import HCAConfig
 from hca.dss import DSSClient
 
+"""
+query_project.py
+
+@input line separated project uuids from stdin
+@output bundle FQIDs contained in that project
+"""
 
 hca_config = HCAConfig()
 # TODO: lock to same environment as specified in DEPLOYMENT_STAGE
