@@ -14,7 +14,7 @@ class TestModel(unittest.TestCase):
     extractor = FixtureExtractor()
 
     def test_bundle(self):
-        bundle = Bundle.from_extractor(self.extractor, 'bundles/' + vx_bundle_fqid)
+        bundle = Bundle.from_extractor(self.extractor, vx_bundle.uuid)
         self.assertEqual(vx_bundle, bundle)
         bundle._files = bundle._files[:-1]
         self.assertNotEqual(vx_bundle, bundle)

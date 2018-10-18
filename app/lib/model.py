@@ -1,6 +1,7 @@
 import re
 import typing
 import inflect
+import json
 
 from uuid import UUID
 from .extract import Extractor
@@ -44,7 +45,7 @@ class File(dict):
 
     @staticmethod
     def from_extractor(extractor: Extractor, metadata: FileMetadata):
-        return File(metadata, **extractor.extract(metadata.key))
+        return File(metadata, **extractor.extract_file(metadata.uuid))
 
     @property
     def schema_module(self):
@@ -65,6 +66,7 @@ class BundleManifest(dict):
 
     @property
     def file_metadata(self) -> typing.List[FileMetadata]:
+        print(">> " + json.dumps(self, indent=4))
         return [FileMetadata(f) for f in self['files']]
 
 
@@ -81,14 +83,17 @@ class Bundle:
         self._files = files
 
     @staticmethod
-    def from_extractor(extractor: Extractor, bundle_key: str):
-        bundle_manifest = BundleManifest(**extractor.extract(bundle_key))
-        _, bundle_fqid = bundle_key.split('/')
+    def from_extractor(extractor: Extractor, bundle_uuid: UUID):
+        bundle_manifest = BundleManifest(**extractor.extract_bundle(bundle_uuid))
         files = [
             File.from_extractor(extractor, m)
             for m in bundle_manifest.file_metadata if Bundle._json_file.match(m.name)
         ]
-        return Bundle(fqid=bundle_fqid, bundle_manifest=bundle_manifest, files=files)
+        return Bundle(
+            fqid=f"{bundle_uuid}.{bundle_manifest['version']}",
+            bundle_manifest=bundle_manifest,
+            files=files
+        )
 
     @property
     def bundle_manifest(self):

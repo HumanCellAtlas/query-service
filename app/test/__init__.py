@@ -42,15 +42,20 @@ vx_bundle = Bundle(
 class FixtureExtractor(Extractor):
 
     _key_to_fixture_map = dict([
-        (d.key, load_fixture(d.name))
+        (d.uuid, load_fixture(d.name))
         for d in BundleManifest(**json.loads(vx_bundle_str)).file_metadata
     ])
-    _key_to_fixture_map['bundles/' + vx_bundle_fqid] = vx_bundle_str
+    _key_to_fixture_map[vx_bundle.uuid] = vx_bundle_str
 
-    def extract(self, key: str):
+    def _extract(self, key: str):
         data = self._key_to_fixture_map[key]
         return self._deserialize(data)
 
+    def extract_bundle(self, key: str):
+        return self._extract(key)
+
+    def extract_file(self, key: str):
+        return self._extract(key)
 
 def gen_random_chars(n: int):
     return ''.join(
