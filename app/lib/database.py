@@ -8,6 +8,7 @@ import psycopg2.extras
 from psycopg2 import DatabaseError, sql
 from psycopg2.extras import Json
 
+from lib.config import Config, requires_admin_mode
 from lib.logger import logger
 from uuid import UUID
 
@@ -185,6 +186,60 @@ class Transaction:
                 raise Exception(f"Not a valid table name: \"{table_name}\"")
         return sql.SQL(statement.format(*table_names))
 
+    @requires_admin_mode
+    def initialize_database(self):
+        self._cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS bundles (
+                uuid UUID NOT NULL,
+                version timestamp NOT NULL,
+                json JSONB NOT NULL,
+                PRIMARY KEY(uuid, version)
+            );
 
-def datetime_to_version(timestamp: datetime) -> str:
-    return timestamp.strftime("%Y-%m-%dT%H%M%S.%fZ")
+            CREATE INDEX IF NOT EXISTS bundles_uuid ON bundles USING btree (uuid);
+
+            CREATE TABLE IF NOT EXISTS metadata_files (
+                uuid UUID NOT NULL,
+                version timestamp NOT NULL,
+                file_type varchar(128) NOT NULL,
+                json JSONB NOT NULL,
+                PRIMARY KEY(uuid, version),
+                UNIQUE (uuid, version, file_type)
+            );
+
+            CREATE TABLE IF NOT EXISTS bundles_metadata_files (
+                bundle_uuid UUID,
+                bundle_version timestamp NOT NULL,
+                file_uuid UUID NOT NULL,
+                file_version timestamp NOT NULL,
+                FOREIGN KEY (bundle_uuid, bundle_version) REFERENCES bundles(uuid, version),
+                FOREIGN KEY (file_uuid, file_version) REFERENCES metadata_files(uuid, version),
+                UNIQUE (bundle_uuid, bundle_version, file_uuid, file_version)
+            );
+
+            CREATE INDEX IF NOT EXISTS bundles_metadata_files_bundle_uuid ON bundles_metadata_files USING btree (bundle_uuid);
+
+            CREATE INDEX IF NOT EXISTS bundles_metadata_files_file_uuid ON bundles_metadata_files USING btree (file_uuid);
+            """
+        )
+
+    @requires_admin_mode
+    def clear_database(self):
+        self._cursor.execute(
+            """
+            CREATE OR REPLACE FUNCTION drop_tables(username IN VARCHAR) RETURNS void AS $$
+            DECLARE
+                statements CURSOR FOR
+                    SELECT tablename FROM pg_tables
+                    WHERE tableowner = username AND schemaname = 'public';
+            BEGIN
+                FOR stmt IN statements LOOP
+                    EXECUTE 'DROP TABLE ' || quote_ident(stmt.tablename) || ' CASCADE;';
+                END LOOP;
+            END;
+            $$ LANGUAGE plpgsql;
+
+            SELECT drop_tables('master');
+            """
+        )
