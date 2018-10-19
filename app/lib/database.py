@@ -59,6 +59,14 @@ class Transaction:
             table_name
         )
         self._cursor.execute(query)
+        query = self._prepare_statement(
+            """
+            CREATE INDEX IF NOT EXISTS {}_uuid ON {} USING btree (uuid);
+            """,
+            table_name,
+            table_name
+        )
+        self._cursor.execute(query)
 
     def create_join_table(self):
         query = self._prepare_statement(
@@ -74,6 +82,20 @@ class Transaction:
             """
         )
         self._cursor.execute(query)
+        self._cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS bundles_metadata_files_bundle_uuid
+            ON bundles_metadata_files
+            USING btree (bundle_uuid);
+            """
+        )
+        self._cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS bundles_metadata_files_file_uuid
+            ON bundles_metadata_files
+            USING btree (file_uuid);
+            """
+        )
 
     def list_tables(self):
         self._cursor.execute(
