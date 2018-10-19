@@ -1,6 +1,5 @@
 import re
 from contextlib import contextmanager
-from datetime import datetime
 from dateutil.parser import parse as parse_datetime
 
 import psycopg2
@@ -13,6 +12,8 @@ from lib.logger import logger
 from uuid import UUID
 
 # http://initd.org/psycopg/docs/faq.html#faq-jsonb-adapt
+from lib.model import datetime_to_version
+
 psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
 
 
@@ -47,85 +48,50 @@ class Transaction:
         assert(cursor is not None)
         self._cursor = cursor
 
-    def create_json_table(self, table_name: str):
+    def create_metadata_file_view(self, table_name: str, file_type: str):
         query = self._prepare_statement(
             """
-            CREATE TABLE IF NOT EXISTS {} (
-                uuid UUID NOT NULL,
-                version timestamp NOT NULL,
-                json JSONB NOT NULL,
-                PRIMARY KEY(uuid, version)
-            );
+            CREATE OR REPLACE VIEW {} AS
+            SELECT * FROM metadata_files
+            WHERE metadata_files.file_type = %s
             """,
             table_name
         )
-        self._cursor.execute(query)
-        query = self._prepare_statement(
-            """
-            CREATE INDEX IF NOT EXISTS {}_uuid ON {} USING btree (uuid);
-            """,
-            table_name,
-            table_name
-        )
-        self._cursor.execute(query)
+        self._cursor.execute(query, (file_type,))
 
-    def create_join_table(self):
-        query = self._prepare_statement(
-            """
-            CREATE TABLE IF NOT EXISTS bundles_metadata_files (
-                bundle_uuid UUID,
-                bundle_version timestamp NOT NULL,
-                file_uuid UUID NOT NULL,
-                file_version timestamp NOT NULL,
-                FOREIGN KEY (bundle_uuid, bundle_version) REFERENCES bundles(uuid, version),
-                UNIQUE (bundle_uuid, bundle_version, file_uuid, file_version)
-            );
-            """
-        )
-        self._cursor.execute(query)
-        self._cursor.execute(
-            """
-            CREATE INDEX IF NOT EXISTS bundles_metadata_files_bundle_uuid
-            ON bundles_metadata_files
-            USING btree (bundle_uuid);
-            """
-        )
-        self._cursor.execute(
-            """
-            CREATE INDEX IF NOT EXISTS bundles_metadata_files_file_uuid
-            ON bundles_metadata_files
-            USING btree (file_uuid);
-            """
-        )
-
-    def list_tables(self):
+    def list_views(self):
         self._cursor.execute(
             """
             SELECT table_name
-            FROM information_schema.tables
-            WHERE
-                table_type = 'BASE TABLE' AND
-                table_schema NOT IN ('pg_catalog', 'information_schema') AND
-                table_schema = 'public'
+            FROM INFORMATION_SCHEMA.views
+            WHERE table_schema = ANY (current_schemas(false))
             """
         )
         result = [ele[0] for ele in self._cursor.fetchall()]
         return result
 
-    def insert(self, table_name: str, uuid: UUID, version: str, json_as_dict: dict) -> int:
-        query = self._prepare_statement(
+    def insert_bundle(self, uuid: UUID, version: str, json_as_dict: dict) -> int:
+        self._cursor.execute(
             """
-            INSERT INTO {} (uuid, version, json)
+            INSERT INTO bundles (uuid, version, json)
             VALUES (%s, %s, %s)
             ON CONFLICT (uuid, version) DO NOTHING
             """,
-            table_name
-        )
-        self._cursor.execute(
-            query,
             (str(uuid), parse_datetime(version), Json(json_as_dict))
         )
 
+        result = self._cursor.rowcount
+        return result
+
+    def insert_metadata_file(self, file_type: str, uuid: UUID, version: str, json_as_dict: dict) -> int:
+        self._cursor.execute(
+            """
+            INSERT INTO metadata_files (uuid, version, file_type, json)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (uuid, version) DO NOTHING
+            """,
+            (str(uuid), parse_datetime(version), file_type, Json(json_as_dict))
+        )
         result = self._cursor.rowcount
         return result
 
@@ -146,38 +112,67 @@ class Transaction:
         result = self._cursor.rowcount
         return result
 
-    def delete(self, table_name: str, uuid: UUID, version: str) -> int:
-        query = self._prepare_statement(
+    def delete_bundle(self, uuid: UUID, version: str) -> int:
+        self._cursor.execute(
             """
-            DELETE FROM {}
+            DELETE FROM bundles
             WHERE uuid = %s AND version = %s
             """,
-            table_name
+            (str(uuid), parse_datetime(version))
         )
-        self._cursor.execute(query, (str(uuid), parse_datetime(version)))
         result = self._cursor.rowcount
         return result
 
-    def select(self, table_name: str, uuid: UUID, version: str) -> dict:
-        query = self._prepare_statement(
+    def delete_metadata_file(self, file_type: str, uuid: UUID, version: str) -> int:
+        self._cursor.execute(
+            """
+            DELETE FROM metadata_files
+            WHERE
+                uuid = %s AND
+                version = %s AND
+                file_type = %s
+            """,
+            (str(uuid), parse_datetime(version), file_type)
+        )
+        result = self._cursor.rowcount
+        return result
+
+    def select_bundle(self, uuid: UUID, version: str) -> dict:
+        self._cursor.execute(
             """
             SELECT uuid, version, json
-            FROM {}
+            FROM bundles
             WHERE uuid = %s AND version = %s
             """,
-            table_name
+            (str(uuid), parse_datetime(version))
         )
-        self._cursor.execute(query, (str(uuid), parse_datetime(version)))
-        result = self._cursor.fetchall()
-        if len(result) > 1:
+        return self._response_to_dict(self._cursor.fetchall(), uuid, version)
+
+    def select_metadata_file(self, file_type: str, uuid: UUID, version: str) -> dict:
+        self._cursor.execute(
+            """
+            SELECT uuid, version, json
+            FROM metadata_files
+            WHERE
+                uuid = %s AND
+                version = %s AND
+                file_type = %s
+            """,
+            (str(uuid), parse_datetime(version), file_type)
+    )
+        return self._response_to_dict(self._cursor.fetchall(), uuid, version)
+
+    @staticmethod
+    def _response_to_dict(response, uuid, version):
+        if len(response) > 1:
             raise DatabaseError(
                 f"Uniqueness constraint broken for uuid={uuid}, version={version}"
             )
         return dict(
-            uuid=result[0][0],
-            version=datetime_to_version(result[0][1]),
-            json=result[0][2]
-        ) if len(result) == 1 else None
+            uuid=response[0][0],
+            version=datetime_to_version(response[0][1]),
+            json=response[0][2]
+        ) if len(response) == 1 else None
 
     @classmethod
     def _prepare_statement(cls, statement: str, *table_names):
@@ -196,9 +191,9 @@ class Transaction:
                 json JSONB NOT NULL,
                 PRIMARY KEY(uuid, version)
             );
-
+            
             CREATE INDEX IF NOT EXISTS bundles_uuid ON bundles USING btree (uuid);
-
+            
             CREATE TABLE IF NOT EXISTS metadata_files (
                 uuid UUID NOT NULL,
                 version timestamp NOT NULL,
@@ -207,7 +202,7 @@ class Transaction:
                 PRIMARY KEY(uuid, version),
                 UNIQUE (uuid, version, file_type)
             );
-
+            
             CREATE TABLE IF NOT EXISTS bundles_metadata_files (
                 bundle_uuid UUID,
                 bundle_version timestamp NOT NULL,
@@ -239,7 +234,7 @@ class Transaction:
                 END LOOP;
             END;
             $$ LANGUAGE plpgsql;
-
+            
             SELECT drop_tables('master');
             """
         )
