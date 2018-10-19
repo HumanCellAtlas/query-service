@@ -18,3 +18,5 @@ terraform/**/terraform.d
 __pycache__/
 venv/
 virtualenv/
+
+tags
