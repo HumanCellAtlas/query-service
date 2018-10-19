@@ -40,4 +40,3 @@ if __name__ == '__main__':
             logger.info(f"Completed ETL for bundle: \"{bundle_uuid}\"")
         except Exception as e:
             logger.exception(f"Could not load bundle with uuid: \"{bundle_uuid}\"")
-            # raise e

@@ -95,11 +95,7 @@ class Transaction:
             """,
             table_name
         )
-        try:
-            self._cursor.execute(query, (str(uuid), Json(json_as_dict)))
-        except Exception as e:
-            print(e)
-            raise e
+        self._cursor.execute(query, (str(uuid), Json(json_as_dict)))
 
         result = self._cursor.rowcount
         return result
