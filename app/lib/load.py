@@ -1,6 +1,7 @@
-from datetime import datetime
-
 import pylru
+from psycopg2 import IntegrityError, InternalError
+
+from lib.logger import logger
 from lib.model import Bundle
 from lib.database import PostgresDatabase
 from lib.transform import BundleDocumentTransform
@@ -10,10 +11,6 @@ class Loader:
 
     def load(self, bundle: Bundle):
         raise NotImplementedError()
-
-
-class DatabaseError(Exception):
-    pass
 
 
 class PostgresLoader(Loader):
@@ -26,6 +23,7 @@ class PostgresLoader(Loader):
     def load(self, bundle: Bundle):
         with self._db.transaction() as transaction:
             self._prepare_database(transaction, bundle)
+        with self._db.transaction() as transaction:
             self._insert_into_database(transaction, bundle)
 
     def _prepare_database(self, transaction, bundle: Bundle):
@@ -41,11 +39,19 @@ class PostgresLoader(Loader):
 
         # create json tables still outstanding
         for table_name in implied_table_names - self._existing_table_names:
-            transaction.create_json_table(table_name)
+            logger.info(f"Creating table: {table_name}")
+            try:
+                transaction.create_json_table(table_name)
+            except (IntegrityError, InternalError) as e:
+                logger.error(f"Could not create table: {table_name}")
 
         # create join table if DNE
         if join_table_name not in self._existing_table_names:
-            transaction.create_join_table()
+            logger.info(f"Creating table: {join_table_name}")
+            try:
+                transaction.create_join_table()
+            except (IntegrityError, InternalError) as e:
+                logger.error(f"Could not create table: {join_table_name}")
 
     def _insert_into_database(self, transaction, bundle: Bundle):
         # insert denormalized bundle

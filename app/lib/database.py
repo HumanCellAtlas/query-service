@@ -5,7 +5,7 @@ from dateutil.parser import parse as parse_datetime
 
 import psycopg2
 import psycopg2.extras
-from psycopg2 import OperationalError, sql
+from psycopg2 import DatabaseError, sql
 from psycopg2.extras import Json
 
 from lib.logger import logger
@@ -13,10 +13,6 @@ from uuid import UUID
 
 # http://initd.org/psycopg/docs/faq.html#faq-jsonb-adapt
 psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
-
-
-class DatabaseError(Exception):
-    pass
 
 
 class PostgresDatabase:
@@ -30,16 +26,16 @@ class PostgresDatabase:
 
     @contextmanager
     def transaction(self):
+        if self._connection.closed != 0:
+            logger.info(f"Reconnecting to database...")
+            self._connection = self._connect()
         try:
             with self._connection.cursor() as cursor:
                 yield Transaction(cursor)
-                self._connection.commit()
-        except OperationalError as e:
-            logger.error("Error connecting", e)
-            self._connection = self._connect()
-            with self._connection.cursor() as cursor:
-                yield Transaction(cursor)
-                self._connection.commit()
+            self._connection.commit()
+        except DatabaseError as e:
+            logger.exception("Database error")
+            self._connection.rollback()
 
 
 class Transaction:
