@@ -1,6 +1,7 @@
-import json
 import re
 from contextlib import contextmanager
+from datetime import datetime
+from dateutil.parser import parse as parse_datetime
 
 import psycopg2
 import psycopg2.extras
@@ -53,8 +54,10 @@ class Transaction:
         query = self._prepare_statement(
             """
             CREATE TABLE IF NOT EXISTS {} (
-                uuid UUID PRIMARY KEY NOT NULL,
-                json JSONB NOT NULL
+                uuid UUID NOT NULL,
+                version timestamp NOT NULL,
+                json JSONB NOT NULL,
+                PRIMARY KEY(uuid, version)
             );
             """,
             table_name
@@ -65,8 +68,12 @@ class Transaction:
         query = self._prepare_statement(
             """
             CREATE TABLE IF NOT EXISTS bundles_metadata_files (
-                bundle_uuid UUID REFERENCES bundles(uuid),
-                file_uuid UUID NOT NULL
+                bundle_uuid UUID,
+                bundle_version timestamp NOT NULL,
+                file_uuid UUID NOT NULL,
+                file_version timestamp NOT NULL,
+                FOREIGN KEY (bundle_uuid, bundle_version) REFERENCES bundles(uuid, version),
+                UNIQUE (bundle_uuid, bundle_version, file_uuid, file_version)
             );
             """
         )
@@ -86,61 +93,71 @@ class Transaction:
         result = [ele[0] for ele in self._cursor.fetchall()]
         return result
 
-    def insert(self, table_name: str, uuid: UUID, json_as_dict: dict) -> int:
+    def insert(self, table_name: str, uuid: UUID, version: str, json_as_dict: dict) -> int:
         query = self._prepare_statement(
             """
-            INSERT INTO {} (uuid, json)
-            VALUES (%s, %s)
-            ON CONFLICT (uuid) DO NOTHING
+            INSERT INTO {} (uuid, version, json)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (uuid, version) DO NOTHING
             """,
             table_name
         )
-        self._cursor.execute(query, (str(uuid), Json(json_as_dict)))
+        self._cursor.execute(
+            query,
+            (str(uuid), parse_datetime(version), Json(json_as_dict))
+        )
 
         result = self._cursor.rowcount
         return result
 
-    def insert_join(self, table_name: str, bundle_uuid: UUID, file_uuid: UUID) -> int:
+    def insert_join(self, bundle_uuid: UUID, bundle_version: str, file_uuid: UUID, file_version: str) -> int:
         self._cursor.execute(
             """
-            INSERT INTO bundles_metadata_files
-            VALUES (%s, %s)
+            INSERT INTO bundles_metadata_files (bundle_uuid, bundle_version, file_uuid, file_version)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (bundle_uuid, bundle_version, file_uuid, file_version) DO NOTHING
             """,
-            (str(bundle_uuid), str(file_uuid))
+            (
+                str(bundle_uuid),
+                parse_datetime(bundle_version),
+                str(file_uuid),
+                parse_datetime(file_version)
+            )
         )
         result = self._cursor.rowcount
         return result
 
-    def delete(self, table_name: str, uuid: UUID) -> int:
+    def delete(self, table_name: str, uuid: UUID, version: str) -> int:
         query = self._prepare_statement(
             """
             DELETE FROM {}
-            WHERE uuid = %s
+            WHERE uuid = %s AND version = %s
             """,
             table_name
         )
-        self._cursor.execute(query, (str(uuid),))
+        self._cursor.execute(query, (str(uuid), parse_datetime(version)))
         result = self._cursor.rowcount
         return result
 
-    def select(self, table_name: str, uuid: UUID) -> dict:
+    def select(self, table_name: str, uuid: UUID, version: str) -> dict:
         query = self._prepare_statement(
             """
-            SELECT uuid, json
+            SELECT uuid, version, json
             FROM {}
-            WHERE uuid = %s
+            WHERE uuid = %s AND version = %s
             """,
             table_name
         )
-        self._cursor.execute(query, (str(uuid),))
+        self._cursor.execute(query, (str(uuid), parse_datetime(version)))
         result = self._cursor.fetchall()
         if len(result) > 1:
             raise DatabaseError(
-                f"Uniqueness constraint broken for uuid={uuid}"
+                f"Uniqueness constraint broken for uuid={uuid}, version={version}"
             )
         return dict(
             uuid=result[0][0],
-            json=result[0][1]
+            version=datetime_to_version(result[0][1]),
+            json=result[0][2]
         ) if len(result) == 1 else None
 
     @classmethod
@@ -151,3 +168,5 @@ class Transaction:
         return sql.SQL(statement.format(*table_names))
 
 
+def datetime_to_version(timestamp: datetime) -> str:
+    return timestamp.strftime("%Y-%m-%dT%H%M%S.%fZ")

@@ -1,7 +1,6 @@
 import re
 import typing
 import inflect
-import json
 
 from uuid import UUID
 from .extract import Extractor
@@ -31,7 +30,7 @@ class FileMetadata(dict):
         return UUID(self['uuid'])
 
     @property
-    def version(self):
+    def version(self) -> str:
         return self['version']
 
 
@@ -60,6 +59,14 @@ class File(dict):
     @property
     def uuid(self) -> UUID:
         return UUID(self['provenance']['document_id'])
+
+    @property
+    def version(self) -> str:
+        return self.metadata.version
+
+    @property
+    def fqid(self) -> str:
+        return f"{self.uuid}.{self.version}"
 
 
 class BundleManifest(dict):

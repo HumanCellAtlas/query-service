@@ -8,7 +8,7 @@ sys.path.insert(0, pkg_root)  # noqa
 
 from psycopg2 import sql
 from test import *
-from lib.database import PostgresDatabase, Transaction
+from lib.database import PostgresDatabase, Transaction, datetime_to_version
 from lib.load import PostgresLoader
 
 
@@ -50,13 +50,13 @@ class TestPostgresLoader(unittest.TestCase):
         file_uuids_by_schema_module = defaultdict(set)
         for f in vx_bundle.normalizable_files:
             file_counts_by_schema_module[f.schema_module_plural] += 1
-            file_uuids_by_schema_module[f.schema_module_plural].add(str(f.uuid))
+            file_uuids_by_schema_module[f.schema_module_plural].add(str(f.fqid))
 
         self.loader.load(vx_bundle)
 
         with self.db.transaction() as transaction:
             # bundle insertion
-            result = transaction.select('bundles', vx_bundle.uuid)
+            result = transaction.select('bundles', vx_bundle.uuid, vx_bundle.version)
             self.assertEqual(result['uuid'], str(vx_bundle.uuid))
             self.assertEqual(result['json']['uuid'], str(vx_bundle.uuid))
             # json and join tables
@@ -64,17 +64,19 @@ class TestPostgresLoader(unittest.TestCase):
                 transaction._cursor.execute(
                     sql.SQL(
                         """
-                        SELECT bf.* FROM bundles_metadata_files AS bf
-                        JOIN {} AS json_table on bf.file_uuid = json_table.uuid
-                        WHERE bf.bundle_uuid = %s
+                        SELECT bf.bundle_uuid, bf.bundle_version, bf.file_uuid, bf.file_version
+                        FROM bundles_metadata_files AS bf
+                        JOIN {} AS json_table
+                        ON bf.file_uuid = json_table.uuid AND bf.file_version = json_table.version
+                        WHERE bf.bundle_uuid = %s AND bf.bundle_version = %s
                         """.format(table_name)
                     ),
-                    (str(vx_bundle.uuid),)
+                    (str(vx_bundle.uuid), vx_bundle.version)
                 )
                 result = transaction._cursor.fetchall()
-                bundle_uuid = set([t[0] for t in result])
-                table_uuids = set([t[1] for t in result])
-                self.assertEqual(bundle_uuid, {str(vx_bundle.uuid)})
+                bundle_uuid = set([f"{t[0]}.{datetime_to_version(t[1])}" for t in result])
+                table_uuids = set([f"{t[2]}.{datetime_to_version(t[3])}" for t in result])
+                self.assertEqual(bundle_uuid, {str(vx_bundle.fqid)})
                 self.assertEqual(table_uuids, file_uuids_by_schema_module[table_name])
                 self.assertEqual(len(result), file_counts_by_schema_module[table_name])
 

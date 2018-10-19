@@ -22,21 +22,22 @@ class TestPostgresLoader(unittest.TestCase):
 
     def test_insert_select_delete(self):
         uuid = uuid4()
+        version = '2018-10-18T121314.123456Z'
         example_json = dict(a='b')
         try:
             with self.db.transaction() as transaction:
                 # insert
-                result = transaction.insert('bundles', uuid, example_json)
+                result = transaction.insert('bundles', uuid, version, example_json)
                 self.assertEqual(result, 1)
                 # select
-                result = transaction.select('bundles', uuid)
+                result = transaction.select('bundles', uuid, version)
                 self.assertDictEqual(result['json'], example_json)
         finally:
             with self.db.transaction() as transaction:
                 # delete
-                result = transaction.delete('bundles', uuid)
+                result = transaction.delete('bundles', uuid, version)
                 self.assertEqual(result, 1)
-                result = transaction.select('bundles', uuid)
+                result = transaction.select('bundles', uuid, version)
                 self.assertIsNone(result)
 
     def test_table_create_list_delete(self):
