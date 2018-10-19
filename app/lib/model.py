@@ -45,7 +45,7 @@ class File(dict):
 
     @staticmethod
     def from_extractor(extractor: Extractor, metadata: FileMetadata):
-        return File(metadata, **extractor.extract_file(metadata.uuid))
+        return File(metadata, **extractor.extract_file(metadata.uuid, metadata.version))
 
     @property
     def schema_module(self):
@@ -82,7 +82,7 @@ class Bundle:
         self._files = files
 
     @staticmethod
-    def from_extractor(extractor: Extractor, bundle_uuid: UUID, version: typing.Optional[str]=None):
+    def from_extractor(extractor: Extractor, bundle_uuid: UUID, version: str):
         bundle_manifest = BundleManifest(**extractor.extract_bundle(bundle_uuid, version))
         files = [
             File.from_extractor(extractor, m)

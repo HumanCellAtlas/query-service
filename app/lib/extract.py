@@ -1,5 +1,5 @@
 import json
-import typing
+from functools import lru_cache
 from uuid import UUID
 
 from hca.dss import DSSClient
@@ -7,10 +7,10 @@ from hca.dss import DSSClient
 
 class Extractor:
 
-    def extract_bundle(self, uuid: UUID, version: typing.Optional[str]):
+    def extract_bundle(self, uuid: UUID, version: str):
         raise NotImplementedError()
 
-    def extract_file(self, uuid: UUID):
+    def extract_file(self, uuid: UUID, version: str):
         raise NotImplementedError()
 
     @staticmethod
@@ -23,10 +23,10 @@ class DSSClientExtractor(Extractor):
     def __init__(self, dss: DSSClient):
         self._dss = dss
 
-    def extract_bundle(self, uuid: UUID, version: typing.Optional[str]=None):
+    @lru_cache(maxsize=1000)
+    def extract_bundle(self, uuid: UUID, version: str):
         return self._dss.get_bundle(replica='aws', uuid=str(uuid), version=version)['bundle']
 
-    def extract_file(self, uuid: UUID):
+    @lru_cache(maxsize=1000)
+    def extract_file(self, uuid: UUID, version: str):
         return self._dss.get_file(replica='aws', uuid=str(uuid))
-
-
