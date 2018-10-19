@@ -1,5 +1,7 @@
 import re
 import typing
+from datetime import datetime
+
 import inflect
 
 from uuid import UUID
@@ -117,3 +119,7 @@ class Bundle:
         if isinstance(other, Bundle):
             return self._bundle_manifest == other._bundle_manifest and self._files == other._files
         return False
+
+
+def datetime_to_version(timestamp: datetime) -> str:
+    return timestamp.strftime("%Y-%m-%dT%H%M%S.%fZ")

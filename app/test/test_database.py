@@ -7,37 +7,58 @@ pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noq
 sys.path.insert(0, pkg_root)  # noqa
 
 from test import *
+from lib.config import Config
 from lib.database import PostgresDatabase
-from psycopg2 import sql
 
 
 class TestPostgresLoader(unittest.TestCase):
 
-    db = PostgresDatabase(CONFIG.test_database_uri)
+    db = PostgresDatabase(Config.test_database_uri)
 
     @classmethod
     def setUpClass(cls):
         with cls.db.transaction() as transaction:
-            transaction.create_json_table('bundles')
+            clear_views(transaction._cursor)
 
-    def test_insert_select_delete(self):
+    def test_bundle_insert_select_delete(self):
         uuid = uuid4()
         version = '2018-10-18T121314.123456Z'
         example_json = dict(a='b')
         try:
             with self.db.transaction() as transaction:
                 # insert
-                result = transaction.insert('bundles', uuid, version, example_json)
+                result = transaction.insert_bundle(uuid, version, example_json)
                 self.assertEqual(result, 1)
                 # select
-                result = transaction.select('bundles', uuid, version)
+                result = transaction.select_bundle(uuid, version)
                 self.assertDictEqual(result['json'], example_json)
         finally:
             with self.db.transaction() as transaction:
                 # delete
-                result = transaction.delete('bundles', uuid, version)
+                result = transaction.delete_bundle(uuid, version)
                 self.assertEqual(result, 1)
-                result = transaction.select('bundles', uuid, version)
+                result = transaction.select_bundle(uuid, version)
+                self.assertIsNone(result)
+
+    def test_metadata_file_insert_select_delete(self):
+        uuid = uuid4()
+        version = '2018-10-18T121314.123456Z'
+        file_type = 'donor_organism'
+        example_json = dict(a='b')
+        try:
+            with self.db.transaction() as transaction:
+                # insert
+                result = transaction.insert_metadata_file(file_type, uuid, version, example_json)
+                self.assertEqual(result, 1)
+                # select
+                result = transaction.select_metadata_file(file_type, uuid, version)
+                self.assertDictEqual(result['json'], example_json)
+        finally:
+            with self.db.transaction() as transaction:
+                # delete
+                result = transaction.delete_metadata_file(file_type, uuid, version)
+                self.assertEqual(result, 1)
+                result = transaction.select_metadata_file(file_type, uuid, version)
                 self.assertIsNone(result)
 
     def test_table_create_list_delete(self):
@@ -48,7 +69,7 @@ class TestPostgresLoader(unittest.TestCase):
 
         @eventually(5.0, 1.0)
         def test_list(transaction, num_intersecting_tables: int):
-            ls_result = set(transaction.list_tables())
+            ls_result = set(transaction.list_views())
             inner_result = ls_result & set(test_table_names)
             self.assertEqual(len(inner_result), num_intersecting_tables)
 
@@ -56,13 +77,12 @@ class TestPostgresLoader(unittest.TestCase):
             with self.db.transaction() as transaction:
                 # create
                 for table_name in test_table_names:
-                    transaction.create_json_table(table_name)
+                    transaction.create_metadata_file_view(table_name, file_type=gen_random_chars(4))
                 # list
                 test_list(transaction, num_test_tables)
         finally:
             with self.db._connection.cursor() as cursor:
-                for table_name in test_table_names:
-                    cursor.execute(sql.SQL("DROP TABLE {}".format(table_name)))
+                clear_views(cursor)
             self.db._connection.commit()
             with self.db.transaction() as transaction:
                 test_list(transaction, 0)

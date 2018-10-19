@@ -1,5 +1,5 @@
 import pylru
-from psycopg2 import IntegrityError, InternalError
+from psycopg2 import IntegrityError
 
 from lib.logger import logger
 from lib.model import Bundle
@@ -17,7 +17,7 @@ class PostgresLoader(Loader):
 
     def __init__(self, db: PostgresDatabase):
         self._db = db
-        self._existing_table_names = set([])
+        self._existing_view_names = set([])
         self._inserted_metadata_files = pylru.lrucache(1000)
 
     def load(self, bundle: Bundle):
@@ -28,36 +28,25 @@ class PostgresLoader(Loader):
 
     def _prepare_database(self, transaction, bundle: Bundle):
         # get table names for tables implied by the bundle manifest
-        implied_table_names = set([f.schema_module_plural for f in bundle.normalizable_files])
-        implied_table_names.add('bundles')
-        join_table_name = 'bundles_metadata_files'
+        view_names_to_type_mapping = dict([(f.schema_module_plural, f.schema_module) for f in bundle.normalizable_files])
+        implied_view_names = set([f.schema_module_plural for f in bundle.normalizable_files])
 
         # if there are tables implied in the manifest not recorded in PostgresLoader, refresh
-        if len(implied_table_names - self._existing_table_names) > 0 or \
-                join_table_name not in self._existing_table_names:
-            self._existing_table_names = set(transaction.list_tables())
+        if len(implied_view_names - self._existing_view_names) > 0:
+            self._existing_view_names = set(transaction.list_views())
 
-        # create json tables still outstanding
-        for table_name in implied_table_names - self._existing_table_names:
-            logger.info(f"Creating table: {table_name}")
+        # create view tables still outstanding
+        for view_name in implied_view_names - self._existing_view_names:
+            logger.info(f"Creating view: {view_name}")
             try:
-                transaction.create_json_table(table_name)
-            except (IntegrityError, InternalError) as e:
-                logger.error(f"Could not create table: {table_name}")
-
-        # create join table if DNE
-        if join_table_name not in self._existing_table_names:
-            logger.info(f"Creating table: {join_table_name}")
-            try:
-                transaction.create_join_table()
-            except (IntegrityError, InternalError) as e:
-                logger.error(f"Could not create table: {join_table_name}")
+                transaction.create_metadata_file_view(view_name, view_names_to_type_mapping[view_name])
+            except IntegrityError:
+                logger.info(f"View already exists: {view_name}")
 
     def _insert_into_database(self, transaction, bundle: Bundle):
         # insert denormalized bundle
         denormalized_bundle = BundleDocumentTransform.transform(bundle)
-        transaction.insert(
-            table_name='bundles',
+        transaction.insert_bundle(
             uuid=bundle.uuid,
             version=bundle.version,
             json_as_dict=denormalized_bundle,
@@ -66,8 +55,8 @@ class PostgresLoader(Loader):
         # insert file metadata, and join table entry
         for normalizable_file in bundle.normalizable_files:
             if normalizable_file.fqid not in self._inserted_metadata_files:
-                transaction.insert(
-                    table_name=normalizable_file.schema_module_plural,
+                transaction.insert_metadata_file(
+                    file_type=normalizable_file.schema_module,
                     uuid=normalizable_file.uuid,
                     version=normalizable_file.metadata.version,
                     json_as_dict=normalizable_file,

@@ -7,6 +7,10 @@ import sys
 import time
 import typing
 
+from psycopg2 import sql
+
+from lib.database import Transaction
+
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
@@ -14,9 +18,6 @@ from lib.extract import Extractor
 from lib.config import Config
 from lib.model import Bundle, BundleManifest, File, FileMetadata
 from lib.logger import logger
-
-CONFIG = Config()
-
 
 def load_fixture(fixture_file):
     with open('test/fixtures/' + fixture_file, 'r') as fh:
@@ -90,3 +91,22 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
 
         return call
     return decorate
+
+
+def clear_views(cursor):
+    cursor.execute(
+        """
+        SELECT table_name
+            FROM information_schema.views
+        WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+            AND table_name !~ '^pg_';
+        """
+    )
+    views = [ele[0] for ele in cursor.fetchall()]
+    for view in views:
+        cursor.execute(
+            sql.SQL(
+                f"DROP VIEW {view};"
+            )
+        )
+
