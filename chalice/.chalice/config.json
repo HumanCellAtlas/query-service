@@ -1,0 +1,15 @@
+{
+  "version": "0.0",
+  "app_name": "query-api",
+  "stages": {
+    "dev": {
+      "api_gateway_stage": "dev",
+      "environment_variables": {
+        "DEPLOYMENT_STAGE": "dev",
+        "API_HOST": "query.dev.data.humancellatlas.org"
+      }
+    }
+  },
+  "lambda_timeout": 300,
+  "lambda_memory_size": 512
+}

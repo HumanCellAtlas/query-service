@@ -23,4 +23,8 @@ module "database" {
 
 module "query-service-infra" {
   source = "modules/query-service-infra"
+  domain_name = "${var.domain_name}"
+  parent_zone_domain_name = "${var.parent_zone_domain_name}"
+  api_id = "${var.api_id}"
+  deployment_stage = "${var.deployment_stage}"
 }

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 set -a
 PROJECT_ROOT=`pwd`
+SERVICE_NAME='query'
+DCP_DNS_DOMAIN='data.humancellatlas.org'
+DEPLOYMENT_STAGE="${DEPLOYMENT_STAGE:-dev}"
+API_HOST=${SERVICE_NAME}.${DEPLOYMENT_STAGE}.${DCP_DNS_DOMAIN}
 set +a

@@ -1,0 +1,57 @@
+swagger: '2.0'
+info:
+  title: DCP Query Service API
+  description: Data Coordination Platform Query Service API
+  version: "0.0.1"
+host: ${API_HOST}
+schemes:
+  - https
+basePath: /
+consumes:
+  - application/json
+  - application/octet-stream
+produces:
+  - application/json
+
+paths:
+
+  /v1/health:
+    get:
+      summary: Retreive health status of Query Service
+      description: |
+        Returns a 200 if Query Service is healthy.
+      operationId: query.lambdas.api_server.v1.health_check.health
+      tags:
+        - All
+      responses:
+        200:
+          description: Status is nominnal.
+        503:
+          description: Service unavailable.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+
+  Error:
+    type: object
+    properties:
+      status:
+        type: integer
+        format: int32
+        description: HTTP error code.
+      title:
+        type: string
+        description: Human-readable error message.
+      detail:
+        type: string
+        description: Exception stacktrace, if any.
+    required:
+      - status
+      - title
+
+
