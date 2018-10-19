@@ -60,14 +60,15 @@ class PostgresLoader(Loader):
 
         # insert file metadata, and join table entry
         for normalizable_file in bundle.normalizable_files:
-            try:
+            # TODO uuids -> fqids
+            if normalizable_file.uuid not in self._inserted_metadata_files:
                 transaction.insert(
                     table_name=normalizable_file.schema_module_plural,
                     uuid=normalizable_file.uuid,
                     json_as_dict=normalizable_file,
                 )
-            except IntegrityError:
-                print(f"already inserted: {normalizable_file.schema_module_plural} with uuid: {normalizable_file.uuid}")
+            self._inserted_metadata_files[normalizable_file.uuid] = True
+
             transaction.insert_join(
                 table_name=f"bundles_{normalizable_file.schema_module_plural}",
                 bundle_uuid=bundle.uuid,
