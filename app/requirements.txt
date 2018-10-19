@@ -3,3 +3,5 @@ inflect
 psycopg2-binary==2.7.5
 dcplib
 hca
+pylru
+

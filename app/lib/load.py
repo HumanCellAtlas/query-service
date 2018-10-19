@@ -1,5 +1,7 @@
 from datetime import datetime
 from uuid import UUID
+
+import pylru
 from psycopg2 import IntegrityError
 from lib.model import Bundle
 from lib.database import PostgresDatabase
@@ -23,6 +25,7 @@ class PostgresLoader(Loader):
     def __init__(self, db: PostgresDatabase):
         self._db = db
         self._existing_table_names = set([])
+        self._inserted_metadata_files = pylru.lrucache(1000)
 
     def load(self, bundle: Bundle):
         with self._db.transaction() as transaction:
@@ -48,8 +51,7 @@ class PostgresLoader(Loader):
         if join_table_name not in self._existing_table_names:
             transaction.create_join_table()
 
-    @staticmethod
-    def _insert_into_database(transaction, bundle: Bundle):
+    def _insert_into_database(self, transaction, bundle: Bundle):
         # insert denormalized bundle
         denormalized_bundle = BundleDocumentTransform.transform(bundle)
         transaction.insert(
