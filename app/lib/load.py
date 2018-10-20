@@ -29,11 +29,11 @@ class PostgresLoader(Loader):
     def _prepare_database(self, transaction, bundle: Bundle):
         # get table names for tables implied by the bundle manifest
         view_names_to_type_mapping = dict([(f.schema_module_plural, f.schema_module) for f in bundle.normalizable_files])
-        implied_view_names = set([f.schema_module_plural for f in bundle.normalizable_files])
+        implied_view_names = set(f.schema_module_plural for f in bundle.normalizable_files)
 
-        # if there are tables implied in the manifest not recorded in PostgresLoader, refresh
+        # if there are views implied in the manifest not recorded in PostgresLoader, refresh
         if len(implied_view_names - self._existing_view_names) > 0:
-            self._existing_view_names = set(transaction.list_views())
+            self._existing_view_names = set(transaction.select_views())
 
         # create view tables still outstanding
         for view_name in implied_view_names - self._existing_view_names:
@@ -56,7 +56,7 @@ class PostgresLoader(Loader):
         for normalizable_file in bundle.normalizable_files:
             if normalizable_file.fqid not in self._inserted_metadata_files:
                 transaction.insert_metadata_file(
-                    file_type=normalizable_file.schema_module,
+                    module=normalizable_file.schema_module,
                     uuid=normalizable_file.uuid,
                     version=normalizable_file.metadata.version,
                     json_as_dict=normalizable_file,

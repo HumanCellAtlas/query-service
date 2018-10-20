@@ -110,3 +110,8 @@ def clear_views(cursor):
             )
         )
 
+
+def truncate_tables(cursor):
+    cursor.execute("TRUNCATE TABLE metadata_modules CASCADE")
+    cursor.execute("TRUNCATE TABLE metadata_files CASCADE")
+    cursor.execute("TRUNCATE TABLE bundles CASCADE")

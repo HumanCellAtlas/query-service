@@ -37,7 +37,7 @@ class TestPostgresLoader(unittest.TestCase):
 
     def test_prepare_database(self):
         with self.db.transaction() as transaction:
-            result = set(transaction.list_views())
+            result = set(transaction.select_views())
             self.assertEqual(result & self.implied_views, self.implied_views)
 
     def test_insert_into_database(self):
@@ -78,9 +78,8 @@ class TestPostgresLoader(unittest.TestCase):
 
     @staticmethod
     def _clear_tables(transaction: Transaction):
-        transaction._cursor.execute("TRUNCATE TABLE bundles CASCADE;")
-        transaction._cursor.execute("TRUNCATE TABLE metadata_files CASCADE;")
         clear_views(transaction._cursor)
+        truncate_tables(transaction._cursor)
 
 
 if __name__ == '__main__':

@@ -1,19 +1,19 @@
 import re
+import typing
 from contextlib import contextmanager
 from dateutil.parser import parse as parse_datetime
-
-import psycopg2
-import psycopg2.extras
-from psycopg2 import DatabaseError, sql
-from psycopg2.extras import Json
-
-from lib.config import Config, requires_admin_mode
-from lib.logger import logger
 from uuid import UUID
 
-# http://initd.org/psycopg/docs/faq.html#faq-jsonb-adapt
+from psycopg2 import DatabaseError, sql
+from psycopg2.extras import Json
+import psycopg2
+import psycopg2.extras
+
+from lib.config import requires_admin_mode
+from lib.logger import logger
 from lib.model import datetime_to_version
 
+# http://initd.org/psycopg/docs/faq.html#faq-jsonb-adapt
 psycopg2.extras.register_json(oid=3802, array_oid=3807, globally=True)
 
 
@@ -48,18 +48,19 @@ class Transaction:
         assert(cursor is not None)
         self._cursor = cursor
 
-    def create_metadata_file_view(self, table_name: str, file_type: str):
+    def create_metadata_file_view(self, table_name: str, module: str):
         query = self._prepare_statement(
             """
             CREATE OR REPLACE VIEW {} AS
             SELECT * FROM metadata_files
-            WHERE metadata_files.file_type = %s
+            JOIN metadata_modules on metadata_files.module_id = metadata_modules.id
+            WHERE metadata_modules.name = %s
             """,
             table_name
         )
-        self._cursor.execute(query, (file_type,))
+        self._cursor.execute(query, (module,))
 
-    def list_views(self):
+    def select_views(self) -> typing.List[str]:
         self._cursor.execute(
             """
             SELECT table_name
@@ -79,21 +80,26 @@ class Transaction:
             """,
             (str(uuid), parse_datetime(version), Json(json_as_dict))
         )
-
         result = self._cursor.rowcount
         return result
 
-    def insert_metadata_file(self, file_type: str, uuid: UUID, version: str, json_as_dict: dict) -> int:
+    def insert_metadata_file(self, module: str, uuid: UUID, version: str, json_as_dict: dict) -> int:
         self._cursor.execute(
             """
-            INSERT INTO metadata_files (uuid, version, file_type, json)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (uuid, version) DO NOTHING
+            INSERT INTO metadata_modules (name)
+            VALUES (%s)
+            ON CONFLICT (name) DO NOTHING;
+            
+            INSERT INTO metadata_files (uuid, version, module_id, json) (
+                SELECT %s, %s, id, %s
+                FROM metadata_modules
+                WHERE name = %s
+            )
+            ON CONFLICT (uuid, version) DO NOTHING;
             """,
-            (str(uuid), parse_datetime(version), file_type, Json(json_as_dict))
+            (module, str(uuid), parse_datetime(version), Json(json_as_dict), module)
         )
-        result = self._cursor.rowcount
-        return result
+        return self._cursor.rowcount
 
     def insert_join(self, bundle_uuid: UUID, bundle_version: str, file_uuid: UUID, file_version: str) -> int:
         self._cursor.execute(
@@ -123,16 +129,18 @@ class Transaction:
         result = self._cursor.rowcount
         return result
 
-    def delete_metadata_file(self, file_type: str, uuid: UUID, version: str) -> int:
+    def delete_metadata_file(self, module: str, uuid: UUID, version: str) -> int:
         self._cursor.execute(
             """
             DELETE FROM metadata_files
+            USING metadata_modules
             WHERE
-                uuid = %s AND
-                version = %s AND
-                file_type = %s
+                metadata_modules.name = %s AND
+                metadata_files.module_id = metadata_modules.id AND
+                metadata_files.uuid = %s AND
+                metadata_files.version = %s
             """,
-            (str(uuid), parse_datetime(version), file_type)
+            (module, str(uuid), parse_datetime(version))
         )
         result = self._cursor.rowcount
         return result
@@ -148,18 +156,19 @@ class Transaction:
         )
         return self._response_to_dict(self._cursor.fetchall(), uuid, version)
 
-    def select_metadata_file(self, file_type: str, uuid: UUID, version: str) -> dict:
+    def select_metadata_file(self, module: str, uuid: UUID, version: str) -> dict:
         self._cursor.execute(
             """
             SELECT uuid, version, json
             FROM metadata_files
+            JOIN metadata_modules on metadata_files.module_id = metadata_modules.id
             WHERE
-                uuid = %s AND
-                version = %s AND
-                file_type = %s
+                metadata_files.uuid = %s AND
+                metadata_files.version = %s AND
+                metadata_modules.name = %s
             """,
-            (str(uuid), parse_datetime(version), file_type)
-    )
+            (str(uuid), parse_datetime(version), module)
+        )
         return self._response_to_dict(self._cursor.fetchall(), uuid, version)
 
     @staticmethod
@@ -194,13 +203,19 @@ class Transaction:
             
             CREATE INDEX IF NOT EXISTS bundles_uuid ON bundles USING btree (uuid);
             
+            CREATE TABLE IF NOT EXISTS metadata_modules (
+                id SERIAL,
+                name varchar(128) UNIQUE NOT NULL,
+                PRIMARY KEY (id)
+            );
+            
             CREATE TABLE IF NOT EXISTS metadata_files (
                 uuid UUID NOT NULL,
                 version timestamp NOT NULL,
-                file_type varchar(128) NOT NULL,
+                module_id SERIAL REFERENCES metadata_modules(id),
                 json JSONB NOT NULL,
                 PRIMARY KEY(uuid, version),
-                UNIQUE (uuid, version, file_type)
+                UNIQUE (uuid, version, module_id)
             );
             
             CREATE TABLE IF NOT EXISTS bundles_metadata_files (
