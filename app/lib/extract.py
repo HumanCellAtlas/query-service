@@ -10,7 +10,7 @@ class Extractor:
     def extract_bundle(self, uuid: UUID, version: str):
         raise NotImplementedError()
 
-    def extract_blob(self, uuid: UUID, version: str):
+    def extract_file(self, uuid: UUID, version: str):
         raise NotImplementedError()
 
     @staticmethod
