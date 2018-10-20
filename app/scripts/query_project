@@ -26,6 +26,7 @@ if __name__ == '__main__':
         project_uuids.append(project_uuid)
 
     for project_uuid in project_uuids:
+        sys.stderr.write(f"looking up {project_uuid}\n")
         results = dss.post_search.iterate(
             replica='aws',
             es_query={
@@ -36,7 +37,5 @@ if __name__ == '__main__':
                 }
             }
         )
-        f = open('fqids.txt', 'w+')
         for r in results:
-            f.write(r['bundle_fqid']+"\n")
-        f.close()
+            print(r['bundle_fqid'])
