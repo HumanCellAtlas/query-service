@@ -111,7 +111,7 @@ class MetadataFiles(Table):
     def destroy(self):
         self._cursor.execute(
             """
-            DROP TABLE metadata_modules;
-            DROP TABLE metadata_files;
+            DROP TABLE metadata_files CASCADE;
+            DROP TABLE metadata_modules CASCADE;
             """
         )

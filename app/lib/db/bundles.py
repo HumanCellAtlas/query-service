@@ -60,10 +60,5 @@ class Bundles(Table):
 
     @requires_admin_mode
     def destroy(self):
-        self._cursor.execute(
-            """
-            DROP TABLE metadata_modules;
-            DROP TABLE metadata_files;
-            """
-        )
+        self._cursor.execute("DROP TABLE bundles CASCADE;")
 

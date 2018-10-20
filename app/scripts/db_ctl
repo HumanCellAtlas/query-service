@@ -20,7 +20,7 @@ CLI.add_argument(
 )
 CLI.add_argument(
     'action',
-    choices=['init', 'clear'],
+    choices=['init', 'destroy'],
     help="DANGER: clearing the database will clear out all tables. Initializing resets the initial database schemas."
 )
 
@@ -36,14 +36,18 @@ if __name__ == '__main__':
 
     if options.action == 'init':
         with db.transaction() as transaction:
-            transaction.initialize_database()
+            transaction.bundles.initialize()
+            transaction.metadata_files.initialize()
+            transaction.bundles_metadata_files.initialize()
 
-    elif options.action == 'clear':
+    elif options.action == 'destroy':
         conf = input("Are you sure that you want to do this? [Y/n] ")
         if conf != "Y":
             print("Ok, whew.")
             sys.exit(0)
         with db.transaction() as transaction:
-            transaction.clear_database()
+            transaction.bundles.destroy()
+            transaction.metadata_files.destroy()
+            transaction.bundles_metadata_files.destroy()
 
     print(f"Completed action {options.action} on database: {options.database}")
