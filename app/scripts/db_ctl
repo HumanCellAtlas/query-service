@@ -20,7 +20,7 @@ CLI.add_argument(
 )
 CLI.add_argument(
     'action',
-    choices=['initialize', 'clear'],
+    choices=['init', 'clear'],
     help="DANGER: clearing the database will clear out all tables. Initializing resets the initial database schemas."
 )
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     db = PostgresDatabase(db_uri)
 
-    if options.action == 'initialize':
+    if options.action == 'init':
         with db.transaction() as transaction:
             transaction.initialize_database()
 
