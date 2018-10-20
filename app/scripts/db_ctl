@@ -7,7 +7,7 @@ pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noq
 sys.path.insert(0, pkg_root)  # noqa
 
 from lib.config import Config
-from lib.database import PostgresDatabase
+from lib.db.database import PostgresDatabase
 
 NAME = sys.argv[0].split('/')[-1]
 CLI = argparse.ArgumentParser(

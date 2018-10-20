@@ -8,7 +8,7 @@ sys.path.insert(0, pkg_root)  # noqa
 
 from test import *
 from lib.config import Config
-from lib.database import PostgresDatabase, Transaction
+from lib.db.database import PostgresDatabase, Transaction
 from lib.model import datetime_to_version
 from lib.load import PostgresLoader
 
@@ -30,14 +30,15 @@ class TestPostgresLoader(unittest.TestCase):
 
     def setUp(self):
         assert(self.db._connection_uri == Config.test_database_uri and Config.test_database_uri.endswith('/test'))
-        with self.db.transaction() as transaction:
-            self._clear_tables(transaction)
+        with self.db._connection.cursor() as cursor:
+            self._clear_tables(cursor)
             self.loader._existing_view_names.clear()
+        with self.db.transaction() as transaction:
             self.loader._prepare_database(transaction, vx_bundle)
 
     def test_prepare_database(self):
         with self.db.transaction() as transaction:
-            result = set(transaction.select_views())
+            result = set(transaction.metadata_files.select_views())
             self.assertEqual(result & self.implied_views, self.implied_views)
 
     def test_insert_into_database(self):
@@ -52,12 +53,12 @@ class TestPostgresLoader(unittest.TestCase):
 
         with self.db.transaction() as transaction:
             # bundle insertion
-            result = transaction.select_bundle(vx_bundle.uuid, vx_bundle.version)
+            result = transaction.bundles.select(vx_bundle.uuid, vx_bundle.version)
             self.assertEqual(result['uuid'], str(vx_bundle.uuid))
             self.assertEqual(result['json']['uuid'], str(vx_bundle.uuid))
             # json and join tables
             for view_name in self.implied_views:
-                transaction._cursor.execute(
+                transaction.bundles_metadata_files._cursor.execute(
                     sql.SQL(
                         """
                         SELECT bf.bundle_uuid, bf.bundle_version, bf.file_uuid, bf.file_version
@@ -69,7 +70,7 @@ class TestPostgresLoader(unittest.TestCase):
                     ),
                     (str(vx_bundle.uuid), vx_bundle.version)
                 )
-                result = transaction._cursor.fetchall()
+                result = transaction.bundles_metadata_files._cursor.fetchall()
                 bundle_uuid = set([f"{t[0]}.{datetime_to_version(t[1])}" for t in result])
                 table_uuids = set([f"{t[2]}.{datetime_to_version(t[3])}" for t in result])
                 self.assertEqual(bundle_uuid, {str(vx_bundle.fqid)})
@@ -77,9 +78,9 @@ class TestPostgresLoader(unittest.TestCase):
                 self.assertEqual(len(result), file_counts_by_schema_module[view_name])
 
     @staticmethod
-    def _clear_tables(transaction: Transaction):
-        clear_views(transaction._cursor)
-        truncate_tables(transaction._cursor)
+    def _clear_tables(cursor):
+        clear_views(cursor)
+        truncate_tables(cursor)
 
 
 if __name__ == '__main__':
