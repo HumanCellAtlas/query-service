@@ -17,6 +17,7 @@ pip install -r requirements-dev.txt
 source environment
 export AWS_PROFILE=hca
 cd terraform
+make secret
 make init
 make plan
 make apply
