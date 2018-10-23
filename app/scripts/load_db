@@ -52,7 +52,7 @@ def process_batch(batch: typing.List[str]):
         extract_transform_load(extractor, loader, bundle_fqid)
         c += 1
         if c % 10 == 0:
-            logger.info(f"Batch completion: %0.02f%%" % (float(c) / float(batch_len)))
+            logger.info(f"Batch completion: %0.02f%%" % (100.0 * float(c) / float(batch_len)))
 
 
 if __name__ == '__main__':
