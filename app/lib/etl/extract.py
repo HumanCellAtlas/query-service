@@ -36,7 +36,7 @@ class Extractor:
         return json.loads(serialized_json)
 
 
-class DSSClientExtractor(Extractor):
+class DSSExtractor(Extractor):
 
     def __init__(self, dss: DSSClient):
         self._dss = dss

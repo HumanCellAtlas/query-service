@@ -16,7 +16,7 @@ from lib.db.database import PostgresDatabase
 from lib.etl.load import PostgresLoader, Loader
 from lib.logger import logger
 from lib.model import Bundle, datetime_to_version
-from lib.etl.extract import DSSClientExtractor, Extractor
+from lib.etl.extract import DSSExtractor, Extractor
 
 # this seems to be entirely IO bound, so we can have _lots_ of workers...
 CONCURRENCY = 20
@@ -49,7 +49,7 @@ def process_batch(batch: typing.List[str]):
     # TODO: don't hardcode to staging
     config['DSSClient'].swagger_url = f"https://dss.staging.data.humancellatlas.org/v1/swagger.json"
     loader = PostgresLoader(PostgresDatabase(Config.serve_database_uri))
-    extractor = DSSClientExtractor(DSSClient(config=config))
+    extractor = DSSExtractor(DSSClient(config=config))
     batch_len = len(batch)
     c = 0
     for bundle_fqid in batch:
