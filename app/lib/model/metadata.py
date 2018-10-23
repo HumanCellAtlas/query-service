@@ -27,3 +27,6 @@ class FileMetadata(dict):
     @property
     def version(self) -> str:
         return self['version']
+
+    def __hash__(self):
+        return hash(self.key)
