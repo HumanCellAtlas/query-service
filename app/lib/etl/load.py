@@ -4,7 +4,7 @@ from psycopg2 import IntegrityError
 from lib.logger import logger
 from lib.model import Bundle
 from lib.db.database import PostgresDatabase, Transaction
-from lib.transform import BundleDocumentTransform
+from lib.etl.transform import BundleDocumentTransform
 
 
 class Loader:

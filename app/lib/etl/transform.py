@@ -1,7 +1,7 @@
 import inflect
 import re
 
-from lib.model import Bundle, FileMetadata
+from lib.model import Bundle
 
 
 class BundleDocumentTransform:

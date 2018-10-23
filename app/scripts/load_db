@@ -13,10 +13,10 @@ sys.path.insert(0, pkg_root)  # noqa
 
 from lib.config import Config
 from lib.db.database import PostgresDatabase
-from lib.load import PostgresLoader, Loader
+from lib.etl.load import PostgresLoader, Loader
 from lib.logger import logger
 from lib.model import Bundle, datetime_to_version
-from lib.extract import DSSClientExtractor, Extractor
+from lib.etl.extract import DSSClientExtractor, Extractor
 
 # this seems to be entirely IO bound, so we can have _lots_ of workers...
 CONCURRENCY = 20

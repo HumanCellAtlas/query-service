@@ -6,7 +6,7 @@ pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noq
 sys.path.insert(0, pkg_root)  # noqa
 
 from test import *
-from lib.transform import BundleDocumentTransform
+from lib.etl.transform import BundleDocumentTransform
 
 
 class TestTransform(unittest.TestCase):

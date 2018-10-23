@@ -8,9 +8,9 @@ sys.path.insert(0, pkg_root)  # noqa
 
 from test import *
 from lib.config import Config
-from lib.db.database import PostgresDatabase, Transaction
+from lib.db.database import PostgresDatabase
 from lib.model import datetime_to_version
-from lib.load import PostgresLoader
+from lib.etl.load import PostgresLoader
 
 
 class TestPostgresLoader(unittest.TestCase):

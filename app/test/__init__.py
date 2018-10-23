@@ -12,7 +12,7 @@ from psycopg2 import sql
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from lib.extract import Extractor
+from lib.etl.extract import Extractor
 from lib.model import Bundle, BundleManifest, File, FileMetadata
 from lib.logger import logger
 

@@ -1,74 +1,10 @@
 import re
 import typing
-from datetime import datetime
-
-import inflect
 
 from uuid import UUID
-from .extract import Extractor
-
-
-class FileMetadata(dict):
-
-    @property
-    def key(self):
-        return "blobs/" + '.'.join([
-            self['sha256'],
-            self['sha1'],
-            self['s3-etag'],
-            self['crc32c']
-        ])
-
-    @property
-    def name(self):
-        return self['name']
-
-    @property
-    def indexable(self):
-        return self['indexed']
-
-    @property
-    def uuid(self):
-        return UUID(self['uuid'])
-
-    @property
-    def version(self) -> str:
-        return self['version']
-
-
-class File(dict):
-
-    _inflect_engine = inflect.engine()
-
-    def __init__(self, metadata: FileMetadata, **kwargs):
-        self.metadata = metadata
-        super().__init__(kwargs)
-
-    @staticmethod
-    def from_extractor(extractor: Extractor, metadata: FileMetadata):
-        return File(metadata, **extractor.extract_file(metadata.uuid, metadata.version))
-
-    @property
-    def schema_module(self):
-        return '_'.join(self.metadata.name.split('_')[:-1])
-
-    @property
-    def schema_module_plural(self):
-        group_words = self.metadata.name.rsplit('_', 1)[0].split('_')
-        group_words[-1] = self._inflect_engine.plural(group_words[-1])
-        return '_'.join(group_words)
-
-    @property
-    def uuid(self) -> UUID:
-        return UUID(self['provenance']['document_id'])
-
-    @property
-    def version(self) -> str:
-        return self.metadata.version
-
-    @property
-    def fqid(self) -> str:
-        return f"{self.uuid}.{self.version}"
+from lib.etl.extract import Extractor
+from lib.model.metadata import FileMetadata
+from lib.model.file import File
 
 
 class BundleManifest(dict):
@@ -119,7 +55,3 @@ class Bundle:
         if isinstance(other, Bundle):
             return self._bundle_manifest == other._bundle_manifest and self._files == other._files
         return False
-
-
-def datetime_to_version(timestamp: datetime) -> str:
-    return timestamp.strftime("%Y-%m-%dT%H%M%S.%fZ")
