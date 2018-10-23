@@ -1,11 +1,4 @@
-import re
-import typing
-from datetime import datetime
-
-import inflect
-
 from uuid import UUID
-from lib.etl.extract import Extractor
 
 
 class FileMetadata(dict):

@@ -5,7 +5,7 @@ import random
 import string
 import sys
 import time
-import typing
+from uuid import UUID
 
 from psycopg2 import sql
 
@@ -51,11 +51,11 @@ class FixtureExtractor(Extractor):
         data = self._key_to_fixture_map[key]
         return self._deserialize(data)
 
-    def extract_bundle(self, key: str, version: typing.Optional[str]=None):
-        return self._extract(key)
+    def _get_bundle_data(self, uuid: UUID, version: str) -> dict:
+        return self._extract(uuid)
 
-    def extract_file(self, key: str, version: typing.Optional[str]=None):
-        return self._extract(key)
+    def _get_file_data(self, file_metadata: FileMetadata) -> dict:
+        return self._extract(file_metadata.uuid)
 
 
 def gen_random_chars(n: int):

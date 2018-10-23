@@ -1,7 +1,6 @@
 import inflect
 
 from uuid import UUID
-from lib.etl.extract import Extractor
 from lib.model.metadata import FileMetadata
 
 
@@ -12,10 +11,6 @@ class File(dict):
     def __init__(self, metadata: FileMetadata, **kwargs):
         self.metadata = metadata
         super().__init__(kwargs)
-
-    @staticmethod
-    def from_extractor(extractor: Extractor, metadata: FileMetadata):
-        return File(metadata, **extractor.extract_file(metadata.uuid, metadata.version))
 
     @property
     def schema_module(self):
