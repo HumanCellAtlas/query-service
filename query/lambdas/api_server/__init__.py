@@ -8,8 +8,9 @@ import requests
 from connexion.resolver import RestyResolver
 from connexion.lifecycle import ConnexionResponse
 
-from ...common.exceptions import QueryException
-from ...common.logging import get_logger
+from query.lib.common.exceptions import QueryException
+from query.lib.common.logging import get_logger
+
 
 get_logger('boto3').setLevel(logging.WARNING)
 get_logger('botocore').setLevel(logging.WARNING)

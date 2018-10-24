@@ -11,12 +11,12 @@ clobber: clean
 
 build:
 	cp ../requirements.txt .
-	mkdir -p chalicelib/query/common
+	mkdir -p chalicelib/query/lib
 	mkdir -p chalicelib/query/lambdas
 	mkdir -p chalicelib/config
-	cp -R ../query/__init__.py \
-		  ../query/common \
-		chalicelib/query
+	cp -R ../query/__init__.py chalicelib/query
+	cp -R ../query/lib/common chalicelib/query/lib/common
+	cp -R ../query/lib/__init__.py chalicelib/query/lib
 	cp -R ../query/lambdas/__init__.py \
 		  ../query/lambdas/api_server \
 		chalicelib/query/lambdas
@@ -29,4 +29,3 @@ deploy: build
 	@echo -e "#########################################################\n"
 	./build_deploy_config.sh $(DEPLOYMENT_STAGE)
 	chalice deploy --no-autogen-policy --stage $(DEPLOYMENT_STAGE) --api-gateway-stage $(DEPLOYMENT_STAGE)
-

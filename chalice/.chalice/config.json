@@ -8,6 +8,9 @@
         "DEPLOYMENT_STAGE": "dev",
         "API_HOST": "query.dev.data.humancellatlas.org"
       }
+    },
+    "setup_deployed_json": {
+      "api_gateway_stage": "setup_deployed_json"
     }
   },
   "lambda_timeout": 300,
