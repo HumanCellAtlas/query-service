@@ -7,7 +7,7 @@ from psycopg2 import DatabaseError, sql
 from psycopg2.extras import Json
 
 from lib.db.table import Table
-from lib.model import datetime_to_version
+from lib.model import datetime_to_version, File
 from lib.config import requires_admin_mode
 
 
@@ -19,9 +19,9 @@ class Files(Table):
         query = self._prepare_statement(
             """
             CREATE OR REPLACE VIEW {} AS
-            SELECT * FROM files
-            JOIN metadata_modules on files.module_id = metadata_modules.id
-            WHERE metadata_modules.name = %s
+            SELECT f.* FROM files as f
+            JOIN metadata_modules as m on f.module_id = m.id
+            WHERE m.name = %s
             """,
             table_name
         )
@@ -38,36 +38,61 @@ class Files(Table):
         result = [ele[0] for ele in self._cursor.fetchall()]
         return result
 
-    def insert(self, module: str, uuid: UUID, version: str, json_as_dict: typing.Optional[dict]) -> int:
-        self._cursor.execute(
-            """
-            INSERT INTO metadata_modules (name)
-            VALUES (%s)
-            ON CONFLICT (name) DO NOTHING;
+    def insert(self, file: File) -> int:
+        if file.schema_module:
+            self._cursor.execute(
+                """
+                INSERT INTO metadata_modules (name)
+                VALUES (%s)
+                ON CONFLICT (name) DO NOTHING;
 
-            INSERT INTO files (uuid, version, module_id, json) (
-                SELECT %s, %s, id, %s
-                FROM metadata_modules
-                WHERE name = %s
+                INSERT INTO files (uuid, version, fqid, name, module_id, json) (
+                    SELECT %s, %s, %s, %s, id, %s
+                    FROM metadata_modules
+                    WHERE metadata_modules.name = %s
+                )
+                ON CONFLICT (uuid, version) DO NOTHING;
+                """,
+                (
+                    file.schema_module,
+                    str(file.uuid),
+                    parse_datetime(file.version),
+                    f"{file.uuid}.{file.version}",
+                    file.metadata.name,
+                    Json(file if file.metadata.indexable else None),
+                    file.schema_module
+                )
             )
-            ON CONFLICT (uuid, version) DO NOTHING;
-            """,
-            (module, str(uuid), parse_datetime(version), Json(json_as_dict), module)
-        )
+        else:
+            self._cursor.execute(
+                """
+                INSERT INTO files (uuid, version, fqid, name, module_id, json) (
+                    SELECT %s, %s, %s, %s, id, %s
+                    FROM metadata_modules
+                    WHERE metadata_modules.name is NULL
+                )
+                ON CONFLICT (uuid, version) DO NOTHING;
+                """,
+                (
+                    str(file.uuid),
+                    parse_datetime(file.version),
+                    f"{file.uuid}.{file.version}",
+                    file.metadata.name,
+                    Json(file if file.metadata.indexable else None)
+                )
+            )
         return self._cursor.rowcount
 
-    def select(self, module: str, uuid: UUID, version: str) -> dict:
+    def select(self, uuid: UUID, version: str) -> dict:
         self._cursor.execute(
             """
-            SELECT uuid, version, json
+            SELECT uuid, version, fqid, files.name, json
             FROM files
-            JOIN metadata_modules on files.module_id = metadata_modules.id
             WHERE
                 files.uuid = %s AND
-                files.version = %s AND
-                metadata_modules.name = %s
+                files.version = %s
             """,
-            (str(uuid), parse_datetime(version), module)
+            (str(uuid), parse_datetime(version))
         )
         response = self._cursor.fetchall()
         if len(response) > 1:
@@ -77,7 +102,9 @@ class Files(Table):
         return dict(
             uuid=response[0][0],
             version=datetime_to_version(response[0][1]),
-            json=response[0][2]
+            fqid=response[0][2],
+            name=response[0][3],
+            json=response[0][4]
         ) if len(response) == 1 else None
 
     @classmethod
@@ -93,19 +120,27 @@ class Files(Table):
             """
             CREATE TABLE IF NOT EXISTS metadata_modules (
                 id SERIAL,
-                name varchar(128) UNIQUE NOT NULL,
+                name varchar(128) UNIQUE,
                 PRIMARY KEY (id)
             );
+
+            INSERT INTO metadata_modules (name)
+            VALUES (NULL)
+            ON CONFLICT (name) DO NOTHING;
+
             CREATE TABLE IF NOT EXISTS files (
                 uuid UUID NOT NULL,
                 version timestamp with time zone NOT NULL,
+                fqid varchar(62) NOT NULL,
+                name varchar(128) NOT NULL,
                 module_id SERIAL REFERENCES metadata_modules(id),
                 json JSONB,
                 PRIMARY KEY(uuid, version),
-                UNIQUE (uuid, version, module_id)
+                UNIQUE (uuid, version, fqid, module_id)
             );
             CREATE INDEX IF NOT EXISTS files_uuid ON files USING btree (uuid);
-            CREATE INDEX files_jsonb_gin_index ON files USING GIN (json);
+            CREATE INDEX IF NOT EXISTS files_fqid ON files USING btree (fqid);
+            CREATE INDEX IF NOT EXISTS files_jsonb_gin_index ON files USING GIN (json);
             """
         )
 

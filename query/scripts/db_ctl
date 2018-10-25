@@ -39,7 +39,6 @@ if __name__ == '__main__':
         with db.transaction() as (_, tables):
             tables.files.initialize()
             tables.bundles.initialize()
-            tables.bundles_files.initialize()
 
     elif options.action == 'destroy':
         conf = input("Are you sure that you want to do this? [Y/n] ")
@@ -47,7 +46,7 @@ if __name__ == '__main__':
             logger.info("Ok, whew.")
             sys.exit(0)
         with db.transaction() as (_, tables):
-            for table in [tables.files, tables.bundles, tables.bundles_files]:
+            for table in [tables.files, tables.bundles]:
                 try:
                     table.destroy()
                     logger.info(f"Dropped table: {table}")

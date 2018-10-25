@@ -6,14 +6,12 @@ import psycopg2
 import psycopg2.extras
 
 from lib.db.bundles import Bundles
-from lib.db.bundles_files import BundlesFiles
 from lib.db.files import Files
 from lib.logger import logger
 
 
 class Tables(NamedTuple):
     bundles: Bundles
-    bundles_files: BundlesFiles
     files: Files
 
 
@@ -35,7 +33,6 @@ class PostgresDatabase:
             with self._connection.cursor() as cursor:
                 yield cursor, Tables(
                     bundles=Bundles(cursor),
-                    bundles_files=BundlesFiles(cursor),
                     files=Files(cursor),
                 )
             self._connection.commit()

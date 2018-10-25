@@ -23,67 +23,39 @@ class TestPostgresLoader(unittest.TestCase):
             truncate_tables(cursor)
 
     def test_insert_select(self):
-        uuid = uuid4()
-        version = '2018-10-18T121314.123456Z'
-
-        file1_module = 'donor_organism'
-        file1_uuid = uuid4()
-        file1_version = '2018-10-24T121314.123456Z'
-
-        file2_module = 'sequencing_protocol'
-        file2_uuid = uuid4()
-        file2_version = '2018-10-25T121314.123456Z'
-        example_json1 = dict(a='b')
-        example_json2 = dict(b='c')
+        project_file = next(f for f in vx_bundle.files if f.metadata.name == 'project_0.json')
         with self.db.transaction() as (cursor, tables):
             # insert files
-            result = tables.files.insert(file1_module, file1_uuid, file1_version, example_json1)
-            self.assertEqual(result, 1)
-            result = tables.files.insert(file2_module, file2_uuid, file2_version, example_json2)
+            result = tables.files.insert(project_file)
             self.assertEqual(result, 1)
             # select files
-            result = tables.files.select(file1_module, file1_uuid, file1_version)
-            self.assertDictEqual(result['json'], example_json1)
-            result = tables.files.select(file2_module, file2_uuid, file2_version)
-            self.assertDictEqual(result['json'], example_json2)
+            result = tables.files.select(project_file.uuid, project_file.version)
+            self.assertDictEqual(
+                result,
+                dict(
+                    uuid=str(project_file.uuid),
+                    version=project_file.version,
+                    fqid=f"{project_file.uuid}.{project_file.version}",
+                    name="project_0.json",
+                    json=project_file
+                )
+            )
 
             # insert bundle
-            result = tables.bundles.insert(uuid, version)
+            result = tables.bundles.insert(vx_bundle)
             self.assertEqual(result, 1)
             # select bundle
-            result = tables.bundles.select(uuid, version)
-            self.assertEqual(result['uuid'], str(uuid))
-            self.assertEqual(result['version'], version)
-            result = tables.bundles.select(file1_uuid, version)
-            self.assertIsNone(result)
-
-            # insert bundles_files
-            result = tables.bundles_files.insert(uuid, version, file1_uuid, file1_version)
-            self.assertEqual(result, 1)
-            result = tables.bundles_files.insert(uuid, version, file2_uuid, file2_version)
-            self.assertEqual(result, 1)
-            # select bundles_files
-            result = tables.bundles_files.select_bundle(uuid, version)
-            result = sorted(result, key=lambda x: x['file_version'])
-            self.assertEqual(len(result), 2)
+            result = tables.bundles.select(vx_bundle.uuid, vx_bundle.version)
+            file_fqids = result.pop('file_fqids')
             self.assertDictEqual(
-                result[0],
+                result,
                 dict(
-                    bundle_uuid=str(uuid),
-                    bundle_version=version,
-                    file_uuid=str(file1_uuid),
-                    file_version=file1_version
+                    uuid=str(vx_bundle.uuid),
+                    version=vx_bundle.version
                 )
             )
-            self.assertDictEqual(
-                result[1],
-                dict(
-                    bundle_uuid=str(uuid),
-                    bundle_version=version,
-                    file_uuid=str(file2_uuid),
-                    file_version=file2_version
-                )
-            )
+            self.assertEqual(len(vx_bundle.files), len(file_fqids))
+            self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(file_fqids))
 
     def test_table_create_list(self):
         num_test_tables = 3

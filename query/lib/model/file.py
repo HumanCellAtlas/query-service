@@ -1,7 +1,10 @@
+import typing
+
 import inflect
 import re
 
 from uuid import UUID
+
 from lib.model.metadata import FileMetadata
 
 
@@ -19,15 +22,17 @@ class File(dict):
         return self._normalizable_file.match(self.metadata.name) is not None
 
     @property
-    def schema_module(self):
-        return '_'.join(self.metadata.name.split('_')[:-1])
+    def schema_module(self) -> typing.Optional[str]:
+        if self.metadata.indexable and self.metadata.name.endswith('.json'):
+            return '_'.join(self.metadata.name.split('_')[:-1]) \
+                if self._normalizable_file.match(self.metadata.name) else self.metadata.name[:-5]
+        return None
 
     @property
     def schema_module_plural(self):
-        tmp = self.metadata.name.replace('.json', '')
-        if '_' not in tmp:
-            return tmp
-        group_words = tmp.rsplit('_', 1)[0].split('_')
+        if self.schema_module is None:
+            return None
+        group_words = self.schema_module.split('_')
         group_words[-1] = self._inflect_engine.plural(group_words[-1])
         return '_'.join(group_words)
 
