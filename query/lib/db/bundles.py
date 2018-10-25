@@ -55,6 +55,7 @@ class Bundles(Table):
             );
             
             CREATE INDEX IF NOT EXISTS bundles_uuid ON bundles USING btree (uuid);
+            CREATE INDEX bundles_jsonb_gin_index ON bundles USING GIN (json);
             """
         )
 
