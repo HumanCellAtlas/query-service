@@ -11,13 +11,11 @@ from lib.etl.s3_client import S3Client
 
 class Extractor:
 
-    _json_file = re.compile('.+[.]json$')
-
     def extract_bundle(self, uuid: UUID, version: str) -> Bundle:
         bundle_manifest = BundleManifest(**self._get_bundle_data(uuid, version))
         files = [
-            File(m, **self._get_file_data(m))
-            for m in bundle_manifest.file_metadata if Extractor._json_file.match(m.name)
+            File(m, **self._get_file_data(m)) if m.indexable else File(m)
+            for m in bundle_manifest.file_metadata
         ]
         return Bundle(
             fqid=f"{uuid}.{bundle_manifest['version']}",

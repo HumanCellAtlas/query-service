@@ -12,7 +12,7 @@ from lib.config import Config
 from lib.db.database import PostgresDatabase
 from lib.etl.load import PostgresLoader, Loader
 from lib.logger import logger
-from lib.model import Bundle, datetime_to_version
+from lib.model import datetime_to_version
 from lib.etl.extract import S3Client, S3Extractor, Extractor
 
 # this seems to be entirely IO bound, so we can have _lots_ of workers...
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     # eliminate fqids that have already been processed
     db = PostgresDatabase(Config.serve_database_uri)
-    with db._connection.cursor() as cursor:
+    with db.transaction() as (cursor, _):
         cursor.execute("SELECT uuid, version from bundles;")
         already_processed_fqids = set(f"{ele[0]}.{datetime_to_version(ele[1])}" for ele in cursor.fetchall())
 

@@ -8,7 +8,7 @@ sys.path.insert(0, pkg_root)  # noqa
 
 from test import *
 from lib.config import Config
-from lib.db.database import PostgresDatabase, Transaction
+from lib.db.database import PostgresDatabase, Tables
 
 
 class TestPostgresLoader(unittest.TestCase):
@@ -20,30 +20,45 @@ class TestPostgresLoader(unittest.TestCase):
             clear_views(cursor)
             truncate_tables(cursor)
 
-    def test_bundle_insert_select(self):
+    def test_insert_select(self):
         uuid = uuid4()
         version = '2018-10-18T121314.123456Z'
-        example_json = dict(a='b')
-        with self.db.transaction() as transaction:
-            # insert
-            result = transaction.bundles.insert(uuid, version, example_json)
+        file_module = 'donor_organism'
+        file1_uuid = uuid4()
+        file1_version = '2018-10-24T121314.123456Z'
+        file2_uuid = uuid4()
+        file2_version = '2018-10-25T121314.123456Z'
+        example_json1 = dict(a='b')
+        example_json2 = dict(b='c')
+        with self.db.transaction() as (_, tables):
+            # insert files
+            result = tables.files.insert(file_module, file1_uuid, file1_version, example_json1)
             self.assertEqual(result, 1)
-            # select
-            result = transaction.bundles.select(uuid, version)
-            self.assertDictEqual(result['json'], example_json)
+            result = tables.files.insert(file_module, file2_uuid, file2_version, example_json2)
+            self.assertEqual(result, 1)
+            # select files
+            result = tables.files.select(file_module, file1_uuid, file1_version)
+            self.assertDictEqual(result['json'], example_json1)
+            result = tables.files.select(file_module, file2_uuid, file2_version)
+            self.assertDictEqual(result['json'], example_json2)
 
-    def test_metadata_file_insert_select(self):
-        uuid = uuid4()
-        version = '2018-10-18T121314.123456Z'
-        module = 'donor_organism'
-        example_json = dict(a='b')
-        with self.db.transaction() as transaction:
-            # insert
-            result = transaction.metadata_files.insert(module, uuid, version, example_json)
+            # insert bundle
+            result = tables.bundles.insert(uuid, version, file1_uuid, file1_version)
             self.assertEqual(result, 1)
-            # select
-            result = transaction.metadata_files.select(module, uuid, version)
-            self.assertDictEqual(result['json'], example_json)
+            result = tables.bundles.insert(uuid, version, file2_uuid, file2_version)
+            self.assertEqual(result, 1)
+            # select bundle
+            result = tables.bundles.select(uuid, version)
+            result = sorted(result, key=lambda x: x['file_version'])
+            self.assertEqual(len(result), 2)
+            self.assertDictEqual(
+                result[0],
+                dict(uuid=str(uuid), version=version, file_uuid=str(file1_uuid), file_version=file1_version)
+            )
+            self.assertDictEqual(
+                result[1],
+                dict(uuid=str(uuid), version=version, file_uuid=str(file2_uuid), file_version=file2_version)
+            )
 
     def test_table_create_list(self):
         num_test_tables = 3
@@ -52,24 +67,24 @@ class TestPostgresLoader(unittest.TestCase):
         ]
 
         @eventually(5.0, 1.0)
-        def test_list(transaction: Transaction, num_intersecting_tables: int):
-            ls_result = set(transaction.metadata_files.select_views())
+        def test_list(tables: Tables, num_intersecting_tables: int):
+            ls_result = set(tables.files.select_views())
             inner_result = ls_result & set(test_table_names)
             self.assertEqual(len(inner_result), num_intersecting_tables)
 
         try:
-            with self.db.transaction() as transaction:
+            with self.db.transaction() as (cursor, tables):
                 # create
                 for table_name in test_table_names:
-                    transaction.metadata_files.create_view(table_name, module=gen_random_chars(4))
+                    tables.files.create_view(table_name, module=gen_random_chars(4))
                 # list
-                test_list(transaction, num_test_tables)
+                test_list(tables, num_test_tables)
         finally:
-            with self.db._connection.cursor() as cursor:
+            with self.db.transaction() as (cursor, _):
                 clear_views(cursor)
             self.db._connection.commit()
-            with self.db.transaction() as transaction:
-                test_list(transaction, 0)
+            with self.db.transaction() as (_, tables):
+                test_list(tables, 0)
 
 
 if __name__ == '__main__':

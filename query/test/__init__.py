@@ -32,9 +32,9 @@ vx_bundle = Bundle(
     files=[
         File(
             FileMetadata(d),
-            **json.loads(load_fixture(d['name']))
+            **(json.loads(load_fixture(d['name'])) if d['name'].endswith('.json') else {})
         )
-        for d in json.loads(vx_bundle_str)['files'] if d['name'].endswith('.json')
+        for d in json.loads(vx_bundle_str)['files']
     ]
 )
 
@@ -110,6 +110,5 @@ def clear_views(cursor):
 
 
 def truncate_tables(cursor):
-    cursor.execute("TRUNCATE TABLE metadata_modules CASCADE")
-    cursor.execute("TRUNCATE TABLE metadata_files CASCADE")
+    cursor.execute("TRUNCATE TABLE files CASCADE")
     cursor.execute("TRUNCATE TABLE bundles CASCADE")
