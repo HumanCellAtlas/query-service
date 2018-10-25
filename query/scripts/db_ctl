@@ -7,6 +7,7 @@ pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noq
 sys.path.insert(0, pkg_root)  # noqa
 
 from lib.config import Config
+from lib.logger import logger
 from lib.db.database import PostgresDatabase
 
 NAME = sys.argv[0].split('/')[-1]
@@ -38,14 +39,19 @@ if __name__ == '__main__':
         with db.transaction() as (_, tables):
             tables.files.initialize()
             tables.bundles.initialize()
+            tables.bundles_files.initialize()
 
     elif options.action == 'destroy':
         conf = input("Are you sure that you want to do this? [Y/n] ")
         if conf != "Y":
-            print("Ok, whew.")
+            logger.info("Ok, whew.")
             sys.exit(0)
         with db.transaction() as (_, tables):
-            tables.files.destroy()
-            tables.bundles.destroy()
+            for table in [tables.files, tables.bundles, tables.bundles_files]:
+                try:
+                    table.destroy()
+                    logger.info(f"Dropped table: {table}")
+                except:
+                    logger.exception(f"Could not drop table: {table}")
 
-    print(f"Completed action {options.action} on database: {options.database}")
+    logger.info(f"Completed action {options.action} on database: {options.database}")

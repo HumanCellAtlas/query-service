@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from dateutil.parser import parse as parse_datetime
 from uuid import uuid4
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
@@ -8,6 +9,7 @@ sys.path.insert(0, pkg_root)  # noqa
 
 from test import *
 from lib.config import Config
+from lib.model import datetime_to_version
 from lib.db.database import PostgresDatabase, Tables
 
 
@@ -23,41 +25,64 @@ class TestPostgresLoader(unittest.TestCase):
     def test_insert_select(self):
         uuid = uuid4()
         version = '2018-10-18T121314.123456Z'
-        file_module = 'donor_organism'
+
+        file1_module = 'donor_organism'
         file1_uuid = uuid4()
         file1_version = '2018-10-24T121314.123456Z'
+
+        file2_module = 'sequencing_protocol'
         file2_uuid = uuid4()
         file2_version = '2018-10-25T121314.123456Z'
         example_json1 = dict(a='b')
         example_json2 = dict(b='c')
-        with self.db.transaction() as (_, tables):
+        with self.db.transaction() as (cursor, tables):
             # insert files
-            result = tables.files.insert(file_module, file1_uuid, file1_version, example_json1)
+            result = tables.files.insert(file1_module, file1_uuid, file1_version, example_json1)
             self.assertEqual(result, 1)
-            result = tables.files.insert(file_module, file2_uuid, file2_version, example_json2)
+            result = tables.files.insert(file2_module, file2_uuid, file2_version, example_json2)
             self.assertEqual(result, 1)
             # select files
-            result = tables.files.select(file_module, file1_uuid, file1_version)
+            result = tables.files.select(file1_module, file1_uuid, file1_version)
             self.assertDictEqual(result['json'], example_json1)
-            result = tables.files.select(file_module, file2_uuid, file2_version)
+            result = tables.files.select(file2_module, file2_uuid, file2_version)
             self.assertDictEqual(result['json'], example_json2)
 
             # insert bundle
-            result = tables.bundles.insert(uuid, version, file1_uuid, file1_version)
-            self.assertEqual(result, 1)
-            result = tables.bundles.insert(uuid, version, file2_uuid, file2_version)
+            result = tables.bundles.insert(uuid, version)
             self.assertEqual(result, 1)
             # select bundle
             result = tables.bundles.select(uuid, version)
+            self.assertEqual(result['uuid'], str(uuid))
+            self.assertEqual(result['version'], version)
+            result = tables.bundles.select(file1_uuid, version)
+            self.assertIsNone(result)
+
+            # insert bundles_files
+            result = tables.bundles_files.insert(uuid, version, file1_uuid, file1_version)
+            self.assertEqual(result, 1)
+            result = tables.bundles_files.insert(uuid, version, file2_uuid, file2_version)
+            self.assertEqual(result, 1)
+            # select bundles_files
+            result = tables.bundles_files.select_bundle(uuid, version)
             result = sorted(result, key=lambda x: x['file_version'])
             self.assertEqual(len(result), 2)
             self.assertDictEqual(
                 result[0],
-                dict(uuid=str(uuid), version=version, file_uuid=str(file1_uuid), file_version=file1_version)
+                dict(
+                    bundle_uuid=str(uuid),
+                    bundle_version=version,
+                    file_uuid=str(file1_uuid),
+                    file_version=file1_version
+                )
             )
             self.assertDictEqual(
                 result[1],
-                dict(uuid=str(uuid), version=version, file_uuid=str(file2_uuid), file_version=file2_version)
+                dict(
+                    bundle_uuid=str(uuid),
+                    bundle_version=version,
+                    file_uuid=str(file2_uuid),
+                    file_version=file2_version
+                )
             )
 
     def test_table_create_list(self):

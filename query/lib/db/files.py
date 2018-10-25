@@ -98,12 +98,13 @@ class Files(Table):
             );
             CREATE TABLE IF NOT EXISTS files (
                 uuid UUID NOT NULL,
-                version timestamp NOT NULL,
+                version timestamp with time zone NOT NULL,
                 module_id SERIAL REFERENCES metadata_modules(id),
                 json JSONB,
                 PRIMARY KEY(uuid, version),
                 UNIQUE (uuid, version, module_id)
             );
+            CREATE INDEX IF NOT EXISTS files_uuid ON files USING btree (uuid);
             CREATE INDEX files_jsonb_gin_index ON files USING GIN (json);
             """
         )
@@ -112,7 +113,7 @@ class Files(Table):
     def destroy(self):
         self._cursor.execute(
             """
-            DROP TABLE files CASCADE;
-            DROP TABLE metadata_modules CASCADE;
+            DROP TABLE IF EXISTS files CASCADE;
+            DROP TABLE IF EXISTS metadata_modules CASCADE;
             """
         )

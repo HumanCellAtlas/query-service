@@ -42,20 +42,23 @@ class PostgresLoader(Loader):
             except IntegrityError:
                 logger.info(f"View already exists: {view_name}")
 
-    def _insert_into_database(self, transaction: Tables, bundle: Bundle):
-        # insert file metadata, and join table entry
+    def _insert_into_database(self, tables: Tables, bundle: Bundle):
+        # insert the bundle
+        tables.bundles.insert(bundle.uuid, bundle.version)
+
+        # insert files, and join table entry
         for file in bundle.files:
             if file.fqid not in self._inserted_files:
-                transaction.files.insert(
+                tables.files.insert(
                     module=file.schema_module,
                     uuid=file.uuid,
                     version=file.metadata.version,
                     json_as_dict=file if file.metadata.indexable else None,
                 )
             self._inserted_files[file.fqid] = True
-            transaction.bundles.insert(
-                uuid=bundle.uuid,
-                version=bundle.version,
+            tables.bundles_files.insert(
+                bundle_uuid=bundle.uuid,
+                bundle_version=bundle.version,
                 file_uuid=file.uuid,
                 file_version=file.metadata.version
             )
