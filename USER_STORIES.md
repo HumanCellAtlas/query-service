@@ -36,15 +36,16 @@ Find all bundles specified in release 'X' with tissue type 'Y' Note: could subst
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
 ```sql
-select b.uuid, b.version
-        from bundles as b
-               join donor_organisms as d on d.fqid = ANY(b.file_fqids)
-               join sequencing_protocols as s on s.fqid = ANY(b.file_fqids)
-               join files as f on f.fqid = ANY(b.file_fqids)
-        where s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
-          AND d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
-        group by 1, 2
-        HAVING 'analysis_0.json' != ANY(array_agg(f.name));
+select * from (select f.fqid, f.name
+               from bundles as b
+                      join donor_organisms as d on d.fqid = ANY(b.file_fqids)
+                      join sequencing_protocols as s on s.fqid = ANY(b.file_fqids)
+                      join files as f on f.fqid = ANY(b.file_fqids)
+               where s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
+                 AND d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
+               group by 1, 2
+               having 'analysis_0.json' != ANY(array_agg(f.name))) as unanalyzed
+where name like '%.fastq.gz';
 ```
 
 ## 5
