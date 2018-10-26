@@ -96,6 +96,9 @@ where s.json @> '{"organ": {"text": "pancreas"}}'
 
 ## 9
 Here's a list of files I'm interested in. What is their total size? Count might also be useful
+
+* TODO: depends on adding file size to the files table https://github.com/HumanCellAtlas/query-service/issues/40
+
 ## 10
 DCP dashboard - What are all the files submitted since a certain date?
 
