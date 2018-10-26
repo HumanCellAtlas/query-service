@@ -1,4 +1,8 @@
 # User Stories and Matching Queries
+
+Query user stories taken from the [Blue Box Queries
+Table](https://docs.google.com/spreadsheets/d/1PBMrc0oql4gPpH_cQMqlf7ASNMwePRQZNCutxeSFze8/edit#gid=0)
+
 ## 1
 Please give me a list of all the contact emails and titles for all the projects, and how many samples and files each has.
 
