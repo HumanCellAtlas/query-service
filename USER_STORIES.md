@@ -130,6 +130,14 @@ Multi'omics analysis. Imagine a future workflow in green box (or a portal) that 
 Retreive a list of relesaes that a submission is part of
 ## 21
 Get list of submitters
+
+```sql
+select distinct contributors->'contact_name' as names
+from projects as p,
+     jsonb_array_elements(p.json->'contributors') as contributors
+where contributors ? 'contact_name';
+```
+
 ## 22
 Get list of submissions for a submitter
 ## 23
