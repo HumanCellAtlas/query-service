@@ -98,6 +98,13 @@ where s.json @> '{"organ": {"text": "pancreas"}}'
 Here's a list of files I'm interested in. What is their total size? Count might also be useful
 ## 10
 DCP dashboard - What are all the files submitted since a certain date?
+
+```sql
+select *
+from files
+where version > current_date - interval '4 weeks';
+```
+
 ## 11
 What samples have no files?  Or, perhaps since no files takes it outside of the blue box rework query as:  given a sample UUID are there any bundles and files associated with it?
 ## 12
