@@ -32,6 +32,10 @@ I’m trying to figure out whether this is a batch effect. Please try to find me
 ## 3
 Find all bundles specified in release 'X' with tissue type 'Y' Note: could substitute wide variety of other bio constraint, eg, "with coverage gt 10X", etc.
 
+```sql
+/* can't do this without establishing release design first */
+```
+
 ## 4
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
