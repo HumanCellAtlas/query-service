@@ -128,6 +128,11 @@ I'm a submitting lab and I just figured out that some of the raw data bundles I 
 Multi'omics analysis. Imagine a future workflow in green box (or a portal) that wants to do integrative analysis on two data types -- say raw imaging data and raw RNA-seq data. We would need a way to query and trigger events whenever a pair of matching bundles (for the same sample id) get deposited. In other words, imaging bundle alone = no event, sequencing bundle alone = no event, imaging + sequencing bundles = event.
 ## 20
 Retreive a list of relesaes that a submission is part of
+
+```sql
+/* can't do this without establishing release design first */
+```
+
 ## 21
 Get list of submitters
 
