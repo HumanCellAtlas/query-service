@@ -145,6 +145,15 @@ where contributors ? 'contact_name';
 
 ## 22
 Get list of submissions for a submitter
+
+```sql
+select p.uuid, p.json->'project_core'->>'project_title' as title
+from projects as p
+where
+  p.json @> '{"contributors": [{"contact_name": "Aviv,,Regev"}]}'
+  OR p.json @> '{"contributors": [{"contact_name": "Sarah,,Teichmann"}]}';
+```
+
 ## 23
 Access all versions of metadata standards
 ## 24
