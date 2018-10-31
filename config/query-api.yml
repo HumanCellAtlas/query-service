@@ -35,6 +35,32 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /v1/query:
+    post:
+      summary: Log query
+      description: Print Query
+      operationId: query.lambdas.api_server.v1.fast_query.query
+      tags:
+        - All
+      parameters:
+        - name: query_string
+          in: body
+          schema:
+            type: string
+      responses:
+        200:
+          description: Query received
+          schema:
+            type: object
+            properties:
+              query:
+                type: string
+                description: Query Sent
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
 definitions:
 
   Error:
