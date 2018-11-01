@@ -2,8 +2,8 @@ import re
 import typing
 
 from uuid import UUID
-from lib.model.metadata import FileMetadata
-from lib.model.file import File
+from ..model.metadata import FileMetadata
+from ..model.file import File
 
 
 class BundleManifest(dict):

@@ -25,7 +25,6 @@ tags
 chalice/.chalice/deployments/
 chalice/.chalice/venv/
 chalice/vendor/
-chalice/chalicelib/config/
-chalice/chalicelib/query/
+chalice/chalicelib/
 
 /config/environment.dev

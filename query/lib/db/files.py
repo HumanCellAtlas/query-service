@@ -6,9 +6,9 @@ from uuid import UUID
 from psycopg2 import DatabaseError, sql
 from psycopg2.extras import Json
 
-from lib.db.table import Table
-from lib.model import datetime_to_version, File
-from lib.config import requires_admin_mode
+from .table import Table
+from ..model import datetime_to_version, File
+from ..config import requires_admin_mode
 
 
 class Files(Table):

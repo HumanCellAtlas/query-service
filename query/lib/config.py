@@ -1,7 +1,8 @@
 import os
 import json
-from lib.logger import logger
 from dcplib.aws_secret import AwsSecret
+
+from .logger import logger
 
 
 def _get(d, name: str, sensitive: bool = False, default=None) -> str:
@@ -10,6 +11,7 @@ def _get(d, name: str, sensitive: bool = False, default=None) -> str:
         value = d[name]
         display_value = sensitive_display if sensitive else value
         logger.info(f"LOADED CONF VARIABLE: {name}=\"{display_value}\"")
+
         return value
     except KeyError as e:
         display_value = sensitive_display if sensitive else default
@@ -33,7 +35,7 @@ class Config:
     _secret = json.loads(AwsSecret(f"dcp/query/{deployment_stage}/database").value)
 
     _pg_bouncer_dns_name = _get(_secret, 'pgbouncer_dns_name')
-    _rds_dns_name = _get(_secret, 'rds_dns_name')
+    # _rds_dns_name = _get(_secret, 'rds_dns_name')
     _database_name = _get(_secret, 'database')
     _user = _get(_secret, 'user', sensitive=True)
     _password = _get(_secret, 'password', sensitive=True)

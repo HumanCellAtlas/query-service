@@ -5,8 +5,8 @@ from uuid import UUID
 
 from hca.dss import DSSClient
 
-from lib.model import FileMetadata, File, Bundle, BundleManifest
-from lib.etl.s3_client import S3Client
+from ..model import FileMetadata, File, Bundle, BundleManifest
+from ..etl.s3_client import S3Client
 
 
 class Extractor:

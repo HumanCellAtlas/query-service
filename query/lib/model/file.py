@@ -5,7 +5,7 @@ import re
 
 from uuid import UUID
 
-from lib.model.metadata import FileMetadata
+from ..model.metadata import FileMetadata
 
 
 class File(dict):
