@@ -4,7 +4,7 @@ Query user stories taken from the [Blue Box Queries
 Table](https://docs.google.com/spreadsheets/d/1PBMrc0oql4gPpH_cQMqlf7ASNMwePRQZNCutxeSFze8/edit#gid=0)
 
 ## 1
-Please give me a list of all the contact emails and titles for all the projects, and how many samples and files each has.
+Please give me a list of all the contact emails and titles for all the projects, and how many samples (specimens) and sequencing files each project has.
 
 ### emails
 ```sql
@@ -14,16 +14,28 @@ from projects as p,
 group by 1;
 ```
 
-### counts
+### specimen count per project
 ```sql
 select p.uuid                                   as project_uuid,
        p.json->'project_core'->>'project_title' as project_title,
        s.json->'organ'->>'text'                 as organ,
-       count(1)
+       count(distinct(s.uuid))                  as specimen_count
 from bundles as b
        join specimen_from_organisms as s on s.fqid = ANY(b.file_fqids)
        join projects as p on p.fqid = ANY(b.file_fqids)
-group by 1, 2, 3
+group by 1, 2, 3;
+```
+
+### data (sequence) file count per project
+```sql
+select p.uuid                                   as project_uuid,
+       p.json->'project_core'->>'project_title' as project_title,
+       count(distinct(f.uuid))                  as file_count
+from bundles as b
+       join files as f on f.fqid = ANY(b.file_fqids)
+       join projects as p on p.fqid = ANY(b.file_fqids)
+WHERE f.module_id = 87 /* sequence_file_*.json */
+group by 1,2;
 ```
 
 ## 2
