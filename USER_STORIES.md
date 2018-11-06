@@ -19,7 +19,7 @@ group by 1;
 select p.uuid                                   as project_uuid,
        p.json->'project_core'->>'project_title' as project_title,
        s.json->'organ'->>'text'                 as organ,
-       count(distinct(s.uuid))                  as specimen_uuid
+       count(distinct(s.uuid))                  as specimen_count
 from bundles as b
        join specimen_from_organisms as s on s.fqid = ANY(b.file_fqids)
        join projects as p on p.fqid = ANY(b.file_fqids)
