@@ -66,6 +66,28 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /v1/webhook:
+    post:
+      summary: Data to add to RDS
+      description: Add data
+      operationId: query.lambdas.api_server.v1.fast_query.webhook
+      tags:
+        - All
+      parameters:
+        - name: new_data
+          in: body
+          schema:
+            type: string
+      responses:
+        202:
+          description: Data accepted for processing
+          schema:
+            type: object
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
 definitions:
 
   Error:

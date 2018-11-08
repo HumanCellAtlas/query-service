@@ -38,4 +38,7 @@ data "aws_subnet_ids" "query_vpc" {
   vpc_id = "${data.aws_vpc.selected.id}"
 }
 
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
 

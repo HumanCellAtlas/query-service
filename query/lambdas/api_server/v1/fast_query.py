@@ -1,5 +1,6 @@
 import json
 
+import boto3
 import requests
 
 from query.lib.common.logging import get_logger
@@ -26,3 +27,15 @@ def format_query_results(query_results, column_names):
         new_dict = {k: v for k, v in zip(column_names, result)}
         updated_results.append(new_dict)
     return updated_results
+
+
+@return_exceptions_as_http_errors
+def webhook(new_data):
+    new_data = json.loads(new_data)
+    client = boto3.client('sqs')
+    response = client.send_message(
+        QueueUrl='https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-dev',
+        MessageBody=new_data
+    )
+
+    return {'response': response}, requests.codes.accepted

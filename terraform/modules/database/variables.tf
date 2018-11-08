@@ -22,7 +22,7 @@ variable "db_username" {
 
 variable "db_password" {
   type    = "string"
-  default = "example"
+  default = "examplesofcoolanimals"
 }
 
 variable "db_instance_count" {

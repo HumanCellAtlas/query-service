@@ -28,3 +28,8 @@ module "query-service-infra" {
   api_id = "${var.api_id}"
   deployment_stage = "${var.deployment_stage}"
 }
+
+locals {
+  account_id = "${data.aws_caller_identity.current.account_id}"
+  aws_region = "${data.aws_region.current.name}"
+}

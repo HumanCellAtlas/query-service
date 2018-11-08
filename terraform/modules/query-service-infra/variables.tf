@@ -13,3 +13,7 @@ variable "api_id" {
 variable "deployment_stage" {
   type = "string"
 }
+
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
