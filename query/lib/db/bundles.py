@@ -1,6 +1,7 @@
 import typing
 from dateutil.parser import parse as parse_datetime
 from uuid import UUID
+from psycopg2.extras import Json
 
 from lib.model import datetime_to_version, Bundle
 from lib.config import requires_admin_mode
@@ -19,7 +20,7 @@ class Bundles(Table):
             (
                 str(bundle.uuid),
                 parse_datetime(bundle.version),
-                [f.fqid for f in bundle.files]
+                Json([f.fqid for f in bundle.files])
             )
         )
         result = self._cursor.rowcount
@@ -54,7 +55,7 @@ class Bundles(Table):
             CREATE TABLE IF NOT EXISTS bundles (
                 uuid UUID,
                 version timestamp with time zone NOT NULL,
-                file_fqids varchar(62)[],
+                file_fqids jsonb,
                 PRIMARY KEY (uuid),
                 UNIQUE (uuid, version)
             );

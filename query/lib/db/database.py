@@ -7,12 +7,14 @@ import psycopg2.extras
 
 from lib.db.bundles import Bundles
 from lib.db.files import Files
+from lib.db.bundles_files import BundlesFiles
 from lib.logger import logger
 
 
 class Tables(NamedTuple):
     bundles: Bundles
     files: Files
+    bundles_files: BundlesFiles
 
 
 class PostgresDatabase:
@@ -34,6 +36,7 @@ class PostgresDatabase:
                 yield cursor, Tables(
                     bundles=Bundles(cursor),
                     files=Files(cursor),
+                    bundles_files=BundlesFiles(cursor)
                 )
             self._connection.commit()
         except DatabaseError as e:

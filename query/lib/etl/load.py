@@ -50,4 +50,10 @@ class PostgresLoader(Loader):
         for file in bundle.files:
             if file.fqid not in self._inserted_files:
                 r = tables.files.insert(file)
+                tables.bundles_files.insert(
+                    bundle_uuid=bundle.uuid,
+                    bundle_version=bundle.version,
+                    file_uuid=file.uuid,
+                    file_version=file.metadata.version
+                )
             self._inserted_files[file.fqid] = True
