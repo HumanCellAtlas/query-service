@@ -28,7 +28,7 @@ class TestPostgresLoader(unittest.TestCase):
     def test_prepare_database(self):
         with self.db.transaction() as (_, tables):
             result = set(tables.files.select_views())
-            implied_views = set(f.schema_module_plural for f in vx_bundle.files if f.normalizable)
+            implied_views = set(f.schema_type_plural for f in vx_bundle.files if f.normalizable)
             self.assertEqual(result & implied_views, implied_views)
 
     def test_insert_into_database(self):
@@ -41,7 +41,6 @@ class TestPostgresLoader(unittest.TestCase):
 
             # files and view tables
             for file in vx_bundle.files:
-                print(f">>>>>>>>>>>> {file.metadata.name}, {file.schema_module}, {file.schema_module_plural}")
                 result = tables.files.select(file.uuid, file.version)
                 self.assertIsNotNone(result)
 

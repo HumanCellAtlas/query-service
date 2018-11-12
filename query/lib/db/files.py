@@ -15,17 +15,17 @@ class Files(Table):
 
     _valid_table_name = re.compile('^[a-zA-Z]+[a-zA-Z0-9_]*[a-zA-Z0-9]+$')
 
-    def create_view(self, table_name: str, module: str):
+    def create_view(self, table_name: str, schema_type: str):
         query = self._prepare_statement(
             """
             CREATE OR REPLACE VIEW {} AS
             SELECT f.* FROM files as f
-            JOIN metadata_modules as m on f.module_id = m.id
+            JOIN schema_types as m on f.schema_type_id = m.id
             WHERE m.name = %s
             """,
             table_name
         )
-        self._cursor.execute(query, (module,))
+        self._cursor.execute(query, (schema_type,))
 
     def select_views(self) -> typing.List[str]:
         self._cursor.execute(
@@ -39,37 +39,37 @@ class Files(Table):
         return result
 
     def insert(self, file: File) -> int:
-        if file.schema_module:
+        if file.schema_type:
             self._cursor.execute(
                 """
-                INSERT INTO metadata_modules (name)
+                INSERT INTO schema_types (name)
                 VALUES (%s)
                 ON CONFLICT (name) DO NOTHING;
 
-                INSERT INTO files (uuid, version, fqid, name, module_id, json) (
+                INSERT INTO files (uuid, version, fqid, name, schema_type_id, json) (
                     SELECT %s, %s, %s, %s, id, %s
-                    FROM metadata_modules
-                    WHERE metadata_modules.name = %s
+                    FROM schema_types
+                    WHERE schema_types.name = %s
                 )
                 ON CONFLICT (uuid, version) DO NOTHING;
                 """,
                 (
-                    file.schema_module,
+                    file.schema_type,
                     str(file.uuid),
                     parse_datetime(file.version),
                     f"{file.uuid}.{file.version}",
                     file.metadata.name,
                     Json(file if file.metadata.indexable else None),
-                    file.schema_module
+                    file.schema_type
                 )
             )
         else:
             self._cursor.execute(
                 """
-                INSERT INTO files (uuid, version, fqid, name, module_id, json) (
+                INSERT INTO files (uuid, version, fqid, name, schema_type_id, json) (
                     SELECT %s, %s, %s, %s, id, %s
-                    FROM metadata_modules
-                    WHERE metadata_modules.name is NULL
+                    FROM schema_types
+                    WHERE schema_types.name is NULL
                 )
                 ON CONFLICT (uuid, version) DO NOTHING;
                 """,
@@ -118,13 +118,13 @@ class Files(Table):
     def initialize(self):
         self._cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS metadata_modules (
+            CREATE TABLE IF NOT EXISTS schema_types (
                 id SERIAL,
                 name varchar(128) UNIQUE,
                 PRIMARY KEY (id)
             );
 
-            INSERT INTO metadata_modules (name)
+            INSERT INTO schema_types (name)
             VALUES (NULL)
             ON CONFLICT (name) DO NOTHING;
 
@@ -133,10 +133,10 @@ class Files(Table):
                 version timestamp with time zone NOT NULL,
                 fqid varchar(62) NOT NULL,
                 name varchar(128) NOT NULL,
-                module_id SERIAL REFERENCES metadata_modules(id),
+                schema_type_id SERIAL REFERENCES schema_types(id),
                 json JSONB,
                 PRIMARY KEY(uuid, version),
-                UNIQUE (uuid, version, fqid, module_id)
+                UNIQUE (uuid, version, fqid, schema_type_id)
             );
             CREATE INDEX IF NOT EXISTS files_uuid ON files USING btree (uuid);
             CREATE INDEX IF NOT EXISTS files_fqid ON files USING btree (fqid);
@@ -149,6 +149,6 @@ class Files(Table):
         self._cursor.execute(
             """
             DROP TABLE IF EXISTS files CASCADE;
-            DROP TABLE IF EXISTS metadata_modules CASCADE;
+            DROP TABLE IF EXISTS schema_types CASCADE;
             """
         )

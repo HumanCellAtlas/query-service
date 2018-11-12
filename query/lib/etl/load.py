@@ -27,8 +27,8 @@ class PostgresLoader(Loader):
 
     def _prepare_database(self, tables: Tables, bundle: Bundle):
         # get table names for tables implied by the bundle manifest
-        view_names_to_type_mapping = dict([(f.schema_module_plural, f.schema_module) for f in bundle.files])
-        implied_view_names = set(f.schema_module_plural for f in bundle.files if f.normalizable)
+        view_names_to_type_mapping = dict([(f.schema_type_plural, f.schema_type) for f in bundle.files])
+        implied_view_names = set(f.schema_type_plural for f in bundle.files if f.normalizable)
 
         # if there are views implied in the manifest not recorded in PostgresLoader, refresh
         if len(implied_view_names - self._existing_view_names) > 0:
