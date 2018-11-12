@@ -10,7 +10,7 @@ cd query-service
 mkdir venv
 virtualenv --python python3.6 venv/36
 source venv/36/bin/activate
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 ```
 ## Terraform
 ```bash

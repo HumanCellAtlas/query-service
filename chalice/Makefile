@@ -10,11 +10,12 @@ clobber: clean
 	git checkout .chalice/*.json
 
 build:
+	rm -rf chalicelib/config
+	rm -rf chalicelib/query
 	cp ../requirements.txt .
 	mkdir -p chalicelib/query/lib
 	mkdir -p chalicelib/query/lambdas
 	mkdir -p chalicelib/config
-	cp -R ../query/__init__.py chalicelib/query
 	cp -R ../query/lib/common chalicelib/query/lib/common
 	cp -R ../query/lib/__init__.py chalicelib/query/lib
 	cp -R ../query/lambdas/__init__.py \

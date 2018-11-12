@@ -20,6 +20,6 @@ def get_logger(name):
 
 def format_logger_with_id(logger, corr_id_name, corr_id_val):
     formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s' +
-                                  f' corr_id:{corr_id_name}:{corr_id_val} %(message)s', datefmt="%Y-%m-%dT%H:%M:%S%z")
+                                  f' corr_id:{corr_id_name}:{corr_id_val} %(message)s', datefmt="%Y-%m-%dT%H:%M:%S%zZ")
     logger.handlers[0].setFormatter(formatter)
     return logger

@@ -8,7 +8,10 @@
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "arn:aws:logs:*:*:*"
+      "Resource": [
+        "arn:aws:logs:us-east-1:$account_id:log-group:/aws/lambda/query-api-${DEPLOYMENT_STAGE}",
+        "arn:aws:logs:us-east-1:$account_id:log-group:/aws/lambda/query-api-${DEPLOYMENT_STAGE}:*:*"
+      ]
     },
     {
       "Effect": "Allow",
