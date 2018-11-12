@@ -4,4 +4,6 @@ psycopg2-binary==2.7.5
 dcplib
 hca
 pylru
+PyYAML==3.13
+connexion==1.5.2
 

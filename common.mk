@@ -7,13 +7,14 @@ export AWS_ACCOUNT_ID=$(shell aws sts get-caller-identity | jq -r .Account)
 export TF_S3_BUCKET=org-humancellatlas-$(AWS_ACCOUNT_ID)-terraform
 export APP_NAME=query-service
 
+
 default: plan
 
 secrets:
 	aws secretsmanager get-secret-value \
 		--secret-id query/$(DEPLOYMENT_STAGE)/config.json | \
 		jq -r .SecretString | \
-		python -m json.tool > terraform.tfvars
+		python -m json.tool > terraform/terraform.tfvars
 
 
 plan:

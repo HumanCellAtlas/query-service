@@ -18,6 +18,18 @@ variable "vpc_id" {
   type = "string"
 }
 
+variable "domain_name" {
+  type = "string"
+}
+
+variable "parent_zone_domain_name" {
+  type = "string"
+}
+
+variable "api_id" {
+  type = "string"
+}
+
 data "aws_vpc" "selected" {
   id = "${var.vpc_id}"
 }
@@ -25,3 +37,5 @@ data "aws_vpc" "selected" {
 data "aws_subnet_ids" "query_vpc" {
   vpc_id = "${data.aws_vpc.selected.id}"
 }
+
+

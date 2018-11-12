@@ -8,8 +8,8 @@ import time
 from uuid import UUID
 
 from psycopg2 import sql
-
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
+file_directory = os.path.dirname(__file__)
+pkg_root = os.path.abspath(os.path.join(file_directory, '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
 from lib.etl.extract import Extractor
@@ -18,7 +18,7 @@ from lib.logger import logger
 
 
 def load_fixture(fixture_file):
-    with open('test/fixtures/' + fixture_file, 'r') as fh:
+    with open(f'{file_directory}/fixtures/{fixture_file}', 'r') as fh:
         txt = fh.read()
     return txt
 

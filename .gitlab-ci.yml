@@ -44,7 +44,7 @@ before_script:
 test:
   stage: infra_test_build
   script:
-    - cd app/ && make install test
+    - cd query/ && make install test
 
 deploy:
   stage: deploy
@@ -52,4 +52,4 @@ deploy:
     refs:
       - master
   script:
-    - cd app && make deploy
+    - cd query && make deploy
