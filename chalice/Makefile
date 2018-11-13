@@ -12,7 +12,6 @@ clobber: clean
 build:
 	rm -rf chalicelib/config
 	rm -rf chalicelib/query
-	cp ../requirements.txt .
 	mkdir -p chalicelib/query/lib
 	mkdir -p chalicelib/query/lambdas
 	mkdir -p chalicelib/config
