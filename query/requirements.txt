@@ -2,7 +2,7 @@ boto3
 inflect
 psycopg2-binary==2.7.5
 dcplib
-hca
+hca==4.4.9
 pylru
 PyYAML==3.13
 connexion==1.5.2
