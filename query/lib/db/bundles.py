@@ -11,16 +11,18 @@ from lib.db.table import Table
 class Bundles(Table):
 
     def insert(self, bundle: Bundle) -> int:
+        fqids = [f.fqid for f in bundle.files]
         self._cursor.execute(
             """
-            INSERT INTO bundles (uuid, version, file_fqids)
-            VALUES (%s, %s, %s)
+            INSERT INTO bundles (uuid, version, file_fqids, file_fqids_array)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT (uuid, version) DO NOTHING
             """,
             (
                 str(bundle.uuid),
                 parse_datetime(bundle.version),
-                Json([f.fqid for f in bundle.files])
+                Json(fqids),
+                fqids
             )
         )
         result = self._cursor.rowcount
@@ -56,10 +58,12 @@ class Bundles(Table):
                 uuid UUID,
                 version timestamp with time zone NOT NULL,
                 file_fqids jsonb,
+                file_fqids_array varchar(62)[],
                 PRIMARY KEY (uuid),
                 UNIQUE (uuid, version)
             );
             CREATE INDEX IF NOT EXISTS bundles_file_fqids ON bundles USING GIN (file_fqids);
+            CREATE INDEX IF NOT EXISTS bundles_file_fqids_array ON bundles USING GIN (file_fqids_array);
         """
         )
 

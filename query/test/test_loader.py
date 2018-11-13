@@ -40,7 +40,7 @@ class TestPostgresLoader(unittest.TestCase):
             self.assertIsNotNone(result)
 
             # join table
-            result = tables.bundles_files.select(vx_bundle.uuid, vx_bundle.version)
+            result = tables.bundles_files.select_bundle(vx_bundle.uuid, vx_bundle.version)
             self.assertTrue(len(result) > 0)
 
             # files and view tables

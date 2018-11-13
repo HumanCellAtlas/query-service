@@ -47,7 +47,7 @@ if __name__ == '__main__':
             logger.info("Ok, whew.")
             sys.exit(0)
         with db.transaction() as (_, tables):
-            for table in [tables.files, tables.bundles]:
+            for table in [tables.bundles_files, tables.files, tables.bundles]:
                 try:
                     table.destroy()
                     logger.info(f"Dropped table: {table}")

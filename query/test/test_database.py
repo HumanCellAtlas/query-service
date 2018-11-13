@@ -56,6 +56,8 @@ class TestPostgresLoader(unittest.TestCase):
             self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(file_fqids))
 
             # insert bundles_files
+            result = tables.files.insert(process_file)
+            self.assertEqual(result, 1)
             result = tables.bundles_files.insert(vx_bundle.uuid, vx_bundle.version, project_file.uuid, project_file.version)
             self.assertEqual(result, 1)
             result = tables.bundles_files.insert(vx_bundle.uuid, vx_bundle.version, process_file.uuid, process_file.version)
@@ -99,7 +101,7 @@ class TestPostgresLoader(unittest.TestCase):
             with self.db.transaction() as (cursor, tables):
                 # create
                 for table_name in test_table_names:
-                    tables.files.create_view(table_name, module=gen_random_chars(4))
+                    tables.files.create_view(table_name, schema_type=gen_random_chars(4))
                 # list
                 test_list(tables, num_test_tables)
         finally:
