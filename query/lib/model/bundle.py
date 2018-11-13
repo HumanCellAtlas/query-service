@@ -15,8 +15,6 @@ class BundleManifest(dict):
 
 class Bundle:
 
-    _normalizable_file = re.compile('.*[0-9]+[.]json$')
-
     def __init__(self, fqid: str, bundle_manifest: BundleManifest, files: typing.List[File]):
         self.fqid = fqid
         tmp_uuid, self.version = fqid.split('.', 1)
@@ -29,12 +27,8 @@ class Bundle:
         return self._bundle_manifest
 
     @property
-    def indexable_files(self) -> typing.List[File]:
-        return [f for f in self._files if f.metadata.indexable]
-
-    @property
-    def normalizable_files(self) -> typing.List[File]:
-        return [f for f in self.indexable_files if self._normalizable_file.match(f.metadata.name)]
+    def files(self) -> typing.List[File]:
+        return self._files
 
     def __eq__(self, other):
         if isinstance(other, Bundle):

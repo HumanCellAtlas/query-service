@@ -1,14 +1,13 @@
 import os
 import sys
 import unittest
-from uuid import uuid4
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
 from test import *
 from lib.config import Config
-from lib.db.database import PostgresDatabase, Transaction
+from lib.db.database import PostgresDatabase, Tables
 
 
 class TestPostgresLoader(unittest.TestCase):
@@ -20,30 +19,71 @@ class TestPostgresLoader(unittest.TestCase):
             clear_views(cursor)
             truncate_tables(cursor)
 
-    def test_bundle_insert_select(self):
-        uuid = uuid4()
-        version = '2018-10-18T121314.123456Z'
-        example_json = dict(a='b')
-        with self.db.transaction() as transaction:
-            # insert
-            result = transaction.bundles.insert(uuid, version, example_json)
+    def test_insert_select(self):
+        project_file = next(f for f in vx_bundle.files if f.metadata.name == 'project_0.json')
+        process_file = next(f for f in vx_bundle.files if f.metadata.name == 'process_0.json')
+        with self.db.transaction() as (cursor, tables):
+            # insert files
+            result = tables.files.insert(project_file)
             self.assertEqual(result, 1)
-            # select
-            result = transaction.bundles.select(uuid, version)
-            self.assertDictEqual(result['json'], example_json)
+            # select files
+            result = tables.files.select(project_file.uuid, project_file.version)
+            self.assertDictEqual(
+                result,
+                dict(
+                    uuid=str(project_file.uuid),
+                    version=project_file.version,
+                    fqid=f"{project_file.uuid}.{project_file.version}",
+                    name="project_0.json",
+                    json=project_file
+                )
+            )
 
-    def test_metadata_file_insert_select(self):
-        uuid = uuid4()
-        version = '2018-10-18T121314.123456Z'
-        module = 'donor_organism'
-        example_json = dict(a='b')
-        with self.db.transaction() as transaction:
-            # insert
-            result = transaction.metadata_files.insert(module, uuid, version, example_json)
+            # insert bundle
+            result = tables.bundles.insert(vx_bundle)
             self.assertEqual(result, 1)
-            # select
-            result = transaction.metadata_files.select(module, uuid, version)
-            self.assertDictEqual(result['json'], example_json)
+            # select bundle
+            result = tables.bundles.select(vx_bundle.uuid, vx_bundle.version)
+            file_fqids = result.pop('file_fqids')
+            self.assertDictEqual(
+                result,
+                dict(
+                    uuid=str(vx_bundle.uuid),
+                    version=vx_bundle.version
+                )
+            )
+            self.assertEqual(len(vx_bundle.files), len(file_fqids))
+            self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(file_fqids))
+
+            # insert bundles_files
+            result = tables.files.insert(process_file)
+            self.assertEqual(result, 1)
+            result = tables.bundles_files.insert(vx_bundle.uuid, vx_bundle.version, project_file.uuid, project_file.version)
+            self.assertEqual(result, 1)
+            result = tables.bundles_files.insert(vx_bundle.uuid, vx_bundle.version, process_file.uuid, process_file.version)
+            self.assertEqual(result, 1)
+            # select bundles_files
+            result = tables.bundles_files.select_bundle(vx_bundle.uuid, vx_bundle.version)
+            result = sorted(result, key=lambda x: x['file_uuid'])
+            self.assertEqual(len(result), 2)
+            self.assertDictEqual(
+                result[0],
+                dict(
+                    bundle_uuid=str(vx_bundle.uuid),
+                    bundle_version=vx_bundle.version,
+                    file_uuid=str(process_file.uuid),
+                    file_version=process_file.version
+                )
+            )
+            self.assertDictEqual(
+                result[1],
+                dict(
+                    bundle_uuid=str(vx_bundle.uuid),
+                    bundle_version=vx_bundle.version,
+                    file_uuid=str(project_file.uuid),
+                    file_version=project_file.version
+                )
+            )
 
     def test_table_create_list(self):
         num_test_tables = 3
@@ -52,24 +92,24 @@ class TestPostgresLoader(unittest.TestCase):
         ]
 
         @eventually(5.0, 1.0)
-        def test_list(transaction: Transaction, num_intersecting_tables: int):
-            ls_result = set(transaction.metadata_files.select_views())
+        def test_list(tables: Tables, num_intersecting_tables: int):
+            ls_result = set(tables.files.select_views())
             inner_result = ls_result & set(test_table_names)
             self.assertEqual(len(inner_result), num_intersecting_tables)
 
         try:
-            with self.db.transaction() as transaction:
+            with self.db.transaction() as (cursor, tables):
                 # create
                 for table_name in test_table_names:
-                    transaction.metadata_files.create_view(table_name, module=gen_random_chars(4))
+                    tables.files.create_view(table_name, schema_type=gen_random_chars(4))
                 # list
-                test_list(transaction, num_test_tables)
+                test_list(tables, num_test_tables)
         finally:
-            with self.db._connection.cursor() as cursor:
+            with self.db.transaction() as (cursor, _):
                 clear_views(cursor)
             self.db._connection.commit()
-            with self.db.transaction() as transaction:
-                test_list(transaction, 0)
+            with self.db.transaction() as (_, tables):
+                test_list(tables, 0)
 
 
 if __name__ == '__main__':

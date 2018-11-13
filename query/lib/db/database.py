@@ -6,15 +6,15 @@ import psycopg2
 import psycopg2.extras
 
 from lib.db.bundles import Bundles
-from lib.db.bundles_metadata_files import BundlesMetadataFiles
-from lib.db.metadata_files import MetadataFiles
+from lib.db.files import Files
+from lib.db.bundles_files import BundlesFiles
 from lib.logger import logger
 
 
-class Transaction(NamedTuple):
+class Tables(NamedTuple):
     bundles: Bundles
-    bundles_metadata_files: BundlesMetadataFiles
-    metadata_files: MetadataFiles
+    files: Files
+    bundles_files: BundlesFiles
 
 
 class PostgresDatabase:
@@ -33,10 +33,10 @@ class PostgresDatabase:
             self._connection = self._connect()
         try:
             with self._connection.cursor() as cursor:
-                yield Transaction(
+                yield cursor, Tables(
                     bundles=Bundles(cursor),
-                    bundles_metadata_files=BundlesMetadataFiles(cursor),
-                    metadata_files=MetadataFiles(cursor),
+                    files=Files(cursor),
+                    bundles_files=BundlesFiles(cursor)
                 )
             self._connection.commit()
         except DatabaseError as e:

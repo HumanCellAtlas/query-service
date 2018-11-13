@@ -104,6 +104,7 @@ class MetadataFiles(Table):
                 PRIMARY KEY(uuid, version),
                 UNIQUE (uuid, version, module_id)
             );
+            CREATE INDEX metadata_files_jsonb_gin_index ON metadata_files USING GIN (json);
             """
         )
 
