@@ -8,35 +8,35 @@ Please give me a list of all the contact emails and titles for all the projects,
 
 ### emails
 ```sql
-select p.json->'project_core'->>'project_title' as title, jsonb_agg(contributors->'email') as emails
-from projects as p,
-     jsonb_array_elements(p.json->'contributors') as contributors
-group by 1;
+SELECT p.json->'project_core'->>'project_title' AS title, jsonb_agg(contributors->'email') AS emails
+FROM projects AS p,
+     jsonb_array_elements(p.json->'contributors') AS contributors
+GROUP BY 1;
 ```
 
 ### specimen count per project
 ```sql
-select p.uuid                                   as project_uuid,
-       p.json->'project_core'->>'project_title' as project_title,
-       s.json->'organ'->>'text'                 as organ,
-       count(distinct(s.uuid))                  as specimen_count
-from bundles as b
-       join specimen_from_organisms as s on s.fqid = ANY(b.file_fqids)
-       join projects as p on p.fqid = ANY(b.file_fqids)
-group by 1, 2, 3;
+SELECT p.uuid                                   AS project_uuid,
+       p.json->'project_core'->>'project_title' AS project_title,
+       s.json->'organ'->>'text'                 AS organ,
+       count(DISTINCT(s.uuid))                  AS specimen_count
+FROM bundles AS b
+       JOIN specimen_from_organisms AS s ON s.fqid = ANY(b.file_fqids)
+       JOIN projects AS p ON p.fqid = ANY(b.file_fqids)
+GROUP BY 1, 2, 3;
 ```
 
 ### data (sequence) file count per project
 ```sql
-select p.uuid                                   as project_uuid,
-       p.json->'project_core'->>'project_title' as project_title,
-       count(distinct(f.uuid))                  as file_count
-from bundles as b
-       join files as f on f.fqid = ANY(b.file_fqids)
-       join projects as p on p.fqid = ANY(b.file_fqids)
-       join schema_types st on f.schema_type_id = st.id
+SELECT p.uuid                                   AS project_uuid,
+       p.json->'project_core'->>'project_title' AS project_title,
+       count(DISTINCT(f.uuid))                  AS file_count
+FROM bundles AS b
+       JOIN files AS f ON f.fqid = ANY(b.file_fqids)
+       JOIN projects AS p ON p.fqid = ANY(b.file_fqids)
+       JOIN schema_types st ON f.schema_type_id = st.id
 WHERE st.name = 'sequence_file'
-group by 1,2;
+GROUP BY 1, 2;
 ```
 
 ## 2
@@ -53,28 +53,30 @@ Find all bundles specified in release 'X' with tissue type 'Y' Note: could subst
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
 ```sql
-select * from (select f.fqid, f.name
-               from bundles as b
-                      join donor_organisms as d on d.fqid = ANY(b.file_fqids)
-                      join sequencing_protocols as s on s.fqid = ANY(b.file_fqids)
-                      join files as f on f.fqid = ANY(b.file_fqids)
-               where s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
-                 AND d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
-               group by 1, 2
-               having 'analysis_0.json' != ANY(array_agg(f.name))) as unanalyzed
-where name like '%.fastq.gz';
+SELECT *
+FROM (SELECT f.fqid, f.name
+      FROM bundles AS b
+             JOIN donor_organisms AS d ON d.fqid = ANY(b.file_fqids)
+             JOIN sequencing_protocols AS s ON s.fqid = ANY(b.file_fqids)
+             JOIN files AS f ON f.fqid = ANY(b.file_fqids)
+      WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
+        AND d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
+      GROUP BY 1, 2
+      HAVING 'analysis_0.json' != ANY(array_agg(f.name))) AS unanalyzed
+WHERE name LIKE '%.fastq.gz';
 ```
 
 ## 5
 What are all the files that were submitted as part of a project? (What are my submissions x timeframe, project name, new study) UI: should be able to page/facet for large lists. Would also like to see the status of each file that is retreived b y the query (may need to break this out into a separate case)
 
 ```sql
-select p.uuid as project_uuid, f.uuid as file_uuid, f.name as filename
-from bundles as b
-       join projects as p on p.fqid = ANY(b.file_fqids)
-       join files as f on f.fqid = ANY(b.file_fqids)
-WHERE f.module_id = 1 /* not a metadata file */
-group by 1, 2, 3
+SELECT p.uuid AS project_uuid, f.uuid AS file_uuid, f.name AS filename
+FROM bundles AS b
+       JOIN projects AS p ON p.fqid = ANY(b.file_fqids)
+       JOIN files AS f ON f.fqid = ANY(b.file_fqids)
+       JOIN schema_types st ON f.schema_type_id = st.id
+WHERE st.name IS NULL /* not a metadata file */
+GROUP BY 1, 2, 3;
 ```
 
 ## 6 & 7
@@ -82,29 +84,29 @@ group by 1, 2, 3
 * find all bundles created with a specific method or reference (may want to reprocess the input bundles) May be a 2 step search, 1. Find all results created with a specific version/reference, 2. Use them to find all the source bundles
 
 ```sql
-select outputs.inputs, outputs.uuid as output_uuid, outputs.process_uuid, f.fqid, f.name, f.json
-from files as f
-       join (select links->'inputs'                                     as inputs,
-                    links->>'process'                                   as process_uuid,
-                    jsonb_array_elements_text(links->'outputs') :: uuid as uuid
-             from bundles as b
-                    join projects p on p.fqid = ANY(b.file_fqids)
-                    join links as l on l.fqid = ANY(b.file_fqids),
-                  jsonb_array_elements(l.json->'links') as links
-             where l.json @> '{"links": [{"protocols": [{"protocol_type": "sequencing_protocol"}]}]}'
-               AND p.uuid = '08e7b6ba-5825-47e9-be2d-7978533c5f8c') as outputs on f.uuid = outputs.uuid
+SELECT outputs.inputs, outputs.uuid AS output_uuid, outputs.process_uuid, f.fqid, f.name, f.json
+FROM files AS f
+       JOIN (SELECT links->'inputs'                                     AS inputs,
+                    links->>'process'                                   AS process_uuid,
+                    jsonb_array_elements_text(links->'outputs') :: UUID AS uuid
+             FROM bundles AS b
+                    JOIN projects p ON p.fqid = ANY(b.file_fqids)
+                    JOIN links AS l ON l.fqid = ANY(b.file_fqids),
+                  jsonb_array_elements(l.json->'links') AS links
+             WHERE l.json @> '{"links": [{"protocols": [{"protocol_type": "sequencing_protocol"}]}]}'
+               AND p.uuid = '08e7b6ba-5825-47e9-be2d-7978533c5f8c') AS outputs ON f.uuid = outputs.uuid;
 ```
 
 ## 8
 What are all of the files of a particular format associated with an particular organ?
 
 ```sql
-select f.fqid, f.name
-from bundles as b
-       join files as f on f.fqid = ANY(b.file_fqids)
-       join specimen_from_organisms as s on s.fqid = ANY(b.file_fqids)
-where s.json @> '{"organ": {"text": "pancreas"}}'
-  AND f.name like '%.fastq.gz'
+SELECT f.fqid, f.name
+FROM bundles AS b
+       JOIN files AS f ON f.fqid = ANY(b.file_fqids)
+       JOIN specimen_from_organisms AS s ON s.fqid = ANY(b.file_fqids)
+WHERE s.json @> '{"organ": {"text": "pancreas"}}'
+  AND f.name LIKE '%.fastq.gz'
 ```
 
 ## 9
@@ -116,9 +118,9 @@ Here's a list of files I'm interested in. What is their total size? Count might 
 DCP dashboard - What are all the files submitted since a certain date?
 
 ```sql
-select *
-from files
-where version > current_date - interval '4 weeks';
+SELECT *
+FROM files
+WHERE version > current_date - INTERVAL '4 weeks';
 ```
 
 ## 11
@@ -150,21 +152,20 @@ Retreive a list of relesaes that a submission is part of
 Get list of submitters
 
 ```sql
-select distinct contributors->'contact_name' as names
-from projects as p,
-     jsonb_array_elements(p.json->'contributors') as contributors
-where contributors ? 'contact_name';
+SELECT DISTINCT contributors->'contact_name' AS names
+FROM projects AS p,
+     jsonb_array_elements(p.json->'contributors') AS contributors
+WHERE contributors ? 'contact_name'
 ```
 
 ## 22
 Get list of submissions for a submitter
 
 ```sql
-select p.uuid, p.json->'project_core'->>'project_title' as title
-from projects as p
-where
-  p.json @> '{"contributors": [{"contact_name": "Aviv,,Regev"}]}'
-  OR p.json @> '{"contributors": [{"contact_name": "Sarah,,Teichmann"}]}';
+SELECT p.uuid, p.json->'project_core'->>'project_title' AS title
+FROM projects AS p
+WHERE p.json @> '{"contributors": [{"contact_name": "Aviv,,Regev"}]}'
+   OR p.json @> '{"contributors": [{"contact_name": "Sarah,,Teichmann"}]}';
 ```
 
 ## 23
