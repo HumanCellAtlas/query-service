@@ -34,7 +34,8 @@ select p.uuid                                   as project_uuid,
 from bundles as b
        join files as f on f.fqid = ANY(b.file_fqids)
        join projects as p on p.fqid = ANY(b.file_fqids)
-WHERE f.module_id = 87 /* sequence_file_*.json */
+       join schema_types st on f.schema_type_id = st.id
+WHERE st.name = 'sequence_file'
 group by 1,2;
 ```
 
