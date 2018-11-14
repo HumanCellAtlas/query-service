@@ -1,7 +1,7 @@
 .PHONY: install
 install:
 	virtualenv -p python3 venv
-	venv/bin/pip install -r requirements.txt --upgrade
+	venv/bin/pip install -r requirements-dev.txt --upgrade
 
 .PHONY: test
 test:
