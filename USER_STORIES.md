@@ -28,7 +28,7 @@ GROUP BY 1, 2, 3;
 
 ### data (sequence) file count per project
 
-Variant 1
+Array variant (runtime 11s 638ms)
 
 ```sql
 SELECT p.uuid                                   AS project_uuid,
@@ -42,7 +42,7 @@ WHERE st.name = 'sequence_file'
 GROUP BY 1, 2;
 ```
 
-Variant 2
+Join table variant (runtime 17s 708ms)
 
 ```sql
 WITH bundles_specimens AS (SELECT b.uuid AS bundle_uuid, s.uuid AS file_uuid, s.json->'organ'->>'text' AS organ
@@ -77,6 +77,8 @@ Find all bundles specified in release 'X' with tissue type 'Y' Note: could subst
 ## 4
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
+Array variant (runtime 11s 475ms)
+
 ```sql
 SELECT *
 FROM (SELECT f.fqid, f.name
@@ -88,6 +90,42 @@ FROM (SELECT f.fqid, f.name
         AND d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
       GROUP BY 1, 2
       HAVING 'analysis_0.json' != ANY(array_agg(f.name))) AS unanalyzed
+WHERE name LIKE '%.fastq.gz';
+```
+
+Join table variant (runtime 1s 337ms)
+
+```sql
+SELECT *
+FROM (WITH bundles_donors AS (SELECT b.uuid    AS bundle_uuid,
+                                     b.version AS bundle_version,
+                                     d.fqid    AS file_fqid,
+                                     d.name    AS file_name
+                              FROM bundles AS b
+                                     JOIN bundles_files AS bf
+                                       ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+                                     JOIN donor_organisms AS d
+                                       ON (bf.file_uuid = d.uuid AND bf.file_version = d.version)
+                              WHERE d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
+),
+    bundles_protocols AS (SELECT b.uuid    AS bundle_uuid,
+                                 b.version AS bundle_version,
+                                 s.fqid    AS file_fqid,
+                                 s.name    AS file_name
+                          FROM bundles AS b
+                                 JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+                                 JOIN sequencing_protocols AS s
+                                   ON (bf.file_uuid = s.uuid AND bf.file_version = s.version)
+                          WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
+  )
+SELECT f.fqid, f.name
+FROM bundles AS b
+       JOIN bundles_donors AS bd ON (b.uuid = bd.bundle_uuid AND b.version = bd.bundle_version)
+       JOIN bundles_protocols AS bp ON (b.uuid = bp.bundle_uuid AND b.version = bp.bundle_version)
+       JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+       JOIN files AS f ON (bf.file_uuid = f.uuid AND bf.file_version = f.version)
+GROUP BY 1, 2
+HAVING 'analysis_0.json' != ANY (array_agg(f.name))) AS unanalyzed
 WHERE name LIKE '%.fastq.gz';
 ```
 
