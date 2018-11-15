@@ -27,6 +27,9 @@ GROUP BY 1, 2, 3;
 ```
 
 ### data (sequence) file count per project
+
+Variant 1
+
 ```sql
 SELECT p.uuid                                   AS project_uuid,
        p.json->'project_core'->>'project_title' AS project_title,
@@ -37,6 +40,28 @@ FROM bundles AS b
        JOIN schema_types st ON f.schema_type_id = st.id
 WHERE st.name = 'sequence_file'
 GROUP BY 1, 2;
+```
+
+Variant 2
+
+```sql
+WITH bundles_specimens AS (SELECT b.uuid AS bundle_uuid, s.uuid AS file_uuid, s.json->'organ'->>'text' AS organ
+                           FROM bundles AS b
+                                  JOIN bundles_files AS bf
+                                    ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+                                  JOIN specimen_from_organisms AS s
+                                    ON (bf.file_uuid = s.uuid AND bf.file_version = s.version)),
+     bundles_projects AS (SELECT b.uuid                                   AS bundle_uuid,
+                                 p.uuid                                   AS project_uuid,
+                                 p.json->'project_core'->>'project_title' AS project_title
+                          FROM bundles AS b
+                                 JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+                                 JOIN projects AS p ON (bf.file_uuid = p.uuid AND bf.file_version = p.version))
+SELECT bp.project_uuid, bp.project_title, bs.organ, count(DISTINCT bs.file_uuid)
+FROM bundles_specimens AS bs,
+     bundles_projects AS bp
+WHERE bs.bundle_uuid = bp.bundle_uuid
+GROUP BY 1, 2, 3;
 ```
 
 ## 2
