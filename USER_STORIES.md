@@ -77,7 +77,21 @@ Find all bundles specified in release 'X' with tissue type 'Y' Note: could subst
 ## 4
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
-Array variant (runtime 11s 475ms)
+Array variant 1 (runtime 2m 1s 250ms)
+
+```sql
+SELECT DISTINCT f.fqid, f.name
+FROM bundles AS b
+       LEFT JOIN analysis_files AS a ON a.fqid = ANY(b.file_fqids)
+       JOIN donor_organisms AS d ON d.fqid = ANY(b.file_fqids)
+       JOIN sequencing_protocols AS s ON s.fqid = ANY(b.file_fqids)
+       JOIN files AS f ON f.fqid = ANY(b.file_fqids)
+WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
+  AND d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
+  AND f.name LIKE '%.fastq.gz';
+```
+
+Array variant 2 (runtime 11s 475ms)
 
 ```sql
 SELECT *
@@ -115,12 +129,18 @@ WHERE name LIKE '%.fastq.gz';
 Join table variant (runtime 1s 859ms)
 
 ```sql
-WITH bundles_donors AS (SELECT DISTINCT b.uuid AS bundle_uuid, b.version as bundle_version, d.fqid AS file_fqid, d.name AS file_name
+WITH bundles_donors AS (SELECT DISTINCT b.uuid    AS bundle_uuid,
+                                        b.version AS bundle_version,
+                                        d.fqid    AS file_fqid,
+                                        d.name    AS file_name
                         FROM bundles AS b
                                JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
                                JOIN donor_organisms AS d ON (bf.file_uuid = d.uuid AND bf.file_version = d.version)
                         WHERE d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'),
-     bundles_protocols AS (SELECT DISTINCT b.uuid AS bundle_uuid, b.version as bundle_version, s.fqid AS file_fqid, s.name AS file_name
+     bundles_protocols AS (SELECT DISTINCT b.uuid    AS bundle_uuid,
+                                           b.version AS bundle_version,
+                                           s.fqid    AS file_fqid,
+                                           s.name    AS file_name
                            FROM bundles AS b
                                   JOIN bundles_files AS bf
                                     ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
