@@ -93,40 +93,52 @@ FROM (SELECT f.fqid, f.name
 WHERE name LIKE '%.fastq.gz';
 ```
 
-Join table variant (runtime 1s 337ms)
+Hybrid array and join table variant (runtime 9s 900ms)
 
 ```sql
+WITH matching_bundles AS (SELECT DISTINCT b.uuid, b.version
+                          FROM bundles AS b
+                                 JOIN donor_organisms AS d ON d.fqid = ANY(b.file_fqids)
+                                 JOIN sequencing_protocols AS s ON s.fqid = ANY(b.file_fqids)
+                          WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
+                            AND d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}')
 SELECT *
-FROM (WITH bundles_donors AS (SELECT b.uuid    AS bundle_uuid,
-                                     b.version AS bundle_version,
-                                     d.fqid    AS file_fqid,
-                                     d.name    AS file_name
-                              FROM bundles AS b
-                                     JOIN bundles_files AS bf
-                                       ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
-                                     JOIN donor_organisms AS d
-                                       ON (bf.file_uuid = d.uuid AND bf.file_version = d.version)
-                              WHERE d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'
-),
-    bundles_protocols AS (SELECT b.uuid    AS bundle_uuid,
-                                 b.version AS bundle_version,
-                                 s.fqid    AS file_fqid,
-                                 s.name    AS file_name
+FROM (SELECT f.fqid, f.name
+      FROM matching_bundles AS b
+             JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+             JOIN files AS f ON (bf.file_uuid = f.uuid AND bf.file_version = f.version)
+      GROUP BY 1, 2
+      HAVING 'analysis_0.json' != ANY(array_agg(f.name))) AS unanalyzed
+WHERE name LIKE '%.fastq.gz';
+```
+
+Join table variant (runtime 1s 859ms)
+
+```sql
+WITH bundles_donors AS (SELECT DISTINCT b.uuid AS bundle_uuid, b.version as bundle_version, d.fqid AS file_fqid, d.name AS file_name
+                        FROM bundles AS b
+                               JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+                               JOIN donor_organisms AS d ON (bf.file_uuid = d.uuid AND bf.file_version = d.version)
+                        WHERE d.json @> '{"genus_species": [{"text": "Homo sapiens"}]}'),
+     bundles_protocols AS (SELECT DISTINCT b.uuid AS bundle_uuid, b.version as bundle_version, s.fqid AS file_fqid, s.name AS file_name
+                           FROM bundles AS b
+                                  JOIN bundles_files AS bf
+                                    ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+                                  JOIN sequencing_protocols AS s
+                                    ON (bf.file_uuid = s.uuid AND bf.file_version = s.version)
+                           WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'),
+     analyzed_bundles AS (SELECT DISTINCT b.uuid AS uuid
                           FROM bundles AS b
                                  JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
-                                 JOIN sequencing_protocols AS s
-                                   ON (bf.file_uuid = s.uuid AND bf.file_version = s.version)
-                          WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
-  )
-SELECT f.fqid, f.name
+                                 JOIN analysis_files AS a ON (bf.file_uuid = a.uuid AND bf.file_version = a.version))
+SELECT DISTINCT f.fqid, f.name
 FROM bundles AS b
+       LEFT JOIN analyzed_bundles AS ab ON (b.uuid = ab.uuid)
        JOIN bundles_donors AS bd ON (b.uuid = bd.bundle_uuid AND b.version = bd.bundle_version)
        JOIN bundles_protocols AS bp ON (b.uuid = bp.bundle_uuid AND b.version = bp.bundle_version)
        JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
        JOIN files AS f ON (bf.file_uuid = f.uuid AND bf.file_version = f.version)
-GROUP BY 1, 2
-HAVING 'analysis_0.json' != ANY (array_agg(f.name))) AS unanalyzed
-WHERE name LIKE '%.fastq.gz';
+WHERE f.name LIKE '%.fastq.gz';
 ```
 
 ## 5
