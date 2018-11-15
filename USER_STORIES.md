@@ -28,7 +28,7 @@ GROUP BY 1, 2, 3;
 
 ### data (sequence) file count per project
 
-Array variant (runtime 11s 638ms)
+Array variant (runtime@[19938 bundles, 411394 files]: 11s 638ms)
 
 ```sql
 SELECT p.uuid                                   AS project_uuid,
@@ -77,7 +77,7 @@ Find all bundles specified in release 'X' with tissue type 'Y' Note: could subst
 ## 4
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
-Array variant 1 (runtime 839ms, 2m 1s 250ms with `SELECT DISTICT ...`)
+Array variant 1 (runtime@[19938 bundles, 411394 files]: 839ms, 2m 1s 250ms with `SELECT DISTICT ...`)
 
 ```sql
 SELECT f.fqid, f.name
@@ -91,7 +91,7 @@ WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
   AND f.name LIKE '%.fastq.gz';
 ```
 
-Array variant 2 (runtime 11s 475ms)
+Array variant 2 (runtime@[19938 bundles, 411394 files]: 11s 475ms)
 
 ```sql
 SELECT *
@@ -107,7 +107,7 @@ FROM (SELECT f.fqid, f.name
 WHERE name LIKE '%.fastq.gz';
 ```
 
-Hybrid array and join table variant (runtime 9s 534ms)
+Hybrid array and join table variant (runtime@[19938 bundles, 411394 files]: 9s 534ms)
 
 ```sql
 WITH matching_bundles AS (SELECT DISTINCT b.uuid, b.version
@@ -128,7 +128,7 @@ FROM matching_bundles AS b
 WHERE f.name LIKE '%.fastq.gz';
 ```
 
-Join table variant (runtime 1s 859ms)
+Join table variant (runtime@[19938 bundles, 411394 files]: 1s 859ms)
 
 ```sql
 WITH bundles_donors AS (SELECT DISTINCT b.uuid    AS bundle_uuid,
