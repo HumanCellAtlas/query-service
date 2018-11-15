@@ -77,10 +77,10 @@ Find all bundles specified in release 'X' with tissue type 'Y' Note: could subst
 ## 4
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
-Array variant 1 (runtime 2m 1s 250ms)
+Array variant 1 (runtime 839ms, 2m 1s 250ms with `SELECT DISTICT ...`)
 
 ```sql
-SELECT DISTINCT f.fqid, f.name
+SELECT f.fqid, f.name
 FROM bundles AS b
        LEFT JOIN analysis_files AS a ON a.fqid = ANY(b.file_fqids)
        JOIN donor_organisms AS d ON d.fqid = ANY(b.file_fqids)
