@@ -79,18 +79,18 @@ GROUP BY project_title
      select
        p.json->'project_core'->>'project_title' as project_title,
        count(p.file_uuid) as file_count,
-       count(DISTINCT s.json->'organ'->>'text') as organ_count
+       s.json->'organ'->>'text' as organ
 from bundles as b
        join specimen_from_organisms as s on s.fqid = ANY(b.file_fqids)
        join projects as p on p.fqid = ANY(b.file_fqids)
-group by project_title
+group by project_title, organ
 )
 
 select
     e.project_title as project_title,
     e.emails as emails,
     c.file_count as file_count,
-    c.organ_count as organ_count
+    c.organ as organ
 from emailsTempTable as e
   join countsTable as c on c.project_title = e.project_title;
 ```
