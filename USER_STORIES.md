@@ -144,7 +144,6 @@ FROM bundles AS b
        JOIN bundles_protocols AS bp ON (b.bundle_uuid = bp.bundle_uuid AND b.bundle_version = bp.bundle_version)
        JOIN files AS f ON (bf.file_uuid = f.file_uuid AND bf.file_version = f.file_version)
 WHERE f.name LIKE '%.fastq.gz';
-WHERE f.name LIKE '%.fastq.gz';
 ```
 
 ## 5
