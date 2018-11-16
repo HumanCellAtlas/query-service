@@ -56,13 +56,16 @@ class PostgresDatabase:
                 yield cursor
             self._read_only_connection.commit()
         except DatabaseError as e:
-            logger.exception("Database error")
-            self._read_only_connection.rollback()
+            logger.exception(f"Database error, ROT: {e}")
+            self._read_only_connection.commit()
 
     def run_read_only_query(self, query):
         with self.read_only_transaction() as cursor:
-            cursor.execute(query)
-            return cursor.fetchall()
-
+            try:
+                cursor.execute(query)
+                return cursor.fetchall()
+            except DatabaseError as e:
+                logger.exception(f"Database error, ROQ: {e}")
+                return f"Database error: {e}"
 
 
