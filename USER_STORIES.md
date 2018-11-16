@@ -77,7 +77,30 @@ Find all bundles specified in release 'X' with tissue type 'Y' Note: could subst
 ## 4
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
+Denormalized variant (runtime@[19938 bundles, 411394 files]: 3s 127ms)
+
+```sql
+WITH analysis_inputs AS (SELECT input_uuid :: UUID AS input_uuid
+                         FROM bundles AS b,
+                              jsonb_array_elements(b.json->'links'->'links') AS links,
+                              jsonb_array_elements_text(links->'inputs') AS input_uuid
+                         WHERE b.json ? 'analysis_files'),
+     matching_files AS (SELECT b.bundle_uuid     AS bundle_uuid,
+                               files->>'uuid'    AS file_uuid,
+                               files->>'version' AS file_version,
+                               files->>'name'    AS file_name
+                        FROM bundles AS b,
+                             jsonb_array_elements(b.json->'manifest'->'files') AS files
+                        WHERE b.json @> '{"sequencing_protocols": [{"sequencing_approach": {"text": "RNA-Seq"}}]}'
+                          AND b.json @> '{"donor_organisms": [{"genus_species": [{"text": "Homo sapiens"}]}]}'
+                          AND files->>'name' LIKE '%.fastq.gz')
+SELECT f.*
+FROM matching_files AS f
+       LEFT JOIN analysis_inputs AS ai ON (f.bundle_uuid = ai.input_uuid);
+```
+
 Array variant 1 (runtime@[19938 bundles, 411394 files]: 839ms, 2m 1s 250ms with `SELECT DISTICT ...`)
+*INCORRECT* - Does not check for analysis in separate bundles.
 
 ```sql
 SELECT f.fqid, f.name
@@ -92,6 +115,7 @@ WHERE s.json @> '{"sequencing_approach": {"text": "RNA-Seq"}}'
 ```
 
 Array variant 2 (runtime@[19938 bundles, 411394 files]: 11s 475ms)
+*INCORRECT* - Does not check for analysis in separate bundles.
 
 ```sql
 SELECT *
@@ -108,6 +132,7 @@ WHERE name LIKE '%.fastq.gz';
 ```
 
 Hybrid array and join table variant (runtime@[19938 bundles, 411394 files]: 9s 534ms)
+*INCORRECT* - Does not check for analysis in separate bundles.
 
 ```sql
 WITH matching_bundles AS (SELECT DISTINCT b.uuid, b.version
@@ -129,6 +154,7 @@ WHERE f.name LIKE '%.fastq.gz';
 ```
 
 Join table variant (runtime@[19938 bundles, 411394 files]: 1s 859ms)
+*INCORRECT* - Does not check for analysis in separate bundles.
 
 ```sql
 WITH bundles_donors AS (SELECT DISTINCT b.uuid    AS bundle_uuid,
