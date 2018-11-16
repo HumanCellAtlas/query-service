@@ -64,6 +64,37 @@ WHERE bs.bundle_uuid = bp.bundle_uuid
 GROUP BY 1, 2, 3;
 ```
 
+All together (runtime 13s 530ms)
+```
+with emailsTempTable as(
+     select
+        p.json->'project_core'->>'project_title' as project_title,
+        jsonb_agg(contributors->'email') as emails
+from projects as p,
+      jsonb_array_elements(p.json->'contributors') as contributors
+GROUP BY project_title
+    ),
+
+     countsTable as (
+     select
+       p.json->'project_core'->>'project_title' as project_title,
+       count(p.file_uuid) as file_count,
+       count(DISTINCT s.json->'organ'->>'text') as organ_count
+from bundles as b
+       join specimen_from_organisms as s on s.fqid = ANY(b.file_fqids)
+       join projects as p on p.fqid = ANY(b.file_fqids)
+group by project_title
+)
+
+select
+    e.project_title as project_title,
+    e.emails as emails,
+    c.file_count as file_count,
+    c.organ_count as organ_count
+from emailsTempTable as e
+  join countsTable as c on c.project_title = e.project_title;
+```
+
 ## 2
 I’m trying to figure out whether this is a batch effect. Please try to find me examples where the same type of cell was sequenced by the same lab by two different single cell isolation and sequencing techniques. Please also find examples where the same type of cell was sequenced by two different labs using what is supposed to be the same technique.
 
