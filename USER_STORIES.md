@@ -65,7 +65,7 @@ GROUP BY 1, 2, 3;
 ```
 
 All together (runtime 13s 530ms)
-```
+```sql
 with emailsTempTable as(
      select
         p.json->'project_core'->>'project_title' as project_title,
