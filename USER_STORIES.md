@@ -64,33 +64,34 @@ WHERE bs.bundle_uuid = bp.bundle_uuid
 GROUP BY 1, 2, 3;
 ```
 
-All together (runtime 13s 530ms)
+All together (runtime 24s 192ms)
 ```sql
-with emailsTempTable as(
-     select
-        p.json->'project_core'->>'project_title' as project_title,
-        jsonb_agg(contributors->'email') as emails
+WITH emailsTempTable as (
+     SELECT
+        p.json->'project_core'->>'project_title'   AS project_title,
+        jsonb_agg(contributors->'email')           AS emails
 from projects as p,
-      jsonb_array_elements(p.json->'contributors') as contributors
+      jsonb_array_elements(p.json->'contributors') AS contributors
 GROUP BY project_title
     ),
 
      countsTable as (
      select
-       p.json->'project_core'->>'project_title' as project_title,
-       count(p.file_uuid) as file_count,
-       s.json->'organ'->>'text' as organ
-from bundles as b
+       p.json->'project_core'->>'project_title' AS project_title,
+       count(sf.file_uuid)                      AS file_count,
+       count(DISTINCT(s.file_uuid))             AS specimen_count
+from bundles AS b
        join specimen_from_organisms as s on s.fqid = ANY(b.file_fqids)
-       join projects as p on p.fqid = ANY(b.file_fqids)
-group by project_title, organ
+       join projects                as p on p.fqid = ANY(b.file_fqids)
+       join sequence_files          as sf on sf.fqid = ANY(b.file_fqids)
+group by project_title
 )
 
 select
-    e.project_title as project_title,
-    e.emails as emails,
-    c.file_count as file_count,
-    c.organ as organ
+    e.project_title  as project_title,
+    e.emails         as emails,
+    c.file_count     as sequence_file_count,
+    c.specimen_count as specimen_count
 from emailsTempTable as e
   join countsTable as c on c.project_title = e.project_title;
 ```
