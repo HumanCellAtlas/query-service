@@ -8,12 +8,12 @@ from multiprocessing import Pool
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from lib.config import Config
-from lib.db.database import PostgresDatabase
-from lib.etl.load import PostgresLoader, Loader
-from lib.logger import logger
-from lib.model import datetime_to_version
-from lib.etl.extract import S3Client, S3Extractor, Extractor
+from query.lib.config import Config
+from query.lib.db.database import PostgresDatabase
+from query.lib.etl.load import PostgresLoader, Loader
+from query.lib.logger import logger
+from query.lib.model import datetime_to_version
+from query.lib.etl.extract import S3Client, S3Extractor, Extractor
 
 # this seems to be entirely IO bound, so we can have _lots_ of workers...
 CONCURRENCY = 50

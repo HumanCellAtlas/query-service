@@ -1,8 +1,8 @@
 from dateutil.parser import parse as parse_datetime
 from uuid import UUID
 
-from lib.config import requires_admin_mode
-from lib.db.table import Table
+from query.lib.config import requires_admin_mode
+from query.lib.db.table import Table
 
 
 class BundlesMetadataFiles(Table):

@@ -20,7 +20,9 @@
         "secretsmanager:GetSecretValue"
       ],
       "Resource": [
-        "arn:aws:secretsmanager:us-east-1:$account_id:secret:query/${DEPLOYMENT_STAGE}/*"
+        "arn:aws:secretsmanager:us-east-1:$account_id:secret:query/${DEPLOYMENT_STAGE}/*",
+        "arn:aws:secretsmanager:us-east-1:$account_id:secret:dcp/query/${DEPLOYMENT_STAGE}/database-*"
+
       ]
     }
   ]
