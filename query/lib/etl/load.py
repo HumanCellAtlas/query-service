@@ -1,9 +1,9 @@
 import pylru
 from psycopg2 import IntegrityError
 
-from lib.logger import logger
-from lib.model import Bundle
-from lib.db.database import PostgresDatabase, Tables
+from query.lib.logger import logger
+from query.lib.model import Bundle
+from query.lib.db.database import PostgresDatabase, Tables
 
 
 class Loader:

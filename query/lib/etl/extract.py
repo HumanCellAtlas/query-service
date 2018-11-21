@@ -1,12 +1,14 @@
 import json
-import re
+import os
+import sys
 from functools import lru_cache
 from uuid import UUID
 
 from hca.dss import DSSClient
-
-from ..model import FileMetadata, File, Bundle, BundleManifest
-from ..etl.s3_client import S3Client
+pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))  # noqa
+sys.path.insert(0, pkg_root)  # noqa
+from query.lib.model import FileMetadata, File, Bundle, BundleManifest
+from query.lib.etl.s3_client import S3Client
 
 
 class Extractor:

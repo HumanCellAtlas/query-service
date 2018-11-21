@@ -24,14 +24,6 @@
         "arn:aws:secretsmanager:us-east-1:861229788715:secret:dcp/query/dev/database-*"
 
       ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords"
-      ],
-      "Resource": "*"
     }
   ]
 }

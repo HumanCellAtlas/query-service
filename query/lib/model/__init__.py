@@ -1,6 +1,6 @@
-from .bundle import *
-from .file import *
-from .metadata import *
+from query.lib.model.bundle import *
+from query.lib.model.file import *
+from query.lib.model.metadata import *
 
 from datetime import datetime
 

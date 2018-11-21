@@ -3,9 +3,9 @@ from dateutil.parser import parse as parse_datetime
 from uuid import UUID
 from psycopg2.extras import Json
 
-from ..model import datetime_to_version, Bundle
-from ..config import requires_admin_mode
-from ..db.table import Table
+from query.lib.model import datetime_to_version, Bundle
+from query.lib.config import requires_admin_mode
+from query.lib.db.table import Table
 
 
 class Bundles(Table):

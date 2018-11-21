@@ -1,9 +1,8 @@
-import re
 import typing
 
 from uuid import UUID
-from ..model.metadata import FileMetadata
-from ..model.file import File
+from query.lib.model.metadata import FileMetadata
+from query.lib.model.file import File
 
 
 class BundleManifest(dict):

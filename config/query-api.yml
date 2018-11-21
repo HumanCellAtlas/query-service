@@ -37,8 +37,8 @@ paths:
 
   /v1/query:
     post:
-      summary: Log query
-      description: Print Query
+      summary: Fast completing user written query of hca metadata
+      description: Query the database (query must complete within API gateway's 30 second timeout)
       operationId: query.lambdas.api_server.v1.fast_query.query
       tags:
         - All
@@ -49,13 +49,13 @@ paths:
             type: string
       responses:
         200:
-          description: Query received
+          description: Query received and processed
           schema:
             type: object
             properties:
               query:
                 type: string
-                description: Query Sent
+                description: Submitted query
         default:
           description: Unexpected error
           schema:

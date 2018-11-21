@@ -24,14 +24,6 @@
         "arn:aws:secretsmanager:us-east-1:$account_id:secret:dcp/query/${DEPLOYMENT_STAGE}/database-*"
 
       ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords"
-      ],
-      "Resource": "*"
     }
   ]
 }

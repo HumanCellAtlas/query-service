@@ -5,10 +5,10 @@ from psycopg2 import DatabaseError
 import psycopg2
 import psycopg2.extras
 
-from .bundles import Bundles
-from .files import Files
-from .bundles_files import BundlesFiles
-from ..logger import logger
+from query.lib.db.bundles import Bundles
+from query.lib.db.files import Files
+from query.lib.db.bundles_files import BundlesFiles
+from query.lib.logger import logger
 
 
 class Tables(NamedTuple):

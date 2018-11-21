@@ -28,9 +28,9 @@ build:
 	envsubst '$$API_HOST' < ../config/query-api.yml > chalicelib/config/query-api.yml
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
 
-	# build.zip contains the psycopg2-3.6 package downloaded from https://github.com/jkehler/awslambda-psycopg2
+	# psycopg2.zip contains the psycopg2-3.6 package downloaded from https://github.com/jkehler/awslambda-psycopg2
 	# and renamed psycopg2
-	unzip build.zip
+	unzip psycopg2.zip
 	rm -rf vendor/psycopg2
 	cp -R build/psycopg2 vendor
 	rm -rf build
