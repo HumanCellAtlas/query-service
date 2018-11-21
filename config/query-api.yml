@@ -56,6 +56,11 @@ paths:
               query:
                 type: string
                 description: Submitted query
+              results:
+                type: array
+                description: Results of query
+                items:
+                  type: object
         default:
           description: Unexpected error
           schema:

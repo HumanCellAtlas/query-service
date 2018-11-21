@@ -25,6 +25,8 @@ def load_fixture(fixture_file):
 
 vx_bundle_fqid = '0c8d7f15-47c2-42c2-83de-47ae48e1eae1.2018-09-06T190237.485774Z'
 vx_bundle_str = load_fixture('vx_bundle.json')
+fast_query_mock_result = json.loads(load_fixture('fast_query_mock_result.json'))
+fast_query_expected_results = json.loads(load_fixture('fast_query_expected_results.json'))
 
 vx_bundle = Bundle(
     fqid=vx_bundle_fqid,
