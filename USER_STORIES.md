@@ -13,19 +13,6 @@ FROM projects AS p,
      jsonb_array_elements(p.json->'contributors') AS contributors
 GROUP BY 1;
 ```
-
-### specimen count per project
-```sql
-SELECT p.file_uuid                                   AS project_uuid,
-       p.json->'project_core'->>'project_title' AS project_title,
-       s.json->'organ'->>'text'                 AS organ,
-       count(DISTINCT(s.file_uuid))                  AS specimen_count
-FROM bundles AS b
-       JOIN specimen_from_organisms AS s ON s.fqid = ANY(b.file_fqids)
-       JOIN projects AS p ON p.fqid = ANY(b.file_fqids)
-GROUP BY project_uuid, project_title, organ;
-```
-
 ### data (sequence) file count per project
 
 Array variant (runtime@[19938 bundles, 411394 files]: 11s 697ms)
@@ -42,26 +29,42 @@ WHERE st.name = 'sequence_file'
 GROUP BY project_uuid, project_title;
 ```
 
-Join table variant (runtime 17s 708ms)
+### specimen count per project
+Array variant (runtime 11s 545ms)
+```sql
+SELECT p.file_uuid                                   AS project_uuid,
+       p.json->'project_core'->>'project_title' AS project_title,
+       s.json->'organ'->>'text'                 AS organ,
+       count(DISTINCT(s.file_uuid))                  AS specimen_count
+FROM bundles AS b
+       JOIN specimen_from_organisms AS s ON s.fqid = ANY(b.file_fqids)
+       JOIN projects AS p ON p.fqid = ANY(b.file_fqids)
+GROUP BY project_uuid, project_title, organ;
+```
+
+Join table variant (runtime 17s 907ms)
 
 ```sql
-WITH bundles_specimens AS (SELECT b.uuid AS bundle_uuid, s.uuid AS file_uuid, s.json->'organ'->>'text' AS organ
+WITH bundles_specimens AS (SELECT b.bundle_uuid AS bundle_uuid, s.file_uuid AS file_uuid, s.json->'organ'->>'text' AS organ
                            FROM bundles AS b
                                   JOIN bundles_files AS bf
-                                    ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
+                                    ON (b.bundle_uuid = bf.bundle_uuid AND b.bundle_version = bf.bundle_version)
                                   JOIN specimen_from_organisms AS s
-                                    ON (bf.file_uuid = s.uuid AND bf.file_version = s.version)),
-     bundles_projects AS (SELECT b.uuid                                   AS bundle_uuid,
-                                 p.uuid                                   AS project_uuid,
+                                    ON (bf.file_uuid = s.file_uuid AND bf.file_version = s.file_version)),
+     bundles_projects AS (SELECT b.bundle_uuid                                   AS bundle_uuid,
+                                 p.file_uuid                                   AS project_uuid,
                                  p.json->'project_core'->>'project_title' AS project_title
                           FROM bundles AS b
-                                 JOIN bundles_files AS bf ON (b.uuid = bf.bundle_uuid AND b.version = bf.bundle_version)
-                                 JOIN projects AS p ON (bf.file_uuid = p.uuid AND bf.file_version = p.version))
-SELECT bp.project_uuid, bp.project_title, bs.organ, count(DISTINCT bs.file_uuid)
+                                 JOIN bundles_files AS bf ON (b.bundle_uuid = bf.bundle_uuid AND b.bundle_version = bf.bundle_version)
+                                 JOIN projects AS p ON (bf.file_uuid = p.file_uuid AND bf.file_version = p.file_version))
+SELECT bp.project_uuid as project_uuid,
+       bp.project_title as project_title,
+       bs.organ as organ,
+       count(DISTINCT bs.file_uuid)
 FROM bundles_specimens AS bs,
      bundles_projects AS bp
 WHERE bs.bundle_uuid = bp.bundle_uuid
-GROUP BY 1, 2, 3;
+GROUP BY project_uuid, project_title, organ;
 ```
 
 All together (runtime 24s 192ms)
