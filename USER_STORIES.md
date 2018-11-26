@@ -16,14 +16,14 @@ GROUP BY 1;
 
 ### specimen count per project
 ```sql
-SELECT p.uuid                                   AS project_uuid,
+SELECT p.file_uuid                                   AS project_uuid,
        p.json->'project_core'->>'project_title' AS project_title,
        s.json->'organ'->>'text'                 AS organ,
-       count(DISTINCT(s.uuid))                  AS specimen_count
+       count(DISTINCT(s.file_uuid))                  AS specimen_count
 FROM bundles AS b
        JOIN specimen_from_organisms AS s ON s.fqid = ANY(b.file_fqids)
        JOIN projects AS p ON p.fqid = ANY(b.file_fqids)
-GROUP BY 1, 2, 3;
+GROUP BY project_uuid, project_title, organ;
 ```
 
 ### data (sequence) file count per project
