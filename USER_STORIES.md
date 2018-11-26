@@ -28,18 +28,18 @@ GROUP BY project_uuid, project_title, organ;
 
 ### data (sequence) file count per project
 
-Array variant (runtime@[19938 bundles, 411394 files]: 11s 638ms)
+Array variant (runtime@[19938 bundles, 411394 files]: 11s 697ms)
 
 ```sql
-SELECT p.uuid                                   AS project_uuid,
-       p.json->'project_core'->>'project_title' AS project_title,
-       count(DISTINCT(f.uuid))                  AS file_count
+SELECT p.file_uuid                                   AS project_uuid,
+       p.json->'project_core'->>'project_title'      AS project_title,
+       count(DISTINCT(f.file_uuid))                  AS file_count
 FROM bundles AS b
        JOIN files AS f ON f.fqid = ANY(b.file_fqids)
        JOIN projects AS p ON p.fqid = ANY(b.file_fqids)
        JOIN schema_types st ON f.schema_type_id = st.id
 WHERE st.name = 'sequence_file'
-GROUP BY 1, 2;
+GROUP BY project_uuid, project_title;
 ```
 
 Join table variant (runtime 17s 708ms)
