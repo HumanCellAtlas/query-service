@@ -1,6 +1,6 @@
 chalice >= 1.1.1, < 1.2.0
 boto3==1.7.69
-inflect
+inflection==0.3.1
 dcplib==1.4.0
 hca==4.4.9
 pylru

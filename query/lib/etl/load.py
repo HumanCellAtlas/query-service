@@ -8,7 +8,7 @@ from query.lib.db.database import PostgresDatabase, Tables
 
 class Loader:
 
-    def load(self, bundle: Bundle):
+    def load(self, bundle: Bundle, transformed_bundle: dict):
         raise NotImplementedError()
 
 
@@ -19,11 +19,11 @@ class PostgresLoader(Loader):
         self._existing_view_names = set([])
         self._inserted_files = pylru.lrucache(1000)
 
-    def load(self, bundle: Bundle):
+    def load(self, bundle: Bundle, transformed_bundle: dict):
         with self._db.transaction() as (_, tables):
             self._prepare_database(tables, bundle)
         with self._db.transaction() as (_, tables):
-            self._insert_into_database(tables, bundle)
+            self._insert_into_database(tables, bundle, transformed_bundle)
 
     def _prepare_database(self, tables: Tables, bundle: Bundle):
         # get table names for tables implied by the bundle manifest
@@ -42,18 +42,18 @@ class PostgresLoader(Loader):
             except IntegrityError:
                 logger.info(f"View already exists: {view_name}")
 
-    def _insert_into_database(self, tables: Tables, bundle: Bundle):
+    def _insert_into_database(self, tables: Tables, bundle: Bundle, transformed_bundle: dict):
         # insert the bundle
-        tables.bundles.insert(bundle)
+        tables.bundles.insert(bundle, transformed_bundle)
 
         # insert files, and join table entry
         for file in bundle.files:
             if file.fqid not in self._inserted_files:
                 r = tables.files.insert(file)
-                tables.bundles_files.insert(
-                    bundle_uuid=bundle.uuid,
-                    bundle_version=bundle.version,
-                    file_uuid=file.uuid,
-                    file_version=file.metadata.version
-                )
             self._inserted_files[file.fqid] = True
+            tables.bundles_files.insert(
+                bundle_uuid=bundle.uuid,
+                bundle_version=bundle.version,
+                file_uuid=file.uuid,
+                file_version=file.metadata.version
+            )
