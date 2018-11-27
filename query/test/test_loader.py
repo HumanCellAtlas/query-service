@@ -32,7 +32,7 @@ class TestPostgresLoader(unittest.TestCase):
             self.assertEqual(result & implied_views, implied_views)
 
     def test_insert_into_database(self):
-        self.loader.load(vx_bundle)
+        self.loader.load(vx_bundle, dict(a='b'))
 
         with self.db.transaction() as (cursor, tables):
             # bundle insertion

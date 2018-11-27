@@ -40,7 +40,7 @@ class TestPostgresLoader(unittest.TestCase):
             )
 
             # insert bundle
-            result = tables.bundles.insert(vx_bundle)
+            result = tables.bundles.insert(vx_bundle, dict(a='b'))
             self.assertEqual(result, 1)
             # select bundle
             result = tables.bundles.select(vx_bundle.uuid, vx_bundle.version)
@@ -49,7 +49,8 @@ class TestPostgresLoader(unittest.TestCase):
                 result,
                 dict(
                     uuid=str(vx_bundle.uuid),
-                    version=vx_bundle.version
+                    version=vx_bundle.version,
+                    json=dict(a='b')
                 )
             )
             self.assertEqual(len(vx_bundle.files), len(file_fqids))

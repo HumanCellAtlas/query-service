@@ -8,12 +8,13 @@ from multiprocessing import Pool
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from query.lib.config import Config
-from query.lib.db.database import PostgresDatabase
-from query.lib.etl.load import PostgresLoader, Loader
-from query.lib.logger import logger
-from query.lib.model import datetime_to_version
-from query.lib.etl.extract import S3Client, S3Extractor, Extractor
+from lib.config import Config
+from lib.db.database import PostgresDatabase
+from lib.etl.load import PostgresLoader, Loader
+from lib.logger import logger
+from lib.model import datetime_to_version
+from lib.etl.extract import S3Client, S3Extractor, Extractor
+from lib.etl.transform import BundleDocumentTransform
 
 # this seems to be entirely IO bound, so we can have _lots_ of workers...
 CONCURRENCY = 50
@@ -35,7 +36,8 @@ def extract_transform_load(extractor: Extractor, loader: Loader, bundle_fqid: st
     try:
         bundle_uuid, bundle_version = bundle_fqid.split('.', 1)
         bundle = extractor.extract_bundle(bundle_uuid, bundle_version)
-        loader.load(bundle)
+        transformed_bundle = BundleDocumentTransform.transform(bundle)
+        loader.load(bundle, transformed_bundle)
         logger.info(f"Completed ETL for bundle with FQID: \"{bundle_fqid}\"")
     except:
         logger.exception(f"Could not load bundle with FQID: \"{bundle_fqid}\"")
@@ -63,7 +65,7 @@ if __name__ == '__main__':
     # eliminate fqids that have already been processed
     db = PostgresDatabase(Config.serve_database_uri)
     with db.transaction() as (cursor, _):
-        cursor.execute("SELECT uuid, version from bundles;")
+        cursor.execute("SELECT bundle_uuid, bundle_version from bundles;")
         already_processed_fqids = set(f"{ele[0]}.{datetime_to_version(ele[1])}" for ele in cursor.fetchall())
 
     logger.info(f"Number of Bundle FQIDS before filtering: {len(bundle_fqids)}")

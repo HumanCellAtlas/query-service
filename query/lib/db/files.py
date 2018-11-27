@@ -46,12 +46,12 @@ class Files(Table):
                 VALUES (%s)
                 ON CONFLICT (name) DO NOTHING;
 
-                INSERT INTO files (uuid, version, fqid, name, schema_type_id, json) (
+                INSERT INTO files (file_uuid, file_version, fqid, name, schema_type_id, json) (
                     SELECT %s, %s, %s, %s, id, %s
                     FROM schema_types
                     WHERE schema_types.name = %s
                 )
-                ON CONFLICT (uuid, version) DO NOTHING;
+                ON CONFLICT (file_uuid, file_version) DO NOTHING;
                 """,
                 (
                     file.schema_type,
@@ -66,12 +66,12 @@ class Files(Table):
         else:
             self._cursor.execute(
                 """
-                INSERT INTO files (uuid, version, fqid, name, schema_type_id, json) (
+                INSERT INTO files (file_uuid, file_version, fqid, name, schema_type_id, json) (
                     SELECT %s, %s, %s, %s, id, %s
                     FROM schema_types
                     WHERE schema_types.name is NULL
                 )
-                ON CONFLICT (uuid, version) DO NOTHING;
+                ON CONFLICT (file_uuid, file_version) DO NOTHING;
                 """,
                 (
                     str(file.uuid),
@@ -86,18 +86,18 @@ class Files(Table):
     def select(self, uuid: UUID, version: str) -> dict:
         self._cursor.execute(
             """
-            SELECT uuid, version, fqid, files.name, json
+            SELECT file_uuid, file_version, fqid, files.name, json
             FROM files
             WHERE
-                files.uuid = %s AND
-                files.version = %s
+                files.file_uuid = %s AND
+                files.file_version = %s
             """,
             (str(uuid), parse_datetime(version))
         )
         response = self._cursor.fetchall()
         if len(response) > 1:
             raise DatabaseError(
-                f"Uniqueness constraint broken for uuid={uuid}, version={version}"
+                f"Uniqueness constraint broken for file_uuid={uuid}, file_version={version}"
             )
         return dict(
             uuid=response[0][0],
@@ -129,17 +129,18 @@ class Files(Table):
             ON CONFLICT (name) DO NOTHING;
 
             CREATE TABLE IF NOT EXISTS files (
-                uuid UUID NOT NULL,
-                version timestamp with time zone NOT NULL,
-                fqid varchar(62) NOT NULL,
+                file_uuid UUID NOT NULL,
+                file_version timestamp with time zone NOT NULL,
+                fqid text NOT NULL,
                 name varchar(128) NOT NULL,
                 schema_type_id SERIAL REFERENCES schema_types(id),
                 json JSONB,
-                PRIMARY KEY(uuid, version),
-                UNIQUE (uuid, version, fqid, schema_type_id)
+                PRIMARY KEY(file_uuid, file_version),
+                UNIQUE (file_uuid, file_version, fqid, schema_type_id)
             );
-            CREATE INDEX IF NOT EXISTS files_uuid ON files USING btree (uuid);
+            CREATE INDEX IF NOT EXISTS files_uuid ON files USING btree (file_uuid);
             CREATE INDEX IF NOT EXISTS files_fqid ON files USING btree (fqid);
+            CREATE INDEX IF NOT EXISTS files_schema_type_id ON files USING btree (schema_type_id);
             CREATE INDEX IF NOT EXISTS files_jsonb_gin_index ON files USING GIN (json);
             """
         )

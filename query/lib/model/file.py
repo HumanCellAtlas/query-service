@@ -1,6 +1,6 @@
 import typing
 
-import inflect
+import inflection
 import re
 
 from uuid import UUID
@@ -10,8 +10,7 @@ from query.lib.model.metadata import FileMetadata
 
 class File(dict):
 
-    _inflect_engine = inflect.engine()
-    _normalizable_file = re.compile('.*[0-9]+[.]json$')
+    _normalizable_file = re.compile('^.*[_][0-9]+[.]json$')
 
     def __init__(self, metadata: FileMetadata, **kwargs):
         self.metadata = metadata
@@ -23,18 +22,19 @@ class File(dict):
 
     @property
     def schema_type(self) -> typing.Optional[str]:
-        if self.metadata.indexable and self.metadata.name.endswith('.json'):
-            return '_'.join(self.metadata.name.split('_')[:-1]) \
-                if self._normalizable_file.match(self.metadata.name) else self.metadata.name[:-5]
+        if self.metadata.indexable:
+            return self['describedBy'].split('/')[-1] if 'describedBy' in self else None
         return None
 
     @property
     def schema_type_plural(self):
         if self.schema_type is None:
             return None
-        group_words = self.schema_type.split('_')
-        group_words[-1] = self._inflect_engine.plural(group_words[-1])
-        return '_'.join(group_words)
+        if '_' in self.schema_type:
+            group_words = self.schema_type.split('_')
+            group_words[-1] = inflection.pluralize(group_words[-1])
+            return '_'.join(group_words)
+        return inflection.pluralize(self.schema_type)
 
     @property
     def uuid(self) -> UUID:

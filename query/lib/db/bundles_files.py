@@ -56,8 +56,8 @@ class BundlesFiles(Table):
                 bundle_version timestamp with time zone NOT NULL,
                 file_uuid UUID NOT NULL,
                 file_version timestamp with time zone NOT NULL,
-                FOREIGN KEY (bundle_uuid, bundle_version) REFERENCES bundles(uuid, version),
-                FOREIGN KEY (file_uuid, file_version) REFERENCES files(uuid, version),
+                FOREIGN KEY (bundle_uuid, bundle_version) REFERENCES bundles(bundle_uuid, bundle_version),
+                FOREIGN KEY (file_uuid, file_version) REFERENCES files(file_uuid, file_version),
                 UNIQUE (bundle_uuid, bundle_version, file_uuid, file_version)
             );
             CREATE INDEX IF NOT EXISTS bundles_files_bundle_uuid ON bundles_files USING btree (bundle_uuid);

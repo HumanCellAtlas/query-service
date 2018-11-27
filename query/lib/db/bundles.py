@@ -10,19 +10,19 @@ from query.lib.db.table import Table
 
 class Bundles(Table):
 
-    def insert(self, bundle: Bundle) -> int:
+    def insert(self, bundle: Bundle, transformed_bundle: dict) -> int:
         fqids = [f.fqid for f in bundle.files]
         self._cursor.execute(
             """
-            INSERT INTO bundles (uuid, version, file_fqids, file_fqids_array)
+            INSERT INTO bundles (bundle_uuid, bundle_version, file_fqids, json)
             VALUES (%s, %s, %s, %s)
-            ON CONFLICT (uuid, version) DO NOTHING
+            ON CONFLICT (bundle_uuid, bundle_version) DO NOTHING
             """,
             (
                 str(bundle.uuid),
                 parse_datetime(bundle.version),
-                Json(fqids),
-                fqids
+                fqids,
+                Json(transformed_bundle)
             )
         )
         result = self._cursor.rowcount
@@ -31,9 +31,9 @@ class Bundles(Table):
     def select(self, uuid: UUID, version: str) -> typing.Optional[dict]:
         self._cursor.execute(
             """
-            SELECT uuid, version, file_fqids
+            SELECT bundle_uuid, bundle_version, file_fqids, json
             FROM bundles
-            WHERE uuid = %s AND version = %s
+            WHERE bundle_uuid = %s AND bundle_version = %s
             """,
             (
                 str(uuid),
@@ -47,7 +47,8 @@ class Bundles(Table):
         return dict(
             uuid=response[0][0],
             version=datetime_to_version(response[0][1]),
-            file_fqids=response[0][2]
+            file_fqids=response[0][2],
+            json=response[0][3]
         )
 
     @requires_admin_mode
@@ -55,15 +56,15 @@ class Bundles(Table):
         self._cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS bundles (
-                uuid UUID,
-                version timestamp with time zone NOT NULL,
-                file_fqids jsonb,
-                file_fqids_array varchar(62)[],
-                PRIMARY KEY (uuid),
-                UNIQUE (uuid, version)
+                bundle_uuid UUID,
+                bundle_version timestamp with time zone NOT NULL,
+                file_fqids text[],
+                json jsonb NOT NULL,
+                PRIMARY KEY (bundle_uuid),
+                UNIQUE (bundle_uuid, bundle_version)
             );
-            CREATE INDEX IF NOT EXISTS bundles_file_fqids ON bundles USING GIN (file_fqids);
-            CREATE INDEX IF NOT EXISTS bundles_file_fqids_array ON bundles USING GIN (file_fqids_array);
+            CREATE INDEX IF NOT EXISTS bundles_json ON bundles USING GIN (json);
+            CREATE INDEX IF NOT EXISTS bundles_file_fqids_array ON bundles USING GIN (file_fqids);
         """
         )
 
