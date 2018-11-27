@@ -287,3 +287,124 @@ WHERE p.json @> '{"contributors": [{"contact_name": "Aviv,,Regev"}]}'
 Access all versions of metadata standards
 ## 24
 Get a list of all submissions in progress for a particular submitter.  A submitter that starts a submission with one broker might want/need to continue it with another.
+
+## Facet Table
+# Creation
+19,939 Bundles -> 327805 row facet table in 25s 855ms (fields include organ, organ part, method library construction, method instrument model, donor sex, donor age, age unit, donor genus species, disease, project, laboratory and file format)
+```sql
+Create MATERIALIZED VIEW facets_table
+  AS
+  -- ORGAN INFO
+    Select b.bundle_uuid        as bundle_uuid,
+           b.bundle_version     as bundle_version,
+           'organ'              as field,
+           specimen->'organ'->>'text' as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'specimen_from_organisms') as specimen
+
+    UNION
+    Select b.bundle_uuid              as bundle_uuid,
+           b.bundle_version           as bundle_version,
+           'organ_part'               as field,
+           specimen-> 'organ_part'->>'text' as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'specimen_from_organisms') as specimen
+
+    -- METHODS
+    UNION
+
+    Select b.bundle_uuid                      as bundle_uuid,
+           b.bundle_version                   as bundle_version,
+           'method-library-construction'      as field,
+           sp->'sequencing_approach'->>'text' as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'sequencing_protocols') as sp
+
+    UNION
+
+    Select b.bundle_uuid                                as bundle_uuid,
+           b.bundle_version                             as bundle_version,
+           'method-instrument-model'                    as field,
+           sp->'instrument_manufacturer_model'->>'text' as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'sequencing_protocols') as sp
+
+    -- DONOR INFO
+    UNION
+
+    Select b.bundle_uuid                              as bundle_uuid,
+           b.bundle_version                           as bundle_version,
+           'sex'                                      as field,
+           donor->>'sex'                              as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'donor_organisms') as donor
+
+
+    UNION
+
+    Select b.bundle_uuid       as bundle_uuid,
+           b.bundle_version    as bundle_version,
+           'age'               as field,
+           donor->>'organism_age' as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'donor_organisms') as donor
+
+    UNION
+
+    Select b.bundle_uuid                   as bundle_uuid,
+           b.bundle_version                as bundle_version,
+           'Genus Species'                 as field,
+           donor->'genus_species'->0->>'text' as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'donor_organisms') as donor
+
+    UNION
+
+    Select b.bundle_uuid                    as bundle_uuid,
+           b.bundle_version                 as bundle_version,
+           'age unit'                       as field,
+           donor->'organism_age_unit'->>'text' as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'donor_organisms') as donor
+
+   UNION
+
+    Select b.bundle_uuid                    as bundle_uuid,
+           b.bundle_version                 as bundle_version,
+           'disease'                        as field,
+           d->>'text'                       as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'donor_organisms') as donor,
+         json_array_elements(donor.json->'diseases') as d
+
+
+  -- ADDITIONAL SAMPLE INFO
+  UNION
+
+    Select b.bundle_uuid                              as bundle_uuid,
+           b.bundle_version                           as bundle_version,
+           'project'                                  as field,
+           project->'project_core'->>'project_title'  as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'projects') as project
+
+
+  UNION
+
+    Select b.bundle_uuid                    as bundle_uuid,
+           b.bundle_version                 as bundle_version,
+           'Laboratory'                     as field,
+           c->>'institution'                as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'projects') as project,
+         json_array_elements(project.json->'contributors') as c
+
+    UNION
+
+    Select b.bundle_uuid                                                          as bundle_uuid,
+           b.bundle_version                                                       as bundle_version,
+           'file format'                                                          as field,
+           substring(file->>'name', '^(?:(?:.){1,}?)((?:[.][a-z]{1,5}){1,2})$')   as field_value
+    from bundles as b,
+         jsonb_array_elements(b.json->'manifest'->'files') as file;
+```  
