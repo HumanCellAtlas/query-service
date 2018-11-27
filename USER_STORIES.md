@@ -289,8 +289,9 @@ Access all versions of metadata standards
 Get a list of all submissions in progress for a particular submitter.  A submitter that starts a submission with one broker might want/need to continue it with another.
 
 ## Facet Table
-# Creation
-19,939 Bundles -> 327805 row facet table in 25s 855ms (fields include organ, organ part, method library construction, method instrument model, donor sex, donor age, age unit, donor genus species, disease, project, laboratory and file format)
+### Creation
+19,939 Bundles -> 327805 row facet table in 25s 855ms 
+fields include organ, organ part, method library construction, method instrument model, donor sex, donor age, age unit, donor genus species, disease, project, laboratory and file format
 ```sql
 Create MATERIALIZED VIEW facets_table
   AS
