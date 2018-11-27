@@ -14,7 +14,7 @@ db = PostgresDatabase(Config.serve_database_uri)
 
 @return_exceptions_as_http_errors
 def query(query_string):
-    query_string = json.loads(query_string)
+    query_string = json.loads(query_string, strict=False)
     query_results, column_names = db.run_read_only_query(query_string)
     formatted_query_results = format_query_results(query_results, column_names)
     return {'query': query_string, "results": formatted_query_results}, requests.codes.ok
