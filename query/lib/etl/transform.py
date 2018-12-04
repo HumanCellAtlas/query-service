@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from lib.model import Bundle
+from query.lib.model import Bundle
 
 
 class BundleDocumentTransform:

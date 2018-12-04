@@ -71,6 +71,14 @@ resource "aws_iam_role_policy" "query_load_data_lambda" {
       "Resource": [
         "arn:aws:sqs:*:*:${aws_sqs_queue.query_queue.name}"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action":["s3:GetObject"],
+      "Resource": [
+        "arn:aws:s3:::*",
+        "arn:aws:s3:::*/*"
+        ]
     }
   ]
 }

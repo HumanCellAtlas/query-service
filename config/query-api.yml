@@ -20,7 +20,7 @@ paths:
       summary: Retreive health status of Query Service
       description: |
         Returns a 200 if Query Service is healthy.
-      operationId: query.lambdas.api_server.v1.health_check.health
+      operationId: query.lambdas.api_server.v1.endpoints.health
       tags:
         - All
       responses:
@@ -39,7 +39,7 @@ paths:
     post:
       summary: Fast completing user written query of hca metadata
       description: Query the database (query must complete within API gateway's 30 second timeout)
-      operationId: query.lambdas.api_server.v1.fast_query.query
+      operationId: query.lambdas.api_server.v1.endpoints.query
       tags:
         - All
       parameters:
@@ -70,7 +70,7 @@ paths:
     post:
       summary: Data to add to RDS
       description: Add data
-      operationId: query.lambdas.api_server.v1.fast_query.webhook
+      operationId: query.lambdas.api_server.v1.endpoints.webhook
       tags:
         - All
       parameters:
