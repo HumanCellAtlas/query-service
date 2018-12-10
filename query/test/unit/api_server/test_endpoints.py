@@ -11,8 +11,10 @@ from query.test.unit.api_server import client_for_test_api_server
 
 
 class TestEndpoints(unittest.TestCase):
-    def test_heathcheck_endpoint(self):
+    def setUp(self):
         self.client = client_for_test_api_server()
+
+    def test_heathcheck_endpoint(self):
 
         response = self.client.get(f"/v1/health")
         self.assertEqual(response.status_code, 200)
@@ -21,7 +23,6 @@ class TestEndpoints(unittest.TestCase):
     def test_query_endpoint(self, mock_ro_query):
         column_names = ['uuid', 'version', 'fqid', 'name', 'schema_type_id', 'json']
         mock_ro_query.return_value = fast_query_mock_result, column_names
-        self.client = client_for_test_api_server()
         query = "Select * From files;"
         response = self.client.post(f"/v1/query", data=json.dumps(query))
         self.assertEqual(response.status_code, 200)
@@ -29,8 +30,10 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(json.loads(response.data), expected_response_data)
 
     @patch('query.lambdas.api_server.v1.endpoints.sqs_client')
-    def test_webhook_endpoint(self, mock_sqs_client):
+    @patch('query.lambdas.api_server.v1.endpoints.os')
+    def test_webhook_endpoint(self, mock_os, mock_sqs_client):
         mock_sqs_client.send_message.return_value = {}
+        mock_os.getenv.return_value = 'queue_url.com'
         subscription_data = {
             "transaction_id": "ad36ec67-32a6-4886-93a9-29caf11e8ea8",
             "subscription_id": "3caf5b8e-2c03-4905-9785-d2b02df4ecbd",
@@ -44,11 +47,10 @@ class TestEndpoints(unittest.TestCase):
                 "bundle_version": "2018-12-03T162944.061337Z"
             }
         }
-        self.client = client_for_test_api_server()
 
         response = self.client.post("v1/webhook", data=json.dumps(subscription_data))
         mock_sqs_client.send_message.assert_called_once_with(
-            QueueUrl='https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-dev',
+            QueueUrl='queue_url.com',
             MessageBody=json.dumps(subscription_data['match'])
         )
 

@@ -6,7 +6,8 @@
       "api_gateway_stage": "dev",
       "environment_variables": {
         "DEPLOYMENT_STAGE": "dev",
-        "API_HOST": "query.dev.data.humancellatlas.org"
+        "API_HOST": "query.dev.data.humancellatlas.org",
+        "LOAD_DATA_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-dev"
       }
     },
     "setup_deployed_json": {

@@ -1,4 +1,5 @@
 import json
+import os
 
 import boto3
 import requests
@@ -28,11 +29,12 @@ def query(query_string):
 
 
 @return_exceptions_as_http_errors
-def webhook(new_data):
-    new_data = json.loads(new_data, strict=False)
+def webhook(subscription_data):
+    subscription_data = json.loads(subscription_data, strict=False)
+    queue_url = os.getenv('LOAD_DATA_QUEUE_URL')
     response = sqs_client.send_message(
-        QueueUrl=f"https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-{Config.deployment_stage}",
-        MessageBody=json.dumps(new_data['match'])
+        QueueUrl=queue_url,
+        MessageBody=json.dumps(subscription_data['match'])
     )
     return {'response': response}, requests.codes.accepted
 

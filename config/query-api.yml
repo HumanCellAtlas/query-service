@@ -68,16 +68,17 @@ paths:
 
   /v1/webhook:
     post:
-      summary: Data to add to RDS
-      description: Add data
+      summary: Endpoint for DSS subscription
+      description: |
+        Recieves a subscription event from the DSS containing the id and version of a bundle that has been added. Extracts the metadata attached to that bundle, transforms it and loads it into the db.
       operationId: query.lambdas.api_server.v1.endpoints.webhook
       tags:
         - All
       parameters:
-        - name: new_data
+        - name: subscription_data
           in: body
           schema:
-            type: string
+            $ref: '#/definitions/SubscriptionData'
       responses:
         202:
           description: Data accepted for processing
@@ -108,3 +109,24 @@ definitions:
       - title
 
 
+  SubscriptionData:
+    type: object
+    properties:
+      transaction_id:
+        type: string
+      subscription_id:
+        type: string
+        description: ID of DSS subscription
+      es_query:
+        type: object
+        properties:
+          query:
+            type: object
+            description: object containing the elastic search query matched by this bundle
+      match:
+        type: object
+        properties:
+          bundle_uuid:
+            type: string
+          bundle_version:
+            type: string

@@ -1,5 +1,5 @@
 
-resource "aws_sqs_queue" "query_queue" {
+resource "aws_sqs_queue" "load_data_queue" {
   name                      = "dcp-query-data-input-queue-${var.deployment_stage}"
 //  Queue visibility timeout must be larger than (triggered lambda) function timeout
   visibility_timeout_seconds = 900
@@ -8,14 +8,18 @@ resource "aws_sqs_queue" "query_queue" {
 
 }
 
+output "load_data" {
+  value = "${aws_sqs_queue.load_data_queue.id}"
+}
+
 
 resource "aws_sqs_queue" "deadletter_queue" {
   name                      = "dcp-query-data-input-deadletter-queue-${var.deployment_stage}"
   message_retention_seconds = 1209600
 }
 
-resource "aws_sqs_queue_policy" "data_input_query_queue_access" {
-  queue_url = "${aws_sqs_queue.query_queue.id}"
+resource "aws_sqs_queue_policy" "load_data_queue_access" {
+  queue_url = "${aws_sqs_queue.load_data_queue.id}"
 
   policy = <<POLICY
 {
@@ -27,7 +31,7 @@ resource "aws_sqs_queue_policy" "data_input_query_queue_access" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "SQS:SendMessage",
-      "Resource": "arn:aws:sqs:*:*:*"
+      "Resource": "${aws_sqs_queue.load_data_queue.arn}"
     },
     {
       "Effect": "Allow",
@@ -48,7 +52,7 @@ POLICY
 
 resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   batch_size = 1
-  event_source_arn  = "${aws_sqs_queue.query_queue.arn}"
+  event_source_arn  = "${aws_sqs_queue.load_data_queue.arn}"
   enabled           = true
   function_name     = "${aws_lambda_function.query_load_data_lambda.arn}"
 }
