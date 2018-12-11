@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -x
-euo pipefail
+set -euo pipefail
 
 api_gateway_name="query.lambdas.api_server"
 

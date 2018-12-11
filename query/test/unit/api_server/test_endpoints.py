@@ -3,11 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from test import *
-
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
-
-from query.test.unit.api_server import client_for_test_api_server
+from test.unit.api_server import client_for_test_api_server
 
 
 class TestEndpoints(unittest.TestCase):

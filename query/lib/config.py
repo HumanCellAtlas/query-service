@@ -1,5 +1,6 @@
 import os
 import json
+
 from dcplib.aws_secret import AwsSecret
 
 from query.lib.logger import logger

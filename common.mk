@@ -14,7 +14,7 @@ secrets:
 	aws secretsmanager get-secret-value \
 		--secret-id query/$(DEPLOYMENT_STAGE)/config.json | \
 		jq -r .SecretString | \
-		python -m json.tool > terraform/terraform.tfvars
+		python -m json.tool > $(PROJECT_ROOT)/terraform/terraform.tfvars
 
 
 plan:

@@ -9,8 +9,8 @@
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:aws:logs:us-east-1:861229788715:log-group:/aws/lambda/query-api-staging",
-        "arn:aws:logs:us-east-1:861229788715:log-group:/aws/lambda/query-api-staging:*:*"
+        "arn:aws:logs:us-east-1:861229788715:log-group:/aws/lambda/query-api-integration",
+        "arn:aws:logs:us-east-1:861229788715:log-group:/aws/lambda/query-api-integration:*:*"
       ]
     },
     {
@@ -20,9 +20,8 @@
         "secretsmanager:GetSecretValue"
       ],
       "Resource": [
-        "arn:aws:secretsmanager:us-east-1:861229788715:secret:query/staging/*",
-        "arn:aws:secretsmanager:us-east-1:861229788715:secret:dcp/query/staging/database-*"
-
+        "arn:aws:secretsmanager:us-east-1:861229788715:secret:query/integration/*",
+        "arn:aws:secretsmanager:us-east-1:861229788715:secret:dcp/query/integration/database-*"
       ]
     },
     {
@@ -31,7 +30,7 @@
         "sqs:SendMessage"
       ],
       "Resource": [
-        "arn:aws:secretsmanager:us-east-1:861229788715::dcp-query-data-input-queue-staging"
+        "arn:aws:secretsmanager:us-east-1:861229788715::dcp-query-data-input-queue-integration"
       ]
     }
   ]

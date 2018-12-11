@@ -22,7 +22,6 @@
       "Resource": [
         "arn:aws:secretsmanager:us-east-1:861229788715:secret:query/staging/*",
         "arn:aws:secretsmanager:us-east-1:861229788715:secret:dcp/query/staging/database-*"
-
       ]
     },
     {

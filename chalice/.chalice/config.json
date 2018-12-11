@@ -7,11 +7,27 @@
       "environment_variables": {
         "DEPLOYMENT_STAGE": "dev",
         "API_HOST": "query.dev.data.humancellatlas.org",
-        "LOAD_DATA_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-integration"
+        "LOAD_DATA_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-dev"
       }
     },
     "setup_deployed_json": {
       "api_gateway_stage": "setup_deployed_json"
+    },
+    "integration": {
+      "api_gateway_stage": "integration",
+      "environment_variables": {
+        "DEPLOYMENT_STAGE": "integration",
+        "API_HOST": "query.integration.data.humancellatlas.org",
+        "LOAD_DATA_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-integration"
+      }
+    },
+    "staging": {
+      "api_gateway_stage": "staging",
+      "environment_variables": {
+        "DEPLOYMENT_STAGE": "staging",
+        "API_HOST": "query.staging.data.humancellatlas.org",
+        "LOAD_DATA_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-staging"
+      }
     }
   },
   "lambda_timeout": 300,

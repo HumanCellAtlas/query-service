@@ -1,12 +1,12 @@
 {
-  "dev": {
-    "api_handler_name": "query-api-dev",
-    "api_handler_arn": "arn:aws:lambda:us-east-1:861229788715:function:query-api-dev",
+  "staging": {
+    "api_handler_name": "query-api-staging",
+    "api_handler_arn": "arn:aws:lambda:us-east-1:861229788715:function:query-api-staging",
     "lambda_functions": {},
     "backend": "api",
     "chalice_version": "1.1.1",
-    "rest_api_id": "fwq0w3ipuc",
-    "api_gateway_stage": "dev",
+    "rest_api_id": "zz6j5xtw29",
+    "api_gateway_stage": "staging",
     "region": "us-east-1"
   }
 }

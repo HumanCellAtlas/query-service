@@ -14,6 +14,8 @@ variable "deployment_stage" {
   type = "string"
 }
 
-data "aws_caller_identity" "current" {}
+variable "vpc_cidr_block" {
+  type = "string"
+}
 
-data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}

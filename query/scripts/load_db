@@ -59,6 +59,7 @@ def process_batch(batch: typing.List[str]):
 
 if __name__ == '__main__':
     bundle_fqids = []
+
     for line in sys.stdin:
         bundle_fqids.append(line.strip())
 
