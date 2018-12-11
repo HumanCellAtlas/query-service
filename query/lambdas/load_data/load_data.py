@@ -9,10 +9,7 @@ logger = get_logger('query.lambdas.load_data.load_data')
 
 
 def extract_transform_load(extractor: Extractor, loader: Loader, bundle_uuid: UUID, bundle_version: str):
-    try:
-        bundle = extractor.extract_bundle(bundle_uuid, bundle_version)
-        transformed_bundle = BundleDocumentTransform.transform(bundle)
-        loader.load(bundle, transformed_bundle)
-        logger.info(f"Completed ETL for bundle with FQID: \"{bundle_uuid}.{bundle_version}\"")
-    except Exception as e:
-        logger.info(f"Could not load bundle with FQID: \"{bundle_uuid}.{bundle_version}\", EXCEPTION: {e}")
+    bundle = extractor.extract_bundle(bundle_uuid, bundle_version)
+    transformed_bundle = BundleDocumentTransform.transform(bundle)
+    loader.load(bundle, transformed_bundle)
+    logger.info(f"Completed ETL for bundle with FQID: \"{bundle_uuid}.{bundle_version}\"")

@@ -112,17 +112,6 @@ definitions:
   SubscriptionData:
     type: object
     properties:
-      transaction_id:
-        type: string
-      subscription_id:
-        type: string
-        description: ID of DSS subscription
-      es_query:
-        type: object
-        properties:
-          query:
-            type: object
-            description: object containing the elastic search query matched by this bundle
       match:
         type: object
         properties:

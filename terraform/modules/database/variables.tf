@@ -1,4 +1,4 @@
-variable "pgbouncer_subnet_id" {
+gvariable "pgbouncer_subnet_id" {
   type = "string"
 }
 
@@ -22,7 +22,6 @@ variable "db_username" {
 
 variable "db_password" {
   type    = "string"
-  default = "example"
 }
 
 variable "db_instance_count" {
