@@ -1,0 +1,8 @@
+requests==2.19.1
+dcplib==1.4.0
+SQLAlchemy==1.2.10
+psycopg2-binary==2.7.5
+inflect
+inflection
+hca==4.4.9
+pylru

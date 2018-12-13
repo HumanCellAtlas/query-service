@@ -24,6 +24,15 @@
         "arn:aws:secretsmanager:us-east-1:$account_id:secret:dcp/query/${DEPLOYMENT_STAGE}/database-*"
 
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:us-east-1:$account_id::dcp-query-data-input-queue-${DEPLOYMENT_STAGE}"
+      ]
     }
   ]
 }

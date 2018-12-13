@@ -20,7 +20,7 @@ paths:
       summary: Retreive health status of Query Service
       description: |
         Returns a 200 if Query Service is healthy.
-      operationId: query.lambdas.api_server.v1.health_check.health
+      operationId: query.lambdas.api_server.v1.endpoints.health
       tags:
         - All
       responses:
@@ -39,7 +39,7 @@ paths:
     post:
       summary: Fast completing user written query of hca metadata
       description: Query the database (query must complete within API gateway's 30 second timeout)
-      operationId: query.lambdas.api_server.v1.fast_query.query
+      operationId: query.lambdas.api_server.v1.endpoints.query
       tags:
         - All
       parameters:
@@ -66,6 +66,29 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /v1/webhook:
+    post:
+      summary: Endpoint for DSS subscription
+      description: |
+        Recieves a subscription event from the DSS containing the id and version of a bundle that has been added. Extracts the metadata attached to that bundle, transforms it and loads it into the db.
+      operationId: query.lambdas.api_server.v1.endpoints.webhook
+      tags:
+        - All
+      parameters:
+        - name: subscription_data
+          in: body
+          schema:
+            $ref: '#/definitions/SubscriptionData'
+      responses:
+        202:
+          description: Data accepted for processing
+          schema:
+            type: object
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
 definitions:
 
   Error:
@@ -86,3 +109,13 @@ definitions:
       - title
 
 
+  SubscriptionData:
+    type: object
+    properties:
+      match:
+        type: object
+        properties:
+          bundle_uuid:
+            type: string
+          bundle_version:
+            type: string

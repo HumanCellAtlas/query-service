@@ -1,7 +1,9 @@
 include ../common.mk
+export LOAD_DATA_QUEUE_URL := $(shell cd ../terraform && terraform output load_data_queue_url)
 
 export EXPORT_ENV_VARS_TO_LAMBDA=DEPLOYMENT_STAGE \
-			API_HOST
+			API_HOST \
+			LOAD_DATA_QUEUE_URL
 
 clean:
 	git clean -df .

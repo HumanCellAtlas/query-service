@@ -16,3 +16,4 @@ def client_for_test_api_server():
     flask_app.add_api(specification)
 
     return flask_app.app.test_client()
+
