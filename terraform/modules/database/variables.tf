@@ -1,4 +1,4 @@
-gvariable "pgbouncer_subnet_id" {
+variable "pgbouncer_subnet_id" {
   type = "string"
 }
 

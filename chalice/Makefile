@@ -1,5 +1,5 @@
 include ../common.mk
-LOAD_DATA_QUEUE_URL := $(shell cd ../terraform && terraform output load_data_queue_url)
+export LOAD_DATA_QUEUE_URL := $(shell cd ../terraform && terraform output load_data_queue_url)
 
 export EXPORT_ENV_VARS_TO_LAMBDA=DEPLOYMENT_STAGE \
 			API_HOST \
