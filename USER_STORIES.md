@@ -17,14 +17,28 @@ WHERE b.json @> '{"specimen_from_organisms": [{"organ": {"text": "pancreas"}}]}'
   AND COALESCE(o->>'organism_age', '0') :: INTEGER BETWEEN 40 AND 50;
 ```
 
-# 2
-How many experiments from X lab
+### 2
+How many experiments from X lab?
 
 ```sql
 SELECT count(DISTINCT p.json->'project_core'->'project_title')
 FROM projects AS p,
      jsonb_array_elements(p.json->'contributors') AS contribs
 WHERE contribs->>'laboratory' LIKE '%Sarah Teichmann%'
+```
+
+### 3
+How many cells from X lab?
+
+```sql
+SELECT sum(bundle_counts.cell_count)
+FROM (SELECT (c->>'total_estimated_cells'):: INTEGER                                        AS cell_count,
+             ROW_NUMBER() OVER (PARTITION BY b.bundle_uuid ORDER BY b.bundle_version DESC) AS rk
+      FROM bundles AS b,
+           jsonb_array_elements(b.json->'cell_suspensions') AS c,
+           jsonb_array_elements(b.json->'projects'->0->'contributors') AS contribs
+      WHERE contribs->>'laboratory' LIKE '%Sarah Teichmann%') AS bundle_counts
+WHERE bundle_counts.rk = 1;
 ```
 
 ## Blue Box Queries
