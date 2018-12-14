@@ -1,6 +1,10 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_ecs_task_definition" "pgbouncer" {
   family                   = "query-pgbouncer-service-${var.deployment_stage}"
   requires_compatibilities = ["FARGATE"]
+  execution_role_arn = "${aws_iam_role.task_executor.arn}"
+  task_role_arn = "${aws_iam_role.pgbouncer.arn}"
 
   container_definitions = <<DEFINITION
 [
@@ -44,7 +48,15 @@ resource "aws_ecs_task_definition" "pgbouncer" {
     "memory": 1024,
     "cpu": 512,
     "image": "docker.io/humancellatlas/pgbouncer:latest",
-    "name": "pgbouncer-${var.deployment_stage}"
+    "name": "pgbouncer-${var.deployment_stage}",
+    "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${aws_cloudwatch_log_group.pgbouncer.name}",
+          "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "ecs"
+        }
+    }
   }
 ]
 DEFINITION
@@ -52,6 +64,77 @@ DEFINITION
   network_mode = "awsvpc"
   cpu          = "512"
   memory       = "1024"
+}
+
+resource "aws_iam_role" "task_executor" {
+  name = "queryPgbouncerTaskExecutionRole"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ecs.amazonaws.com",
+          "ecs-tasks.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "task_executor_ecs" {
+  role = "${aws_iam_role.task_executor.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role" "pgbouncer" {
+  name = "query-pgbouncer"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ecs-tasks.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "pgbouncer" {
+  name = "query-pgbouncer"
+  role = "${aws_iam_role.pgbouncer.id}"
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "${aws_cloudwatch_log_group.pgbouncer.arn}:*",
+            "Effect": "Allow"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "logs:CreateLogGroup",
+            "Resource": "${aws_cloudwatch_log_group.pgbouncer.arn}"
+        }
+    ]
+}
+EOF
 }
 
 resource "aws_ecs_cluster" "pgbouncer" {

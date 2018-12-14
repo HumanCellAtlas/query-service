@@ -19,6 +19,7 @@ module "database" {
   lb_subnet_ids       = "${data.aws_subnet_ids.query_vpc.ids}"
   pgbouncer_subnet_id = "${element(data.aws_subnet_ids.query_vpc.ids, 0)}"
   vpc_id              = "${data.aws_vpc.selected.id}"
+  aws_region          = "${var.aws_region}"
 }
 
 module "query-service-infra" {
