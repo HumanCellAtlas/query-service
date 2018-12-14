@@ -17,6 +17,16 @@ WHERE b.json @> '{"specimen_from_organisms": [{"organ": {"text": "pancreas"}}]}'
   AND COALESCE(o->>'organism_age', '0') :: INTEGER BETWEEN 40 AND 50;
 ```
 
+# 2
+How many experiments from X lab
+
+```sql
+SELECT count(DISTINCT p.json->'project_core'->'project_title')
+FROM projects AS p,
+     jsonb_array_elements(p.json->'contributors') AS contribs
+WHERE contribs->>'laboratory' like '%Sarah Teichmann%'
+```
+
 ## Blue Box Queries
 Query user stories taken from the [Blue Box Queries
 Table](https://docs.google.com/spreadsheets/d/1PBMrc0oql4gPpH_cQMqlf7ASNMwePRQZNCutxeSFze8/edit#gid=0)
