@@ -24,6 +24,10 @@ variable "db_password" {
   type    = "string"
 }
 
+variable "aws_region" {
+  type    = "string"
+}
+
 variable "db_instance_count" {
   type    = "string"
   default = 2
