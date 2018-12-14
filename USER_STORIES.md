@@ -41,6 +41,8 @@ FROM (SELECT (c->>'total_estimated_cells') :: INTEGER                           
 WHERE bundle_counts.rk = 1;
 ```
 
+Notice here that the `PARTITION BY b.bundle_uuid ORDER BY b.bundle_version DESC` and `WHERE bundle_counts.rk = 1` is used to select the most recent version of all bundles from Sarah.
+
 ## Blue Box Queries
 Query user stories taken from the [Blue Box Queries
 Table](https://docs.google.com/spreadsheets/d/1PBMrc0oql4gPpH_cQMqlf7ASNMwePRQZNCutxeSFze8/edit#gid=0)
