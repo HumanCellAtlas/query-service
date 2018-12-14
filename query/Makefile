@@ -5,8 +5,15 @@ install:
 
 .PHONY: test
 test:
-	. venv/bin/activate && python -m unittest discover -s test -p 'test_*.py'
+	. venv/bin/activate && python -m unittest discover -s test/unit -p 'test_*.py' --top-level-directory . --verbose
+
+.PHONY: functional-tests
+functional-tests:
+	PYTHONWARNINGS=ignore:ResourceWarning python \
+		-m unittest discover --start-directory test/functional --top-level-directory . --verbose
+
 
 .PHONY: deploy
 deploy:
-	@echo "Nothing to deploy yet!"
+	cd ../chalice && make deploy
+	cd ../load_data_lambda && make deploy

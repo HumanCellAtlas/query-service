@@ -31,6 +31,12 @@ init:
 		-backend-config="profile=${AWS_PROFILE}" \
 		-backend-config="region=${AWS_REGION}"
 
+gitlab-init:
+	-rm -f .terraform/terraform.tfstate
+	terraform init \
+		-backend-config="bucket=${TF_S3_BUCKET}" \
+		-backend-config="key=query-service/$(DEPLOYMENT_STAGE)/terraform.tfstate"
+
 destroy: init
 	terraform destroy
 

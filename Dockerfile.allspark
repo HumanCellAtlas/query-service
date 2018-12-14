@@ -42,6 +42,7 @@ RUN apt-get install -y docker-ce
 # base requirements
 RUN apt-get install --assume-yes --no-install-recommends \
     build-essential \
+    gettext \
     jq \
     make \
     moreutils \
@@ -49,7 +50,8 @@ RUN apt-get install --assume-yes --no-install-recommends \
     python3-dev \
     python3-setuptools \
     wget \
-    unzip
+    unzip \
+    zip
 
 
 RUN python3 -m pip install --upgrade pip==10.0.1
@@ -57,8 +59,14 @@ RUN python3 -m pip install virtualenv==16.0.0
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN ln -s /usr/bin/pip3 /usr/bin/pip
 
+RUN pip install hca==4.4.9
 RUN pip install awscli --upgrade
 RUN pip install boto3 --upgrade
+RUN pip install chalice>=1.1.1
+RUN pip install connexion==1.5.2
+RUN pip install dcplib==1.4.0
+RUN pip install psycopg2-binary==2.7.5
+
 
 RUN useradd -d /home/hca_cicd -ms /bin/bash -g root -G sudo hca_cicd
 RUN mkdir /HumanCellAtlas && chown hca_cicd /HumanCellAtlas
@@ -69,9 +77,9 @@ ENV PATH ${BIN_DIR}:${PATH}
 RUN mkdir -p ${BIN_DIR}
 
 RUN curl \
- https://releases.hashicorp.com/terraform/0.11.7/terraform_0.11.7_linux_amd64.zip \
- -o ./terraform_0.11.7_linux_amd64.zip \
-    && unzip terraform_0.11.7_linux_amd64.zip -d ${BIN_DIR} \
+ https://releases.hashicorp.com/terraform/0.11.10/terraform_0.11.10_linux_amd64.zip \
+ -o ./terraform_0.11.10_linux_amd64.zip \
+    && unzip terraform_0.11.10_linux_amd64.zip -d ${BIN_DIR} \
     && chmod 755 "${BIN_DIR}/terraform"
 
 RUN curl \

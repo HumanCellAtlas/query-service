@@ -24,8 +24,10 @@ services:
 - docker:dind
 
 stages:
-- infra_test_build
+- infra
+- test
 - deploy
+- functional_tests
 
 before_script:
   - export IMAGE_TAG=${CI_BUILD_REF_NAME}-$(git describe --tags --always)-${CI_PIPELINE_ID}
@@ -35,21 +37,27 @@ before_script:
   - else
   -   export DEPLOYMENT_STAGE="$CI_COMMIT_REF_NAME"
   - fi
+  - source environment
+  - export AWS_REGION=us-east-1
+  - export LC_ALL=C.UTF-8
+  - export LANG=C.UTF-8
 
-#infra:
-#  stage: infra_test_build
-#  script:
-#    - cd terraform/envs/${DEPLOYMENT_STAGE}/query-service-infra/ && make plan
+infra:
+  stage: infra
+  script:
+    - cd terraform/ && make secrets gitlab-init plan
 
 test:
-  stage: infra_test_build
+  stage: test
   script:
     - cd query/ && make install test
 
 deploy:
   stage: deploy
-  only:
-    refs:
-      - master
   script:
     - cd query && make deploy
+
+functional_tests:
+  stage: functional_tests
+  script:
+    - cd query && make install functional-tests
