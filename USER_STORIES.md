@@ -24,7 +24,7 @@ How many experiments from X lab
 SELECT count(DISTINCT p.json->'project_core'->'project_title')
 FROM projects AS p,
      jsonb_array_elements(p.json->'contributors') AS contribs
-WHERE contribs->>'laboratory' like '%Sarah Teichmann%'
+WHERE contribs->>'laboratory' LIKE '%Sarah Teichmann%'
 ```
 
 ## Blue Box Queries
