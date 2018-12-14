@@ -24,7 +24,7 @@ How many experiments from X lab?
 SELECT count(DISTINCT p.json->'project_core'->'project_title')
 FROM projects AS p,
      jsonb_array_elements(p.json->'contributors') AS contribs
-WHERE contribs->>'laboratory' LIKE '%Sarah Teichmann%'
+WHERE contribs->>'laboratory' LIKE '%Sarah Teichmann%';
 ```
 
 ### 3
@@ -32,7 +32,7 @@ How many cells from X lab?
 
 ```sql
 SELECT sum(bundle_counts.cell_count)
-FROM (SELECT (c->>'total_estimated_cells'):: INTEGER                                        AS cell_count,
+FROM (SELECT (c->>'total_estimated_cells') :: INTEGER                                      AS cell_count,
              ROW_NUMBER() OVER (PARTITION BY b.bundle_uuid ORDER BY b.bundle_version DESC) AS rk
       FROM bundles AS b,
            jsonb_array_elements(b.json->'cell_suspensions') AS c,
