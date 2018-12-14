@@ -1,19 +1,20 @@
 # User Stories and Matching Queries
 
+## Blue Box Queries
 Query user stories taken from the [Blue Box Queries
 Table](https://docs.google.com/spreadsheets/d/1PBMrc0oql4gPpH_cQMqlf7ASNMwePRQZNCutxeSFze8/edit#gid=0)
 
-## 1
+### 1
 Please give me a list of all the contact emails and titles for all the projects, and how many samples (specimens) and sequencing files each project has.
 
-### emails
+#### emails
 ```sql
 SELECT p.json->'project_core'->>'project_title' AS title, jsonb_agg(contributors->'email') AS emails
 FROM projects AS p,
      jsonb_array_elements(p.json->'contributors') AS contributors
 GROUP BY 1;
 ```
-### data (sequence) file count per project
+#### data (sequence) file count per project
 
 Array variant (runtime@[19938 bundles, 411394 files]: 11s 697ms)
 
@@ -29,7 +30,7 @@ WHERE st.name = 'sequence_file'
 GROUP BY project_uuid, project_title;
 ```
 
-### specimen count per project
+#### specimen count per project
 Array variant (runtime 11s 545ms)
 ```sql
 SELECT p.file_uuid                                   AS project_uuid,
@@ -99,17 +100,17 @@ from emailsTempTable as e
   join countsTable as c on c.project_title = e.project_title;
 ```
 
-## 2
+### 2
 I’m trying to figure out whether this is a batch effect. Please try to find me examples where the same type of cell was sequenced by the same lab by two different single cell isolation and sequencing techniques. Please also find examples where the same type of cell was sequenced by two different labs using what is supposed to be the same technique.
 
-## 3
+### 3
 Find all bundles specified in release 'X' with tissue type 'Y' Note: could substitute wide variety of other bio constraint, eg, "with coverage gt 10X", etc.
 
 ```sql
 /* can't do this without establishing release design first */
 ```
 
-## 4
+### 4
 Find all fastq single cell files that are from a human, that hasn't been processed (no analysis.json file)
 
 Denormalized variant (runtime@[19938 bundles, 411394 files]: 3s 127ms)
@@ -181,7 +182,7 @@ FROM bundles AS b
 WHERE f.name LIKE '%.fastq.gz';
 ```
 
-## 5
+### 5
 What are all the files that were submitted as part of a project? (What are my submissions x timeframe, project name, new study) UI: should be able to page/facet for large lists. Would also like to see the status of each file that is retreived b y the query (may need to break this out into a separate case)
 
 ```sql
@@ -194,7 +195,7 @@ WHERE st.name IS NULL /* not a metadata file */
 GROUP BY 1, 2, 3;
 ```
 
-## 6 & 7
+### 6 & 7
 * What are all the files that are the results of analysis of files submitted as part of a project? (overlap with #5 above) Release bundles? “Terminal” or latest bundle
 * find all bundles created with a specific method or reference (may want to reprocess the input bundles) May be a 2 step search, 1. Find all results created with a specific version/reference, 2. Use them to find all the source bundles
 
@@ -212,7 +213,7 @@ FROM files AS f
                AND p.uuid = '08e7b6ba-5825-47e9-be2d-7978533c5f8c') AS outputs ON f.uuid = outputs.uuid;
 ```
 
-## 8
+### 8
 What are all of the files of a particular format associated with an particular organ?
 
 ```sql
@@ -224,12 +225,12 @@ WHERE s.json @> '{"organ": {"text": "pancreas"}}'
   AND f.name LIKE '%.fastq.gz'
 ```
 
-## 9
+### 9
 Here's a list of files I'm interested in. What is their total size? Count might also be useful
 
 * TODO: depends on adding file size to the files table https://github.com/HumanCellAtlas/query-service/issues/40
 
-## 10
+### 10
 DCP dashboard - What are all the files submitted since a certain date?
 
 ```sql
@@ -238,32 +239,32 @@ FROM files
 WHERE version > current_date - INTERVAL '4 weeks';
 ```
 
-## 11
+### 11
 What samples have no files?  Or, perhaps since no files takes it outside of the blue box rework query as:  given a sample UUID are there any bundles and files associated with it?
-## 12
+### 12
 On the creation or update of an ingest bundle we would need an event to be created based on the sample.donor.species and the assay.single_cell.method.
-## 13
+### 13
 How many (find?) ingest bundles satisfy a query based on sample.donor.species and assay.single_cell.method
-## 14
+### 14
 Create events for all ingest bundles that satisfy a query based on sample.donor.species and assay.single_cell.method
-## 15
+### 15
 Select all ingest bundles associated with a project. (same as #1?)
-## 16
+### 16
 I'm a submitting lab and I submitted some raw data bundles and want to know their status -- have they made it into blue box, been analyzed by green box? If they've been analyzed, where are the analysis bundles? I might ask for status for all samples in a given project, or for some subset of samples in a project. I might want to do the query myself or I might submit a ticket for DCP operations staff to handle the querying.
-## 17
+### 17
 I'm a submitting lab and I want a list of all raw data and analysis bundles for all data that my lab has ever submitted, or all submitted during a certain date range, or all analyzed during a certain date range.
-## 18
+### 18
 I'm a submitting lab and I just figured out that some of the raw data bundles I submitted are bad -- something went wrong in the lab. I want to find all raw data bundles (and possibly their associated analysis bundles) where the lab processing took place during a certain date range, or used a certain batch of reagents, or that matches some other combination of metadata related to sample prep / lab work.
-## 19
+### 19
 Multi'omics analysis. Imagine a future workflow in green box (or a portal) that wants to do integrative analysis on two data types -- say raw imaging data and raw RNA-seq data. We would need a way to query and trigger events whenever a pair of matching bundles (for the same sample id) get deposited. In other words, imaging bundle alone = no event, sequencing bundle alone = no event, imaging + sequencing bundles = event.
-## 20
+### 20
 Retreive a list of relesaes that a submission is part of
 
 ```sql
 /* can't do this without establishing release design first */
 ```
 
-## 21
+### 21
 Get list of submitters
 
 ```sql
@@ -273,7 +274,7 @@ FROM projects AS p,
 WHERE contributors ? 'contact_name'
 ```
 
-## 22
+### 22
 Get list of submissions for a submitter
 
 ```sql
@@ -283,12 +284,12 @@ WHERE p.json @> '{"contributors": [{"contact_name": "Aviv,,Regev"}]}'
    OR p.json @> '{"contributors": [{"contact_name": "Sarah,,Teichmann"}]}';
 ```
 
-## 23
+### 23
 Access all versions of metadata standards
-## 24
+### 24
 Get a list of all submissions in progress for a particular submitter.  A submitter that starts a submission with one broker might want/need to continue it with another.
 
-## Facet Table
+## Faceted Search
 ### Creation
 19,939 Bundles -> 327805 row facet table in 25s 855ms 
 fields include organ, organ part, method library construction, method instrument model, donor sex, donor age, age unit, donor genus species, disease, project, laboratory and file format
