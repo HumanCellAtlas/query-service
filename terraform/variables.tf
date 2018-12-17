@@ -27,17 +27,10 @@ variable "api_id" {
   type = "string"
 }
 
-//data "aws_vpc" "selected" {
-//  id = "${var.vpc_id}"
-//}
 
 variable "aws_region" {
   type = "string"
 }
-
-//data "aws_subnet_ids" "query_vpc" {
-//  vpc_id = "${data.aws_vpc.selected.id}"
-//}
 
 variable "vpc_cidr_block" {
   type = "string"

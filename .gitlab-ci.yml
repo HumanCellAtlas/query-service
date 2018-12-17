@@ -54,6 +54,13 @@ test:
 
 deploy:
   stage: deploy
+  only:
+    refs:
+      - master
+      - integration
+      - staging
+      - gitlab
+
   script:
     - cd query && make deploy
 

@@ -1,9 +1,5 @@
-import os
-import sys
 import unittest
 from unittest.mock import Mock, patch
-# pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..'))  # noqa
-# sys.path.insert(0, pkg_root)  # noqa
 from lambdas.load_data.load_data import extract_transform_load
 from load_data_lambda.app import load_data
 
