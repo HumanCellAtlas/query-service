@@ -9,11 +9,11 @@ test:
 
 .PHONY: functional-tests
 functional-tests:
-	PYTHONWARNINGS=ignore:ResourceWarning python \
-		-m unittest discover --start-directory test/functional --top-level-directory . --verbose
+	python -m unittest discover --start-directory test/functional --top-level-directory . --verbose
 
 
 .PHONY: deploy
 deploy:
-	cd ../chalice && make deploy
-	cd ../load_data_lambda && make deploy
+	$(MAKE) -C ../chalice $@
+	$(MAKE) -C ../load_data_lambda $@
+

@@ -1,9 +1,16 @@
 include ../common.mk
 export LOAD_DATA_QUEUE_URL := $(shell cd ../terraform && terraform output load_data_queue_url)
-
 export EXPORT_ENV_VARS_TO_LAMBDA=DEPLOYMENT_STAGE \
 			API_HOST \
 			LOAD_DATA_QUEUE_URL
+
+check-queue:
+ifeq ($(DEPLOYMENT_STAGE),$(findstring $(DEPLOYMENT_STAGE),$(LOAD_DATA_QUEUE_URL)))
+	@echo -e "CORRECT ENV FOR QUEUE URL"
+else
+	$(error incorrect ENV: $(DEPLOYMENT_STAGE) FOR QUEUE URL: $(LOAD_DATA_QUEUE_URL))
+endif
+
 
 clean:
 	git clean -df .
@@ -11,22 +18,16 @@ clean:
 clobber: clean
 	git checkout .chalice/*.json
 
-build:
+build: check-queue
 	rm -rf chalicelib/config
 	rm -rf chalicelib/query
 
-	mkdir -p chalicelib/query/lib
-	mkdir -p chalicelib/query/lambdas
 	mkdir -p chalicelib/config
 
 	cp index.html chalicelib/
 
+	rsync -av ../query chalicelib/ --exclude venv/ --exclude test/
 
-	cp -R ../query/__init__.py chalicelib/query
-	cp -R ../query/lib chalicelib/query
-	cp -R ../query/lambdas/__init__.py \
-		  ../query/lambdas/api_server \
-		chalicelib/query/lambdas
 	envsubst '$$API_HOST' < ../config/query-api.yml > chalicelib/config/query-api.yml
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
 

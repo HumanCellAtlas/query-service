@@ -21,10 +21,7 @@ build:
 
 	cp -R vendor.in/* target/
 
-	cp -R ../query/__init__.py target/query
-	cp -R ../query/lambdas target/query
-	cp -R ../query/lib target/query
-	cp -R ../query/scripts target/query
+	rsync -av ../query target/ --exclude venv/ --exclude test/
 
 	cp -R *.py target/
 	# build.zip contains the psycopg2-3.6 package downloaded from https://github.com/jkehler/awslambda-psycopg2

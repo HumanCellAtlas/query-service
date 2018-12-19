@@ -32,6 +32,11 @@ class Config:
         self.__dict__[attr] = value
 
     deployment_stage = _get(os.environ, 'DEPLOYMENT_STAGE')
+    queue_url = _get(os.environ, 'LOAD_DATA_QUEUE_URL', default="NO_QUEUE_URL")
+
+    _api_host = _get(os.environ, 'API_HOST', default="NO_API_HOST")
+
+    api_url = f"https://{_api_host}/v1"
 
     _secret = json.loads(AwsSecret(f"dcp/query/{deployment_stage}/database").value)
 

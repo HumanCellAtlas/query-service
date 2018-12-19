@@ -4,21 +4,16 @@ import unittest
 
 import requests
 
+from lib.config import Config
 
 
 class TestQueryService(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.batch = boto3.client('batch')
-        self.uri = None
-        # self.db_session_maker = DBSessionMaker()
-
-    def setUp(self):
-        self.deployment_stage = os.environ['DEPLOYMENT_STAGE']
-        self.api_url = f"https://{os.environ['API_HOST']}/v1"
-        self.verbose = True
-        print(f"\n\nTESTING ENVIRONMENT {self.deployment_stage} at UFL {self.api_url}. \n")
+        self.deployment_stage = Config.deployment_stage
+        self.api_url = Config.api_url
+        print(f"\n\nTESTING ENVIRONMENT {self.deployment_stage} at URL {self.api_url}. \n")
 
     def test_health_check(self):
         response = self._make_request(

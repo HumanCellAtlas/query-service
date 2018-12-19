@@ -31,7 +31,7 @@ def query(query_string):
 @return_exceptions_as_http_errors
 def webhook(subscription_data):
     subscription_data = json.loads(subscription_data, strict=False)
-    queue_url = os.getenv('LOAD_DATA_QUEUE_URL')
+    queue_url = Config.queue_url
     response = sqs_client.send_message(
         QueueUrl=queue_url,
         MessageBody=json.dumps(subscription_data['match'])

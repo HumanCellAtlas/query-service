@@ -59,7 +59,6 @@ deploy:
       - master
       - integration
       - staging
-      - gitlab
 
   script:
     - cd query && make deploy
