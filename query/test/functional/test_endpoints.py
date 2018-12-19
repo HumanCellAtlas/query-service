@@ -8,7 +8,8 @@ from lib.config import Config
 
 
 class TestQueryService(unittest.TestCase):
-    print(f"\n\nTESTING ENVIRONMENT {Config.deployment_stage} at URL {Config.api_url}. \n")
+    def setUp(self):
+        print(f"\n\nTESTING ENVIRONMENT {Config.deployment_stage} at URL {Config.api_url}. \n")
 
     def test_health_check(self):
         response = self._make_request(
@@ -16,7 +17,6 @@ class TestQueryService(unittest.TestCase):
             verb='GET',
             url=f"{Config.api_url}/health",
             expected_status=200)
-        print(f"RESPONSE: {response}")
 
     def test_query(self):
         query = "SELECT count(*) FROM FILES;"
