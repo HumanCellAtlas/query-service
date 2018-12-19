@@ -8,6 +8,7 @@ from lib.config import Config
 
 
 class TestQueryService(unittest.TestCase):
+
     def setUp(self):
         print(f"\n\nTESTING ENVIRONMENT {Config.deployment_stage} at URL {Config.api_url}. \n")
 
