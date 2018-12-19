@@ -14,12 +14,15 @@ install:
 
 build:
 	rm -rf target
+	rm -rf load_data.zip
 	mkdir target
+	mkdir target/query
 	pip install -r requirements.txt -t target/ --upgrade
 
 	cp -R vendor.in/* target/
 
-	cp -R ../query target/
+	rsync -av ../query target/ --exclude venv/ --exclude test/
+
 	cp -R *.py target/
 	# build.zip contains the psycopg2-3.6 package downloaded from https://github.com/jkehler/awslambda-psycopg2
 	# and renamed psycopg2

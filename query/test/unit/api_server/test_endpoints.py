@@ -3,11 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from test import *
-
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
-
-from query.test.unit.api_server import client_for_test_api_server
+from test.unit.api_server import client_for_test_api_server
 
 
 class TestEndpoints(unittest.TestCase):
@@ -33,7 +29,6 @@ class TestEndpoints(unittest.TestCase):
     @patch('query.lambdas.api_server.v1.endpoints.os')
     def test_webhook_endpoint(self, mock_os, mock_sqs_client):
         mock_sqs_client.send_message.return_value = {}
-        mock_os.getenv.return_value = 'queue_url.com'
         subscription_data = {
             "transaction_id": "ad36ec67-32a6-4886-93a9-29caf11e8ea8",
             "subscription_id": "3caf5b8e-2c03-4905-9785-d2b02df4ecbd",
@@ -50,7 +45,7 @@ class TestEndpoints(unittest.TestCase):
 
         response = self.client.post("v1/webhook", data=json.dumps(subscription_data))
         mock_sqs_client.send_message.assert_called_once_with(
-            QueueUrl='queue_url.com',
+            QueueUrl='NO_QUEUE_URL',
             MessageBody=json.dumps(subscription_data['match'])
         )
 

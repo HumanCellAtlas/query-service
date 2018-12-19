@@ -50,4 +50,5 @@ def get_chalice_app(flask_app):
 
     return app
 
+
 app = get_chalice_app(create_app().app)

@@ -11,7 +11,6 @@ from connexion.lifecycle import ConnexionResponse
 from query.lib.common.exceptions import QueryException
 from query.lib.common.logging import get_logger
 
-
 get_logger('boto3').setLevel(logging.WARNING)
 get_logger('botocore').setLevel(logging.WARNING)
 get_logger('nose').setLevel(logging.WARNING)

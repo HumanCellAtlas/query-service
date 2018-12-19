@@ -14,7 +14,7 @@ secrets:
 	aws secretsmanager get-secret-value \
 		--secret-id query/$(DEPLOYMENT_STAGE)/config.json | \
 		jq -r .SecretString | \
-		python -m json.tool > terraform/terraform.tfvars
+		python -m json.tool > $(PROJECT_ROOT)/terraform/terraform.tfvars
 
 
 plan:
@@ -30,6 +30,12 @@ init:
 		-backend-config="key=query-service/$(DEPLOYMENT_STAGE)/terraform.tfstate" \
 		-backend-config="profile=${AWS_PROFILE}" \
 		-backend-config="region=${AWS_REGION}"
+
+gitlab-init:
+	-rm -f .terraform/terraform.tfstate
+	terraform init \
+		-backend-config="bucket=${TF_S3_BUCKET}" \
+		-backend-config="key=query-service/$(DEPLOYMENT_STAGE)/terraform.tfstate"
 
 destroy: init
 	terraform destroy

@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import Mock, patch
-
 from lambdas.load_data.load_data import extract_transform_load
 from load_data_lambda.app import load_data
 

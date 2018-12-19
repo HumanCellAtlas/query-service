@@ -1,1 +1,1 @@
--r ../query/requirements.txt
+ -r ../query/requirements.txt

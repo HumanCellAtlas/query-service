@@ -67,7 +67,7 @@ DEFINITION
 }
 
 resource "aws_iam_role" "task_executor" {
-  name = "queryPgbouncerTaskExecutionRole"
+  name = "queryPgbouncerTaskExecutionRole-${var.deployment_stage}"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -93,7 +93,7 @@ resource "aws_iam_role_policy_attachment" "task_executor_ecs" {
 }
 
 resource "aws_iam_role" "pgbouncer" {
-  name = "query-pgbouncer"
+  name = "query-pgbouncer-${var.deployment_stage}"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -113,7 +113,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "pgbouncer" {
-  name = "query-pgbouncer"
+  name = "query-pgbouncer-policy-${var.deployment_stage}"
   role = "${aws_iam_role.pgbouncer.id}"
   policy = <<EOF
 {
