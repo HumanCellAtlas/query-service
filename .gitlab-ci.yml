@@ -61,7 +61,8 @@ deploy:
       - staging
 
   script:
-    - cd query && make deploy
+    - cd terraform && make secrets gitlab-init
+    - cd ../query && make deploy
 
 functional_tests:
   stage: functional_tests
