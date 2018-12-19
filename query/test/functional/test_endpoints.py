@@ -8,18 +8,13 @@ from lib.config import Config
 
 
 class TestQueryService(unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.deployment_stage = Config.deployment_stage
-        self.api_url = Config.api_url
-        print(f"\n\nTESTING ENVIRONMENT {self.deployment_stage} at URL {self.api_url}. \n")
+    print(f"\n\nTESTING ENVIRONMENT {Config.deployment_stage} at URL {Config.api_url}. \n")
 
     def test_health_check(self):
         response = self._make_request(
             description='CHECK SERVICE HEALTH',
             verb='GET',
-            url=f"{self.api_url}/health",
+            url=f"{Config.api_url}/health",
             expected_status=200)
         print(f"RESPONSE: {response}")
 
@@ -28,7 +23,7 @@ class TestQueryService(unittest.TestCase):
         response = self._make_request(
             description='CHECK QUERY ENDPOINT',
             verb='POST',
-            url=f"{self.api_url}/query",
+            url=f"{Config.api_url}/query",
             data=json.dumps(query),
             expected_status=200
         )
