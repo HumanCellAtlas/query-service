@@ -5,7 +5,7 @@
 Query user stories taken from @GenevieveHalliburton's [Query brainstorm and examples](Query brainstorm and examples).
 
 ### 1
-Find all pancreas cells from women age 40-50
+Find all pancreas cells from women age 40-50 (denormalized document variant)
 
 ```sql
 SELECT b.bundle_uuid
@@ -18,7 +18,7 @@ WHERE b.json @> '{"specimen_from_organisms": [{"organ": {"text": "pancreas"}}]}'
 ```
 
 ### 2
-How many experiments from lab X?
+How many experiments from lab X?  (denormalized document variant)
 
 ```sql
 SELECT count(DISTINCT p.json->'project_core'->'project_title')
@@ -28,7 +28,8 @@ WHERE contribs->>'laboratory' LIKE '%Sarah Teichmann%';
 ```
 
 ### 3
-How many cells from X lab?
+
+How many cells from X lab? (denormalized document variant)
 
 ```sql
 SELECT sum(bundle_counts.cell_count)
@@ -45,7 +46,8 @@ WHERE bundle_counts.rk = 1;
 Here, `WHERE ... NOT b.json ? 'analysis_files'` is used to avoid double counting cells from analysis bundles.
 
 ### 4
-Average number of cells per experiment for lab X?
+
+Average number of cells per experiment for lab X? (denormalized document variant)
 
 ```sql
 SELECT avg(project_counts.cell_count)
@@ -96,6 +98,7 @@ GROUP BY project_uuid, project_title;
 ```
 
 #### specimen count per project
+
 Array variant (runtime 11s 545ms)
 ```sql
 SELECT p.file_uuid                                   AS project_uuid,
