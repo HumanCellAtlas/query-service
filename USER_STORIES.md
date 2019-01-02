@@ -1,5 +1,78 @@
 # User Stories and Matching Queries
 
+This document lists user stories for the query service and documents sample queries to assess the UX of querying HCA metadata in postgres JSONB.
+
+Three schema variants were tried documented below.
+
+**Denormalized query variant** - all metadata associated with a bundle were summarized into a single json blob. This avoids joins between different metadata JSON blobs by prepackaging all the data together.
+
+**Array query variant** - by summarizing all of a bundle's `file_fqid`s in each row of the `bundle` table, you can easily generate the cross product between files with a the `ANY` SQL operator. This would prevent us from having to create denormalized bundle documents while keeping it realatively easy to join and filter them together with the SQL `ANY` operator.
+
+**Join table variant** - in a classic relational database setting, many-to-many relationships between tables are maintained with join tables with foreign keys to the source and sink tables. `bundles_files` is a join table between `bundles` and `files`.
+
+After assessing each of these viariants it seems that the denormalized schema structure provides the best balance of query UX and performance.
+
+## Experiment schema
+
+There are two essential tables in the schema: `bundles` and `files`. Further, convenience views are created of the `files` table.
+
+The `files` table contains each individual metadata file. A view table of the files table is created for each `schema_type` in the files table. For example, there is a `projects` view table that summarizes all the project metadata files in the `files` table.
+
+`bundles` summarizes all metadata into a single blob of json for easier querying.
+
+```sql
+CREATE TABLE IF NOT EXISTS schema_types (
+    id SERIAL,
+    name varchar(128) UNIQUE,
+    PRIMARY KEY (id)
+);
+
+INSERT INTO schema_types (name)
+VALUES (NULL)
+ON CONFLICT (name) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS files (
+    file_uuid UUID NOT NULL,
+    file_version timestamp with time zone NOT NULL,
+    fqid text NOT NULL, /* for use with array join variants */
+    name varchar(128) NOT NULL,
+    schema_type_id SERIAL REFERENCES schema_types(id),
+    json JSONB, /* a denormalized summary of the metadata files for the denormalized query variants */
+    PRIMARY KEY(file_uuid, file_version),
+    UNIQUE (file_uuid, file_version, fqid, schema_type_id)
+);
+CREATE INDEX IF NOT EXISTS files_uuid ON files USING btree (file_uuid);
+CREATE INDEX IF NOT EXISTS files_fqid ON files USING btree (fqid);
+CREATE INDEX IF NOT EXISTS files_schema_type_id ON files USING btree (schema_type_id);
+CREATE INDEX IF NOT EXISTS files_jsonb_gin_index ON files USING GIN (json);
+
+
+CREATE TABLE IF NOT EXISTS bundles (
+    bundle_uuid UUID,
+    bundle_version timestamp with time zone NOT NULL,
+    file_fqids text[], /* for use with array join query variants */
+    json jsonb NOT NULL,
+    PRIMARY KEY (bundle_uuid),
+    UNIQUE (bundle_uuid, bundle_version)
+);
+CREATE INDEX IF NOT EXISTS bundles_json ON bundles USING GIN (json);
+CREATE INDEX IF NOT EXISTS bundles_file_fqids_array ON bundles USING GIN (file_fqids);
+
+
+/* `bundles_files` is used for the join table query variants */
+CREATE TABLE IF NOT EXISTS bundles_files (
+    bundle_uuid UUID,
+    bundle_version timestamp with time zone NOT NULL,
+    file_uuid UUID NOT NULL,
+    file_version timestamp with time zone NOT NULL,
+    FOREIGN KEY (bundle_uuid, bundle_version) REFERENCES bundles(bundle_uuid, bundle_version),
+    FOREIGN KEY (file_uuid, file_version) REFERENCES files(file_uuid, file_version),
+    UNIQUE (bundle_uuid, bundle_version, file_uuid, file_version)
+);
+CREATE INDEX IF NOT EXISTS bundles_files_bundle_uuid ON bundles_files USING btree (bundle_uuid);
+CREATE INDEX IF NOT EXISTS bundles_files_file_uuid ON bundles_files USING btree (file_uuid);
+```
+
 ## @GenevieveHalliburton's UX study queries
 
 Query user stories taken from @GenevieveHalliburton's [Query brainstorm and examples](Query brainstorm and examples).
