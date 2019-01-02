@@ -2,6 +2,12 @@
 
 This document lists user stories for the query service and documents sample queries to assess the UX of querying HCA metadata in postgres JSONB.
 
+## The affect of database schema on query UX
+
+We conducted some experiments to determin how different database schema designs would affect query UX
+
+### Variants
+
 Three schema variants were tried documented below.
 
 **Denormalized query variant** - all metadata associated with a bundle were summarized into a single json blob. This avoids joins between different metadata JSON blobs by prepackaging all the data together.
@@ -12,7 +18,7 @@ Three schema variants were tried documented below.
 
 After assessing each of these viariants it seems that the denormalized schema structure provides the best balance of query UX and performance.
 
-## Experiment schema
+### Database schema
 
 There are two essential tables in the schema: `bundles` and `files`. Further, convenience views are created of the `files` table.
 
