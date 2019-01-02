@@ -5,12 +5,16 @@ install:
 
 .PHONY: test
 test:
-	. venv/bin/activate && python -m unittest discover -s test/unit -p 'test_*.py' --top-level-directory . --verbose
+	. venv/bin/activate \
+	&& coverage run -m unittest discover -s test/unit -p 'test_*.py' --top-level-directory . --verbose
 
 .PHONY: functional-tests
 functional-tests:
 	python -m unittest discover --start-directory test/functional --top-level-directory . --verbose
 
+.PHONY: report
+report:
+	coverage report --omit=venv/*
 
 .PHONY: deploy
 deploy:
