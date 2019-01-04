@@ -6,5 +6,3 @@ pylru
 PyYAML==3.13
 connexion==1.5.2
 chalice >= 1.1.1, < 1.2.0
-pytest-cov
-codecov
