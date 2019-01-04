@@ -30,7 +30,6 @@ stages:
 - functional_tests
 
 before_script:
-  - export PROJECT_ROOT=`pwd`
   - export IMAGE_TAG=${CI_BUILD_REF_NAME}-$(git describe --tags --always)-${CI_PIPELINE_ID}
   - eval "$(aws ecr get-login --no-include-email)"
   - if [[ integration != "$CI_COMMIT_REF_NAME" && staging != "$CI_COMMIT_REF_NAME" ]]; then
