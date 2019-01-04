@@ -31,3 +31,5 @@ chalice/chalicelib/
 load_data_lambda/load_data.zip
 load_data_lambda/target/*
 load_data_lambda/vendor/*
+
+.coverage

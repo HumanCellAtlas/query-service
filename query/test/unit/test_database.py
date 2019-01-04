@@ -10,6 +10,21 @@ from lib.config import Config
 from lib.db.database import PostgresDatabase, Tables
 
 
+class TestReadOnlyTransactions(unittest.TestCase):
+    db = PostgresDatabase(Config.test_database_uri)
+
+    def test_read_only_returns_column_names(self):
+        project_file = next(f for f in vx_bundle.files if f.metadata.name == 'project_0.json')
+        with self.db.transaction() as (cursor, tables):
+            # insert files
+            result = tables.files.insert(project_file)
+            self.assertEqual(result, 1)
+
+        query_results, column_names = self.db.run_read_only_query("SELECT * FROM FILES;")
+
+        self.assertEqual(column_names, ['file_uuid', 'file_version', 'fqid', 'name', 'schema_type_id', 'json'])
+
+
 class TestPostgresLoader(unittest.TestCase):
 
     db = PostgresDatabase(Config.test_database_uri)
