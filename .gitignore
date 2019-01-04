@@ -4,6 +4,7 @@
 *.tfstate.backup
 *tfvars
 *.terraform.tfstate
+*.pyc
 
 # Module directory
 .terraform/
@@ -21,6 +22,9 @@ virtualenv/
 
 tags
 
+# coverage
+.coverage
+coverage.xml
 
 chalice/.chalice/deployments/
 chalice/.chalice/venv/
