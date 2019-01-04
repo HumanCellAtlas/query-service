@@ -10,8 +10,7 @@ class TestEndpoints(unittest.TestCase):
     def setUp(self):
         self.client = client_for_test_api_server()
 
-    def test_heathcheck_endpoint(self):
-
+    def test_healthcheck_endpoint(self):
         response = self.client.get(f"/v1/health")
         self.assertEqual(response.status_code, 200)
 
