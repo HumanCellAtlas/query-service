@@ -15,8 +15,9 @@ pip install -r requirements.txt
 ```
 ## Terraform
 ```bash
-source environment
+set DEPLOYMENT_STAGE
 export AWS_PROFILE=hca
+source environment
 cd terraform
 make secret
 make init
@@ -27,4 +28,20 @@ make apply
 
 ## Components
 ## Deployment
+```
+set DEPLOYMENT_STAGE
+export AWS_PROFILE=hca
+source environment
+cd terraform
+make secret
+make init
+make plan
+make apply
+cd ../query
+make deploy
+```
 ## Tests
+```
+cd query/
+make install test functional-tests
+```
