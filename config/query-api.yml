@@ -73,7 +73,7 @@ paths:
         Recieves a subscription event from the DSS containing the id and version of a bundle that has been added. Extracts the metadata attached to that bundle, transforms it and loads it into the db.
       operationId: query.lambdas.api_server.v1.endpoints.webhook
       tags:
-        - All
+        - DSS
       parameters:
         - name: subscription_data
           in: body
@@ -84,6 +84,64 @@ paths:
           description: Data accepted for processing
           schema:
             type: object
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /v1/long-running-query:
+    post:
+      summary: Endpoint to kickoff longer running query of hca metadata
+      description: Receives a query that may take longer than 30 seconds to complete. Returns a job id which can be used in a get request to retrieve the query results
+      operationId: query.lambdas.api_server.v1.endpoints.create_long_query
+      tags:
+        - All
+      parameters:
+        - name: query_string
+          in: body
+          schema:
+            type: string
+      responses:
+        202:
+          description: Query job created
+          schema:
+            type: object
+            properties:
+              query:
+                type: string
+                description: Submitted query
+              results:
+                type: string
+                description: Job identifier
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /v1/long-running-query/{job_id}:
+    get:
+      summary: Endpoint to retrieve results of long running query job
+      description: Receives the job id of a long running query and returns status of the job or query results? (or link to query results?)
+      operationId: query.lambdas.api_server.v1.endpoints.get_long_query
+      tags:
+        - All
+      parameters:
+        - name: job_id
+          in: path
+          description: A RFC4122-compliant ID for the upload area.
+          required: true
+          type: string
+          pattern: "[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"
+      responses:
+        200:
+          description: TBD
+          schema:
+            type: object
+            properties:
+              query:
+                type: string
+                description: Submitted query
+              results:
+                type: string
+                description: query results or status
         default:
           description: Unexpected error
           schema:

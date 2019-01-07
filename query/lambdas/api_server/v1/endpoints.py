@@ -1,5 +1,6 @@
 import json
 import os
+from uuid import uuid4
 
 import boto3
 import requests
@@ -26,6 +27,19 @@ def query(query_string):
     query_results, column_names = db.run_read_only_query(query_string)
     formatted_query_results = format_query_results(query_results, column_names)
     return {'query': query_string, "results": formatted_query_results}, requests.codes.ok
+
+
+@return_exceptions_as_http_errors
+def create_long_query(query_string):
+    query_string = json.loads(query_string, strict=False)
+    uuid = uuid4()
+    # TODO send to sqs
+    return {'query': query_string, 'results': uuid}, requests.codes.accepted
+
+
+@return_exceptions_as_http_errors
+def get_long_query(job_id):
+    return {'job_id': job_id}
 
 
 @return_exceptions_as_http_errors
