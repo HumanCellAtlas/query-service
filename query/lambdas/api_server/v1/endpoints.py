@@ -32,8 +32,13 @@ def query(query_string):
 @return_exceptions_as_http_errors
 def create_long_query(query_string):
     query_string = json.loads(query_string, strict=False)
-    uuid = uuid4()
-    # TODO send to sqs
+    # TODO use messageId or requestId as job_id
+    uuid = uuid4().__str__()
+    queue_url = Config.long_query_queue_url
+    response = sqs_client.send_message(
+        QueueUrl=queue_url,
+        MessageBody=json.dumps({'query': query_string, 'job_id': uuid})
+    )
     return {'query': query_string, 'results': uuid}, requests.codes.accepted
 
 
@@ -45,7 +50,7 @@ def get_long_query(job_id):
 @return_exceptions_as_http_errors
 def webhook(subscription_data):
     subscription_data = json.loads(subscription_data, strict=False)
-    queue_url = Config.queue_url
+    queue_url = Config.load_data_queue_url
     response = sqs_client.send_message(
         QueueUrl=queue_url,
         MessageBody=json.dumps(subscription_data['match'])

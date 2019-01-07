@@ -1,16 +1,23 @@
 include ../common.mk
 export LOAD_DATA_QUEUE_URL := $(shell cd ../terraform && terraform output load_data_queue_url)
+export LONG_QUERY_QUEUE_URL := $(shell cd ../terraform && terraform output long_query_queue_url)
+
 export EXPORT_ENV_VARS_TO_LAMBDA=DEPLOYMENT_STAGE \
 			API_HOST \
-			LOAD_DATA_QUEUE_URL
+			LOAD_DATA_QUEUE_URL \
+			LONG_QUERY_QUEUE_URL
 
 check-queue:
 ifeq ($(DEPLOYMENT_STAGE),$(findstring $(DEPLOYMENT_STAGE),$(LOAD_DATA_QUEUE_URL)))
-	@echo -e "CORRECT ENV FOR QUEUE URL"
+	@echo -e "CORRECT ENV FOR LOAD DATA QUEUE URL"
 else
-	$(error incorrect ENV: $(DEPLOYMENT_STAGE) FOR QUEUE URL: $(LOAD_DATA_QUEUE_URL))
+	$(error incorrect ENV: $(DEPLOYMENT_STAGE) FOR LOAD DATA QUEUE URL: $(LOAD_DATA_QUEUE_URL))
 endif
-
+ifeq ($(DEPLOYMENT_STAGE),$(findstring $(DEPLOYMENT_STAGE),$(LONG_QUERY_QUEUE_URL)))
+	@echo -e "CORRECT ENV FOR LONG QUERY QUEUE URL"
+else
+	$(error incorrect ENV: $(DEPLOYMENT_STAGE) FOR LONG QUERY QUEUE URL: $(LONG_QUERY_QUEUE_URL))
+endif
 
 clean:
 	git clean -df .

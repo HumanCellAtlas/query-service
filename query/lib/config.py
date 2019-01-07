@@ -32,7 +32,8 @@ class Config:
         self.__dict__[attr] = value
 
     deployment_stage = _get(os.environ, 'DEPLOYMENT_STAGE')
-    queue_url = _get(os.environ, 'LOAD_DATA_QUEUE_URL', default="NO_QUEUE_URL")
+    load_data_queue_url = _get(os.environ, 'LOAD_DATA_QUEUE_URL', default="NO_QUEUE_URL")
+    long_query_queue_url = _get(os.environ, 'LONG_QUERY_QUEUE_URL', default="NO_QUEUE_URL")
 
     _api_host = _get(os.environ, 'API_HOST', default="NO_API_HOST")
 
