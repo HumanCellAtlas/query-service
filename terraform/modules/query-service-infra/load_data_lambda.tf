@@ -92,8 +92,8 @@ output "query_load_data_lambda_role_arn" {
 
 resource "aws_lambda_function" "query_load_data_lambda" {
   function_name    = "query-load-data-${var.deployment_stage}"
-  s3_bucket        = "${aws_s3_bucket.lambda_deployments.id}"
-  s3_key           = "${var.deployment_stage}/load_data/load_data.zip"
+  s3_bucket        = "${aws_s3_bucket.query-service.id}"
+  s3_key           = "${var.deployment_stage}/lambda_deployments/load_data/load_data.zip"
   role             = "arn:aws:iam::${local.account_id}:role/query-load-data-${var.deployment_stage}"
   handler          = "app.load_data"
   runtime          = "python3.6"

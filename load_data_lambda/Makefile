@@ -3,8 +3,8 @@ include ../common.mk
 
 LAMBDA_NAME=load_data
 ZIP_FILE=$(LAMBDA_NAME).zip
-BUCKET=query-service-lambda-deployment-$(AWS_ACCOUNT_ID)
-STAGED_FILE_KEY=$(DEPLOYMENT_STAGE)/$(LAMBDA_NAME)/$(ZIP_FILE)
+BUCKET=query-service-$(AWS_ACCOUNT_ID)
+STAGED_FILE_KEY=$(DEPLOYMENT_STAGE)/lambda_deployments/$(LAMBDA_NAME)/$(ZIP_FILE)
 
 default: build
 
