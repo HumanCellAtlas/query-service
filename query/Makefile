@@ -20,4 +20,5 @@ report:
 deploy:
 	$(MAKE) -C ../chalice $@
 	$(MAKE) -C ../load_data_lambda $@
+	$(MAKE) -C ../create_long_query_lambda $@
 

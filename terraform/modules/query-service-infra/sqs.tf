@@ -85,7 +85,7 @@ resource "aws_sqs_queue_policy" "long_query_queue_access" {
         "lambda:ListFunction"
       ],
       "Resource": [
-        "arn:aws:lambda:*:*:function:query-load-data-${var.deployment_stage}"
+        "arn:aws:lambda:*:*:function:query-create-long-query-${var.deployment_stage}"
       ]
     }
   ]
@@ -95,7 +95,7 @@ POLICY
 
 resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   batch_size = 1
-  event_source_arn  = "${aws_sqs_queue.load_data_queue.arn}"
+  event_source_arn  = "${aws_sqs_queue.long_query_queue.arn}"
   enabled           = true
-  function_name     = "${aws_lambda_function.query_load_data_lambda.arn}"
+  function_name     = "${aws_lambda_function.query_create_long_query_lambda.arn}"
 }

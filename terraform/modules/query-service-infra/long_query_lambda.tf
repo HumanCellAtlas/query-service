@@ -19,7 +19,7 @@ POLICY
 
 resource "aws_iam_role_policy" "query_create_long_query_lambda" {
   name = "query-create-long-query-${var.deployment_stage}"
-  role = "${aws_iam_role.query_load_data_lambda.name}"
+  role = "${aws_iam_role.query_create_long_query_lambda.name}"
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -74,7 +74,7 @@ resource "aws_iam_role_policy" "query_create_long_query_lambda" {
     },
     {
       "Effect": "Allow",
-      "Action":["s3:GetObject"],
+      "Action":["s3:GetObject", "s3:PutObject", "s3:PutObjectAcl"],
       "Resource": [
         "arn:aws:s3:::*",
         "arn:aws:s3:::*/*"
@@ -87,7 +87,7 @@ EOF
 
 
 resource "aws_lambda_function" "query_create_long_query_lambda" {
-  function_name    = "query-load-data-${var.deployment_stage}"
+  function_name    = "query-create-long-query-${var.deployment_stage}"
   s3_bucket        = "${aws_s3_bucket.query-service.id}"
   s3_key           = "${var.deployment_stage}/lambda_deployments/create_long_query/create_long_query.zip"
   role             = "arn:aws:iam::${local.account_id}:role/query-create-long-query-${var.deployment_stage}"

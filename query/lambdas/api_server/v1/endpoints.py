@@ -1,5 +1,4 @@
 import json
-import os
 from uuid import uuid4
 
 import boto3
@@ -32,19 +31,28 @@ def query(query_string):
 @return_exceptions_as_http_errors
 def create_long_query(query_string):
     query_string = json.loads(query_string, strict=False)
-    # TODO use messageId or requestId as job_id
-    uuid = uuid4().__str__()
+    uuid = uuid4()
+    with db.transaction() as (_, tables):
+        tables.job_status.insert(uuid)
     queue_url = Config.long_query_queue_url
-    response = sqs_client.send_message(
+    sqs_client.send_message(
         QueueUrl=queue_url,
-        MessageBody=json.dumps({'query': query_string, 'job_id': uuid})
+        MessageBody=json.dumps({'query': query_string, 'job_id': str(uuid)})
     )
-    return {'query': query_string, 'results': uuid}, requests.codes.accepted
+    return {'query': query_string, 'results': str(uuid)}, requests.codes.accepted
 
 
 @return_exceptions_as_http_errors
 def get_long_query(job_id):
-    return {'job_id': job_id}
+    with db.transaction() as (_, tables):
+        job = tables.job_status.select(job_id)
+        if job is None:
+            return requests.codes.not_found
+    status = job['status']
+    if status is 'COMPLETE':
+        # TODO write function to format job id into uri
+        return {'job_id': job_id, 'status': status, 's3_uri': 124}, requests.codes.ok
+    return {'job_id': job_id, 'status': status}, requests.codes.ok
 
 
 @return_exceptions_as_http_errors
