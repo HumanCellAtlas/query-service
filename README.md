@@ -17,7 +17,7 @@ set DEPLOYMENT_STAGE and AWS_PROFILE
 ```bash
 source environment
 cd terraform
-make secret
+make secrets
 make init
 make plan
 make apply
