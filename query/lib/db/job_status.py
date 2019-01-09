@@ -42,8 +42,7 @@ class JobStatus(Table):
         return dict(
             uuid=response[0][0],
             created_at=datetime_to_version(response[0][1]),
-            object_url=response[0][2],
-            status=response[0][3]
+            status=response[0][2]
         )
 
     def select_from_write_db(self, uuid: UUID) -> typing.Optional[dict]:
@@ -63,8 +62,7 @@ class JobStatus(Table):
         return dict(
             uuid=response[0][0],
             created_at=datetime_to_version(response[0][1]),
-            object_url=response[0][2],
-            status=response[0][3]
+            status=response[0][2]
         )
 
     def update_job_status(self, uuid: UUID, new_status: str) -> typing.Optional[dict]:
@@ -80,8 +78,6 @@ class JobStatus(Table):
             )
         )
 
-# TODO remove object_url
-
     @requires_admin_mode
     def initialize(self):
         self._cursor.execute(
@@ -90,7 +86,6 @@ class JobStatus(Table):
             CREATE TABLE IF NOT EXISTS job_status (
                 job_id UUID,
                 created_at TIMESTAMP DEFAULT NOW(),
-                object_url text[],
                 status job_status_enum NOT NULL,
                 PRIMARY KEY (job_id)
             );
