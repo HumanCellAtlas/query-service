@@ -48,8 +48,8 @@ class JobStatus(Table):
     def select_from_write_db(self, uuid: UUID) -> typing.Optional[dict]:
         self._cursor.execute(
             """
-            SELECT FOR UPDATE * FROM job_status
-            WHERE job_id = %s
+            SELECT * FROM job_status
+            WHERE job_id = %s FOR UPDATE 
             """,
             (
                 str(uuid),

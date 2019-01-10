@@ -109,7 +109,7 @@ paths:
               query:
                 type: string
                 description: Submitted query
-              results:
+              job_id:
                 type: string
                 description: Job identifier
         default:
@@ -142,10 +142,10 @@ paths:
               results:
                 type: string
                 description: query results or status
-        default:
-          description: Unexpected error
+        404:
+          description: Job not found
           schema:
-            $ref: '#/definitions/Error'
+            type: object
 
 definitions:
 

@@ -39,7 +39,7 @@ def create_long_query(query_string):
         QueueUrl=queue_url,
         MessageBody=json.dumps({'query': query_string, 'job_id': str(uuid)})
     )
-    return {'query': query_string, 'results': str(uuid)}, requests.codes.accepted
+    return {'query': query_string, 'job_id': str(uuid)}, requests.codes.accepted
 
 
 @return_exceptions_as_http_errors
@@ -47,7 +47,7 @@ def get_long_query(job_id):
     with db.transaction() as (_, tables):
         job = tables.job_status.select(job_id)
         if job is None:
-            return requests.codes.not_found
+            return {'job_id': job_id, 'status': 'Not Found'}, requests.codes.not_found
     status = job['status']
     if status is 'COMPLETE':
         # TODO write function to format job id into uri
@@ -72,3 +72,7 @@ def format_query_results(query_results, column_names):
         new_dict = {k: v for k, v in zip(column_names, result)}
         updated_results.append(new_dict)
     return updated_results
+
+
+def format_s3_link(job_id):
+    pass

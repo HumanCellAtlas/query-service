@@ -23,5 +23,6 @@ def query_db_and_put_results_in_s3(job_id, query_string):
                           Key=f"dev/query_results/{job_id}")
             tables.job_status.update_job_status(job_id, 'COMPLETE')
         except:
+            # TODO return any postgres errors back to the user
             tables.job_status.update_job_status(job_id, 'FAILED')
 
