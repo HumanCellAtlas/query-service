@@ -3,12 +3,15 @@ import unittest
 from unittest.mock import patch
 
 from test import *
+from test.unit import QueryTestCase, EnvironmentSetup
 from test.unit.api_server import client_for_test_api_server
 
 
-class TestEndpoints(unittest.TestCase):
+class TestEndpoints(QueryTestCase):
     def setUp(self):
+        super().setUp()
         self.client = client_for_test_api_server()
+        self.uuid = "3d8608c3-0ca6-430a-9f90-2117be6af160"
 
     def test_healthcheck_endpoint(self):
         response = self.client.get(f"/v1/health")
@@ -25,8 +28,7 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(json.loads(response.data), expected_response_data)
 
     @patch('query.lambdas.api_server.v1.endpoints.sqs_client')
-    @patch('query.lambdas.api_server.v1.endpoints.os')
-    def test_webhook_endpoint(self, mock_os, mock_sqs_client):
+    def test_webhook_endpoint(self, mock_sqs_client):
         mock_sqs_client.send_message.return_value = {}
         subscription_data = {
             "transaction_id": "ad36ec67-32a6-4886-93a9-29caf11e8ea8",
@@ -44,8 +46,43 @@ class TestEndpoints(unittest.TestCase):
 
         response = self.client.post("v1/webhook", data=json.dumps(subscription_data))
         mock_sqs_client.send_message.assert_called_once_with(
-            QueueUrl='NO_QUEUE_URL',
+            QueueUrl='NO_LD_QUEUE_URL',
             MessageBody=json.dumps(subscription_data['match'])
         )
 
         self.assertEqual(response.status_code, 202)
+
+    @patch('query.lambdas.api_server.v1.endpoints.sqs_client')
+    @patch('query.lambdas.api_server.v1.endpoints.uuid4')
+    @patch('query.lib.db.database.JobStatus')
+    def test_create_long_query_endpoint(self, mock_job_status, mock_uuid, mock_sqs_client):
+        mock_uuid.return_value = 1234
+        query = "SELECT * FROM FILES;"
+
+        response = self.client.post("v1/long-running-query", data=json.dumps(query))
+        self.assertEqual(mock_job_status.call_count, 1)
+        mock_sqs_client.send_message.assert_called_once_with(
+            QueueUrl='NO_LQ_QUEUE_URL',
+            MessageBody=json.dumps({"query": query, "job_id": "1234"})
+        )
+        self.assertEqual(json.loads(response.data), {'query': query, "job_id": '1234'})
+
+    @patch('query.lib.db.database.JobStatus')
+    def test_get_long_query_when_job_doesnt_exist(self, mock_job_status):
+        mock_job_status().select.return_value = None
+        response = self.client.get("v1/long-running-query/3d8608c3-0ca6-430a-9f90-2117be6af160")
+        self.assertEqual(response.status_code, 404)
+
+    @patch('query.lib.db.database.JobStatus')
+    def test_get_long_query_when_job_is_not_complete(self, mock_job_status):
+        mock_job_status().select.return_value = {'uuid': self.uuid, 'status': 'PROCESSING'}
+        response = self.client.get(f"v1/long-running-query/{self.uuid}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {'job_id': self.uuid, 'status': 'PROCESSING'})
+
+    @patch('query.lib.db.database.JobStatus')
+    def test_get_long_query_when_job_is_complete(self, mock_job_status):
+        mock_job_status().select.return_value = {'uuid': self.uuid, 'status': 'COMPLETE'}
+        response = self.client.get(f"v1/long-running-query/{self.uuid}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {'job_id': self.uuid, 'status': 'COMPLETE', 's3_url': 'https://s3.amazonaws.com/query-service-123/test/query_results/3d8608c3-0ca6-430a-9f90-2117be6af160'})

@@ -5,7 +5,8 @@ export LONG_QUERY_QUEUE_URL := $(shell cd ../terraform && terraform output long_
 export EXPORT_ENV_VARS_TO_LAMBDA=DEPLOYMENT_STAGE \
 			API_HOST \
 			LOAD_DATA_QUEUE_URL \
-			LONG_QUERY_QUEUE_URL
+			LONG_QUERY_QUEUE_URL \
+			AWS_ACCOUNT_ID
 
 check-queue:
 ifeq ($(DEPLOYMENT_STAGE),$(findstring $(DEPLOYMENT_STAGE),$(LOAD_DATA_QUEUE_URL)))

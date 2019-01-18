@@ -119,7 +119,7 @@ paths:
   /v1/long-running-query/{job_id}:
     get:
       summary: Endpoint to retrieve results of long running query job
-      description: Receives the job id of a long running query and returns status of the job or query results? (or link to query results?)
+      description: Receives the job id of a long running query and returns status of the job and link to query results
       operationId: query.lambdas.api_server.v1.endpoints.get_long_query
       tags:
         - All
@@ -132,16 +132,9 @@ paths:
           pattern: "[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"
       responses:
         200:
-          description: TBD
+          description: Job found
           schema:
             type: object
-            properties:
-              query:
-                type: string
-                description: Submitted query
-              results:
-                type: string
-                description: query results or status
         404:
           description: Job not found
           schema:

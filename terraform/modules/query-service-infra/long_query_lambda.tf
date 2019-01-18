@@ -99,6 +99,7 @@ resource "aws_lambda_function" "query_create_long_query_lambda" {
   environment {
     variables = {
       DEPLOYMENT_STAGE = "${var.deployment_stage}"
+      AWS_ACCOUNT_ID = "${local.account_id}"
     }
   }
 }

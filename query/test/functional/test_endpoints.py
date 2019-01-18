@@ -87,3 +87,5 @@ class TestQueryService(unittest.TestCase):
             print(response.content.decode('utf8'))
 
         return response.content
+
+

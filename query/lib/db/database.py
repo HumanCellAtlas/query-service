@@ -48,11 +48,6 @@ class PostgresDatabase:
             logger.exception(f"Database error: {e}")
             self._connection.rollback()
 
-    def run_query(self, query):
-        with self.transaction() as (cursor, tables):
-            cursor.execute(query)
-            return cursor.fetchall()
-
     @contextmanager
     def read_only_transaction(self):
         if self._read_only_connection.closed != 0:

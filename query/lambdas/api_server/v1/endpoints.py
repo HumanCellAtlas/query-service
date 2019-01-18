@@ -1,9 +1,11 @@
 import json
+import os
 from uuid import uuid4
 
 import boto3
 import requests
 
+from lib.common.formatting import format_query_results
 from query.lib.common.logging import get_logger
 from query.lib.config import Config
 from query.lib.db.database import PostgresDatabase
@@ -49,9 +51,9 @@ def get_long_query(job_id):
         if job is None:
             return {'job_id': job_id, 'status': 'Not Found'}, requests.codes.not_found
     status = job['status']
-    if status is 'COMPLETE':
-        # TODO write function to format job id into uri
-        return {'job_id': job_id, 'status': status, 's3_uri': 124}, requests.codes.ok
+    if status == "COMPLETE":
+        s3_url = _format_s3_link(job_id)
+        return {'job_id': job_id, 'status': status, 's3_url': s3_url}, requests.codes.ok
     return {'job_id': job_id, 'status': status}, requests.codes.ok
 
 
@@ -66,13 +68,7 @@ def webhook(subscription_data):
     return {'response': response}, requests.codes.accepted
 
 
-def format_query_results(query_results, column_names):
-    updated_results = []
-    for result in query_results:
-        new_dict = {k: v for k, v in zip(column_names, result)}
-        updated_results.append(new_dict)
-    return updated_results
-
-
-def format_s3_link(job_id):
-    pass
+def _format_s3_link(job_id):
+    account_id = Config.account_id
+    deployment_stage = Config.deployment_stage
+    return f"https://s3.amazonaws.com/query-service-{account_id}/{deployment_stage}/query_results/{job_id}"

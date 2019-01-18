@@ -78,6 +78,13 @@ class JobStatus(Table):
             )
         )
 
+    def delete_old_rows(self):
+        self._cursor.execute(
+            """
+            DELETE FROM job_status WHERE created_at < NOW() - INTERVAL '90 days';
+            """
+        )
+
     @requires_admin_mode
     def initialize(self):
         self._cursor.execute(
