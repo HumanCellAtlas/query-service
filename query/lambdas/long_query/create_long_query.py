@@ -2,7 +2,7 @@ import json
 
 import boto3
 
-from lib.common.formatting import format_query_results
+from query.lib.common.formatting import format_query_results
 from query.lib.config import Config
 from query.lib.db.database import PostgresDatabase
 
@@ -24,7 +24,7 @@ def query_db_and_put_results_in_s3(job_id, query_string):
         deployment_stage = Config.deployment_stage
 
         account_id = Config.account_id
-        s3.put_object(ACL='public-read',
+        s3.put_object(ACL='authenticated-read',
                       Body=data,
                       Bucket=f"query-service-{account_id}",
                       Key=f"{deployment_stage}/query_results/{job_id}")

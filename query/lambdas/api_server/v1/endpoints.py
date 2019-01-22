@@ -1,11 +1,10 @@
 import json
-import os
 from uuid import uuid4
 
 import boto3
 import requests
 
-from lib.common.formatting import format_query_results
+from query.lib.common.formatting import format_query_results
 from query.lib.common.logging import get_logger
 from query.lib.config import Config
 from query.lib.db.database import PostgresDatabase
@@ -15,6 +14,8 @@ logger = get_logger('query.lambdas.api_server.v1.endpoints')
 
 db = PostgresDatabase(Config.serve_database_uri)
 sqs_client = boto3.client('sqs')
+s3_client = boto3.client('s3')
+
 
 
 @return_exceptions_as_http_errors
@@ -52,8 +53,8 @@ def get_long_query(job_id):
             return {'job_id': job_id, 'status': 'Not Found'}, requests.codes.not_found
     status = job['status']
     if status == "COMPLETE":
-        s3_url = _format_s3_link(job_id)
-        return {'job_id': job_id, 'status': status, 's3_url': s3_url}, requests.codes.ok
+        presigned_url = _gen_presigned_url(job_id)
+        return {'job_id': job_id, 'status': status, 'presigned_url': presigned_url}, requests.codes.ok
     return {'job_id': job_id, 'status': status}, requests.codes.ok
 
 
@@ -68,7 +69,11 @@ def webhook(subscription_data):
     return {'response': response}, requests.codes.accepted
 
 
-def _format_s3_link(job_id):
+def _gen_presigned_url(job_id):
     account_id = Config.account_id
     deployment_stage = Config.deployment_stage
-    return f"https://s3.amazonaws.com/query-service-{account_id}/{deployment_stage}/query_results/{job_id}"
+    presigned_url = s3_client.generate_presigned_url(
+        ClientMethod='get_object',
+        Params=dict(Bucket=f"query-service-{account_id}", Key=f"{deployment_stage}/query_results/{job_id}")
+    )
+    return presigned_url

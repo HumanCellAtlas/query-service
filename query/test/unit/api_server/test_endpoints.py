@@ -3,11 +3,10 @@ import unittest
 from unittest.mock import patch
 
 from test import *
-from test.unit import QueryTestCase, EnvironmentSetup
 from test.unit.api_server import client_for_test_api_server
 
 
-class TestEndpoints(QueryTestCase):
+class TestEndpoints(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.client = client_for_test_api_server()
@@ -81,8 +80,13 @@ class TestEndpoints(QueryTestCase):
         self.assertEqual(json.loads(response.data), {'job_id': self.uuid, 'status': 'PROCESSING'})
 
     @patch('query.lib.db.database.JobStatus')
-    def test_get_long_query_when_job_is_complete(self, mock_job_status):
+    @patch('query.lambdas.api_server.v1.endpoints.s3_client')
+    def test_get_long_query_when_job_is_complete(self, mock_s3, mock_job_status):
+
+        mock_s3.generate_presigned_url.return_value = 'www.ThisUrlShouldWork.com'
         mock_job_status().select.return_value = {'uuid': self.uuid, 'status': 'COMPLETE'}
         response = self.client.get(f"v1/long-running-query/{self.uuid}")
+
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.data), {'job_id': self.uuid, 'status': 'COMPLETE', 's3_url': 'https://s3.amazonaws.com/query-service-123/test/query_results/3d8608c3-0ca6-430a-9f90-2117be6af160'})
+
+        self.assertEqual(json.loads(response.data), {'job_id': self.uuid, 'status': 'COMPLETE', 'presigned_url': 'www.ThisUrlShouldWork.com'})

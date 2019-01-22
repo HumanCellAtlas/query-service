@@ -34,7 +34,7 @@ class Config:
     deployment_stage = _get(os.environ, 'DEPLOYMENT_STAGE')
     load_data_queue_url = _get(os.environ, 'LOAD_DATA_QUEUE_URL', default="NO_LD_QUEUE_URL")
     long_query_queue_url = _get(os.environ, 'LONG_QUERY_QUEUE_URL', default="NO_LQ_QUEUE_URL")
-    account_id = _get(os.environ, 'AWS_ACCOUNT_ID')
+    account_id = _get(os.environ, 'AWS_ACCOUNT_ID', default='123')
     _api_host = _get(os.environ, 'API_HOST', default="NO_API_HOST")
 
     api_url = f"https://{_api_host}/v1"
