@@ -33,3 +33,8 @@ load_data_lambda/target/*
 load_data_lambda/vendor/*
 
 .coverage
+
+target/
+load_data.zip
+create_async_query.zip
+vendor/

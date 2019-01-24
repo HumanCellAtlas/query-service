@@ -4,3 +4,7 @@ class QueryException(Exception):
         self.status = status
         self.title = title
         self.detail = detail
+
+
+class DatabaseException(QueryException):
+    pass

@@ -2,6 +2,7 @@ import unittest
 
 from unittest.mock import patch
 
+from query.lib.config import Config
 from test import *
 from test.unit.api_server import client_for_test_api_server
 
@@ -42,7 +43,6 @@ class TestEndpoints(unittest.TestCase):
                 "bundle_version": "2018-12-03T162944.061337Z"
             }
         }
-
         response = self.client.post("v1/webhook", data=json.dumps(subscription_data))
         mock_sqs_client.send_message.assert_called_once_with(
             QueueUrl='NO_LD_QUEUE_URL',
@@ -54,11 +54,11 @@ class TestEndpoints(unittest.TestCase):
     @patch('query.lambdas.api_server.v1.endpoints.sqs_client')
     @patch('query.lambdas.api_server.v1.endpoints.uuid4')
     @patch('query.lib.db.database.JobStatus')
-    def test_create_long_query_endpoint(self, mock_job_status, mock_uuid, mock_sqs_client):
+    def test_create_async_query_endpoint(self, mock_job_status, mock_uuid, mock_sqs_client):
         mock_uuid.return_value = 1234
         query = "SELECT * FROM FILES;"
 
-        response = self.client.post("v1/long-running-query", data=json.dumps(query))
+        response = self.client.post("v1/query/async", data=json.dumps(query))
         self.assertEqual(mock_job_status.call_count, 1)
         mock_sqs_client.send_message.assert_called_once_with(
             QueueUrl='NO_LQ_QUEUE_URL',
@@ -67,25 +67,25 @@ class TestEndpoints(unittest.TestCase):
         self.assertEqual(json.loads(response.data), {'query': query, "job_id": '1234'})
 
     @patch('query.lib.db.database.JobStatus')
-    def test_get_long_query_when_job_doesnt_exist(self, mock_job_status):
+    def test_get_async_query_status_when_job_doesnt_exist(self, mock_job_status):
         mock_job_status().select.return_value = None
-        response = self.client.get("v1/long-running-query/3d8608c3-0ca6-430a-9f90-2117be6af160")
+        response = self.client.get("v1/query/async/3d8608c3-0ca6-430a-9f90-2117be6af160")
         self.assertEqual(response.status_code, 404)
 
     @patch('query.lib.db.database.JobStatus')
-    def test_get_long_query_when_job_is_not_complete(self, mock_job_status):
+    def test_get_async_query_status_when_job_is_not_complete(self, mock_job_status):
         mock_job_status().select.return_value = {'uuid': self.uuid, 'status': 'PROCESSING'}
-        response = self.client.get(f"v1/long-running-query/{self.uuid}")
+        response = self.client.get(f"v1/query/async/{self.uuid}")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {'job_id': self.uuid, 'status': 'PROCESSING'})
 
     @patch('query.lib.db.database.JobStatus')
     @patch('query.lambdas.api_server.v1.endpoints.s3_client')
-    def test_get_long_query_when_job_is_complete(self, mock_s3, mock_job_status):
+    def test_get_async_query_status_when_job_is_complete(self, mock_s3, mock_job_status):
 
         mock_s3.generate_presigned_url.return_value = 'www.ThisUrlShouldWork.com'
         mock_job_status().select.return_value = {'uuid': self.uuid, 'status': 'COMPLETE'}
-        response = self.client.get(f"v1/long-running-query/{self.uuid}")
+        response = self.client.get(f"v1/query/async/{self.uuid}")
 
         self.assertEqual(response.status_code, 200)
 

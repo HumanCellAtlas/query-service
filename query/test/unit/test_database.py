@@ -128,7 +128,7 @@ class TestPostgresLoader(unittest.TestCase):
             with self.db.transaction() as (_, tables):
                 test_list(tables, 0)
 
-    def test_job_status__creation(self):
+    def test_job_status_creation(self):
         uuid = uuid4()
         with self.db.transaction() as (cursor, tables):
             row_count = tables.job_status.insert(uuid)
@@ -138,7 +138,7 @@ class TestPostgresLoader(unittest.TestCase):
             job = tables.job_status.select_from_write_db(uuid)
             assert job['status'] == 'CREATED'
 
-    def test_job_status__status_update(self):
+    def test_job_status_status_update(self):
         uuid = uuid4()
         with self.db.transaction() as (cursor, tables):
             row_count = tables.job_status.insert(uuid)

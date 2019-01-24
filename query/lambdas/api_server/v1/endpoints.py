@@ -17,7 +17,6 @@ sqs_client = boto3.client('sqs')
 s3_client = boto3.client('s3')
 
 
-
 @return_exceptions_as_http_errors
 def health():
     return requests.codes.ok
@@ -32,21 +31,20 @@ def query(query_string):
 
 
 @return_exceptions_as_http_errors
-def create_long_query(query_string):
+def create_async_query(query_string):
     query_string = json.loads(query_string, strict=False)
     uuid = uuid4()
     with db.transaction() as (_, tables):
         tables.job_status.insert(uuid)
-    queue_url = Config.long_query_queue_url
     sqs_client.send_message(
-        QueueUrl=queue_url,
+        QueueUrl=Config.async_query_queue_url,
         MessageBody=json.dumps({'query': query_string, 'job_id': str(uuid)})
     )
     return {'query': query_string, 'job_id': str(uuid)}, requests.codes.accepted
 
 
 @return_exceptions_as_http_errors
-def get_long_query(job_id):
+def get_async_query_job_status(job_id):
     with db.transaction() as (_, tables):
         job = tables.job_status.select(job_id)
         if job is None:
@@ -61,19 +59,17 @@ def get_long_query(job_id):
 @return_exceptions_as_http_errors
 def webhook(subscription_data):
     subscription_data = json.loads(subscription_data, strict=False)
-    queue_url = Config.load_data_queue_url
     response = sqs_client.send_message(
-        QueueUrl=queue_url,
+        QueueUrl=Config.load_data_queue_url,
         MessageBody=json.dumps(subscription_data['match'])
     )
     return {'response': response}, requests.codes.accepted
 
 
 def _gen_presigned_url(job_id):
-    account_id = Config.account_id
     deployment_stage = Config.deployment_stage
     presigned_url = s3_client.generate_presigned_url(
         ClientMethod='get_object',
-        Params=dict(Bucket=f"query-service-{account_id}", Key=f"{deployment_stage}/query_results/{job_id}")
+        Params=dict(Bucket=Config.query_service_bucket, Key=f"{deployment_stage}/query_results/{job_id}")
     )
     return presigned_url

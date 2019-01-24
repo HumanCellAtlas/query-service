@@ -88,11 +88,11 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  /v1/long-running-query:
+  /v1/query/async:
     post:
       summary: Endpoint to kickoff longer running query of hca metadata
       description: Receives a query that may take longer than 30 seconds to complete. Returns a job id which can be used in a get request to retrieve the query results
-      operationId: query.lambdas.api_server.v1.endpoints.create_long_query
+      operationId: query.lambdas.api_server.v1.endpoints.create_async_query
       tags:
         - All
       parameters:
@@ -116,11 +116,11 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  /v1/long-running-query/{job_id}:
+  /v1/query/async/{job_id}:
     get:
       summary: Endpoint to retrieve results of long running query job
       description: Receives the job id of a long running query and returns status of the job and link to query results
-      operationId: query.lambdas.api_server.v1.endpoints.get_long_query
+      operationId: query.lambdas.api_server.v1.endpoints.get_async_query_job_status
       tags:
         - All
       parameters:

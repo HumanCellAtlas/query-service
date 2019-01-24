@@ -1,4 +1,4 @@
-.PHONY: install build stage deploy clobber
+.PHONY: install build stage deploy
 include ../common.mk
 
 LAMBDA_NAME=load_data
@@ -40,5 +40,3 @@ stage: build
 
 deploy: stage
 	aws lambda update-function-code --function-name query-load-data-$(DEPLOYMENT_STAGE) --s3-bucket $(BUCKET) --s3-key $(STAGED_FILE_KEY)
-
-clobber: ;

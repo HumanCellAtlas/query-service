@@ -34,8 +34,8 @@ output "load_data_queue_url" {
   value = "${module.query-service-infra.load_data}"
 }
 
-output "long_query_queue_url" {
-  value = "${module.query-service-infra.long_query}"
+output "async_query_queue_url" {
+  value = "${module.query-service-infra.async_query}"
 }
 
 locals {

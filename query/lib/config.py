@@ -32,15 +32,16 @@ class Config:
         self.__dict__[attr] = value
 
     deployment_stage = _get(os.environ, 'DEPLOYMENT_STAGE')
-    load_data_queue_url = _get(os.environ, 'LOAD_DATA_QUEUE_URL', default="NO_LD_QUEUE_URL")
-    long_query_queue_url = _get(os.environ, 'LONG_QUERY_QUEUE_URL', default="NO_LQ_QUEUE_URL")
-    account_id = _get(os.environ, 'AWS_ACCOUNT_ID', default='123')
-    _api_host = _get(os.environ, 'API_HOST', default="NO_API_HOST")
+    load_data_queue_url = _get(os.environ, 'LOAD_DATA_QUEUE_URL')
+    async_query_queue_url = _get(os.environ, 'ASYNC_QUERY_QUEUE_URL')
 
+    _account_id = _get(os.environ, 'AWS_ACCOUNT_ID')
+    query_service_bucket = f"query-service-{_account_id}"
+
+    _api_host = _get(os.environ, 'API_HOST')
     api_url = f"https://{_api_host}/v1"
 
     _secret = json.loads(AwsSecret(f"dcp/query/{deployment_stage}/database").value)
-
     _pg_bouncer_dns_name = _get(_secret, 'pgbouncer_dns_name')
     _database_name = _get(_secret, 'database')
     _user = _get(_secret, 'user', sensitive=True)
