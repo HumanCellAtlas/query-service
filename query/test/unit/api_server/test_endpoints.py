@@ -45,7 +45,7 @@ class TestEndpoints(unittest.TestCase):
         }
         response = self.client.post("v1/webhook", data=json.dumps(subscription_data))
         mock_sqs_client.send_message.assert_called_once_with(
-            QueueUrl='NO_LD_QUEUE_URL',
+            QueueUrl=Config.load_data_queue_url,
             MessageBody=json.dumps(subscription_data['match'])
         )
 
@@ -61,7 +61,7 @@ class TestEndpoints(unittest.TestCase):
         response = self.client.post("v1/query/async", data=json.dumps(query))
         self.assertEqual(mock_job_status.call_count, 1)
         mock_sqs_client.send_message.assert_called_once_with(
-            QueueUrl='NO_LQ_QUEUE_URL',
+            QueueUrl=Config.async_query_queue_url,
             MessageBody=json.dumps({"query": query, "job_id": "1234"})
         )
         self.assertEqual(json.loads(response.data), {'query': query, "job_id": '1234'})
