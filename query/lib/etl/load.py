@@ -49,7 +49,7 @@ class PostgresLoader(Loader):
         # insert files, and join table entry
         for file in bundle.files:
             if file.fqid not in self._inserted_files:
-                r = tables.files.insert(file)
+                tables.files.insert(file)
             self._inserted_files[file.fqid] = True
             tables.bundles_files.insert(
                 bundle_uuid=bundle.uuid,

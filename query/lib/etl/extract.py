@@ -62,4 +62,3 @@ class S3Extractor(Extractor):
     @lru_cache(maxsize=1000)
     def _get_file_data(self, file_metadata: FileMetadata) -> dict:
         return json.loads(self._s3.get(file_metadata.key))
-

@@ -44,7 +44,7 @@ class MetadataFiles(Table):
             INSERT INTO metadata_modules (name)
             VALUES (%s)
             ON CONFLICT (name) DO NOTHING;
-            
+
             INSERT INTO metadata_files (uuid, version, module_id, json) (
                 SELECT %s, %s, id, %s
                 FROM metadata_modules

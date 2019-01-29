@@ -3,10 +3,11 @@ import sys
 import unittest
 from uuid import uuid4
 
+from test import vx_bundle, clear_views, truncate_tables, eventually, gen_random_chars
+
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from test import *
 from lib.config import Config
 from lib.db.database import PostgresDatabase, Tables
 
@@ -75,9 +76,11 @@ class TestPostgresLoader(unittest.TestCase):
             # insert bundles_files
             result = tables.files.insert(process_file)
             self.assertEqual(result, 1)
-            result = tables.bundles_files.insert(vx_bundle.uuid, vx_bundle.version, project_file.uuid, project_file.version)
+            result = tables.bundles_files.insert(
+                vx_bundle.uuid, vx_bundle.version, project_file.uuid, project_file.version)
             self.assertEqual(result, 1)
-            result = tables.bundles_files.insert(vx_bundle.uuid, vx_bundle.version, process_file.uuid, process_file.version)
+            result = tables.bundles_files.insert(
+                vx_bundle.uuid, vx_bundle.version, process_file.uuid, process_file.version)
             self.assertEqual(result, 1)
             # select bundles_files
             result = tables.bundles_files.select_bundle(vx_bundle.uuid, vx_bundle.version)

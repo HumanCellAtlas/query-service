@@ -1,9 +1,10 @@
+import json
 import unittest
 
 from unittest.mock import patch
 
-from query.lib.config import Config
-from test import *
+# from test import *
+from test import fast_query_mock_result, fast_query_expected_results
 from test.unit.api_server import client_for_test_api_server
 
 
@@ -82,11 +83,13 @@ class TestEndpoints(unittest.TestCase):
     @patch('query.lib.db.database.JobStatus')
     @patch('query.lambdas.api_server.v1.endpoints.s3_client')
     def test_get_async_query_status_when_job_is_complete(self, mock_s3, mock_job_status):
-
         mock_s3.generate_presigned_url.return_value = 'www.ThisUrlShouldWork.com'
         mock_job_status().select.return_value = {'uuid': self.uuid, 'status': 'COMPLETE'}
         response = self.client.get(f"v1/query/async/{self.uuid}")
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(json.loads(response.data), {'job_id': self.uuid, 'status': 'COMPLETE', 'presigned_url': 'www.ThisUrlShouldWork.com'})
+        self.assertEqual(json.loads(response.data), {
+            'job_id': self.uuid,
+            'status': 'COMPLETE',
+            'presigned_url': 'www.ThisUrlShouldWork.com'})
