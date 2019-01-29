@@ -1,5 +1,5 @@
-resource "aws_iam_role" "query_load_data_lambda" {
-  name = "query-load-data-${var.deployment_stage}"
+resource "aws_iam_role" "query_create_async_query_lambda" {
+  name = "query-create-async-query-${var.deployment_stage}"
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -17,9 +17,9 @@ resource "aws_iam_role" "query_load_data_lambda" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "query_load_data_lambda" {
-  name = "query-load-data-${var.deployment_stage}"
-  role = "${aws_iam_role.query_load_data_lambda.name}"
+resource "aws_iam_role_policy" "query_create_async_query_lambda" {
+  name = "query-create-async-query-${var.deployment_stage}"
+  role = "${aws_iam_role.query_create_async_query_lambda.name}"
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -69,12 +69,12 @@ resource "aws_iam_role_policy" "query_load_data_lambda" {
         "sqs:ReceiveMessage"
       ],
       "Resource": [
-        "arn:aws:sqs:*:*:${aws_sqs_queue.load_data_queue.name}"
+        "arn:aws:sqs:*:*:${aws_sqs_queue.async_query_queue.name}"
       ]
     },
     {
       "Effect": "Allow",
-      "Action":["s3:GetObject"],
+      "Action":["s3:GetObject", "s3:PutObject", "s3:PutObjectAcl"],
       "Resource": [
         "arn:aws:s3:::*",
         "arn:aws:s3:::*/*"
@@ -86,12 +86,12 @@ EOF
 }
 
 
-resource "aws_lambda_function" "query_load_data_lambda" {
-  function_name    = "query-load-data-${var.deployment_stage}"
+resource "aws_lambda_function" "query_create_async_query_lambda" {
+  function_name    = "query-create-async-query-${var.deployment_stage}"
   s3_bucket        = "${aws_s3_bucket.query-service.id}"
-  s3_key           = "${var.deployment_stage}/lambda_deployments/load_data/load_data.zip"
-  role             = "arn:aws:iam::${local.account_id}:role/query-load-data-${var.deployment_stage}"
-  handler          = "app.load_data"
+  s3_key           = "${var.deployment_stage}/lambda_deployments/create_async_query/create_async_query.zip"
+  role             = "arn:aws:iam::${local.account_id}:role/query-create-async-query-${var.deployment_stage}"
+  handler          = "app.handler"
   runtime          = "python3.6"
   memory_size      = 960
   timeout          = 900
@@ -99,6 +99,7 @@ resource "aws_lambda_function" "query_load_data_lambda" {
   environment {
     variables = {
       DEPLOYMENT_STAGE = "${var.deployment_stage}"
+      AWS_ACCOUNT_ID = "${local.account_id}"
     }
   }
 }

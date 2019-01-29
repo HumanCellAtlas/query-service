@@ -50,7 +50,7 @@ infra:
 test:
   stage: test
   script:
-    - cd query/ && make install test
+    - cd query/ && make install unit-test
 
 deploy:
   stage: deploy

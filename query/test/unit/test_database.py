@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from uuid import uuid4
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
@@ -126,6 +127,25 @@ class TestPostgresLoader(unittest.TestCase):
             self.db._connection.commit()
             with self.db.transaction() as (_, tables):
                 test_list(tables, 0)
+
+    def test_job_status_creation(self):
+        uuid = uuid4()
+        with self.db.transaction() as (cursor, tables):
+            row_count = tables.job_status.insert(uuid)
+            assert row_count == 1
+            job = tables.job_status.select(uuid)
+            assert job['status'] == 'CREATED'
+            job = tables.job_status.select_from_write_db(uuid)
+            assert job['status'] == 'CREATED'
+
+    def test_job_status_status_update(self):
+        uuid = uuid4()
+        with self.db.transaction() as (cursor, tables):
+            row_count = tables.job_status.insert(uuid)
+            assert row_count == 1
+            tables.job_status.update_job_status(uuid, 'COMPLETE')
+            job = tables.job_status.select(uuid)
+            assert job['status'] == 'COMPLETE'
 
 
 if __name__ == '__main__':

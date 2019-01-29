@@ -5,6 +5,8 @@ from psycopg2 import DatabaseError
 import psycopg2
 import psycopg2.extras
 
+from query.lib.common.exceptions import DatabaseException
+from query.lib.db.job_status import JobStatus
 from query.lib.db.bundles import Bundles
 from query.lib.db.files import Files
 from query.lib.db.bundles_files import BundlesFiles
@@ -15,6 +17,7 @@ class Tables(NamedTuple):
     bundles: Bundles
     files: Files
     bundles_files: BundlesFiles
+    job_status: JobStatus
 
 
 class PostgresDatabase:
@@ -38,11 +41,12 @@ class PostgresDatabase:
                 yield cursor, Tables(
                     bundles=Bundles(cursor),
                     files=Files(cursor),
-                    bundles_files=BundlesFiles(cursor)
+                    bundles_files=BundlesFiles(cursor),
+                    job_status=JobStatus(cursor)
                 )
             self._connection.commit()
         except DatabaseError as e:
-            logger.exception("Database error")
+            logger.exception(f"Database error: {e}")
             self._connection.rollback()
 
     @contextmanager
@@ -56,8 +60,8 @@ class PostgresDatabase:
                 yield cursor
             self._read_only_connection.commit()
         except DatabaseError as e:
-            logger.exception(f"Database error, ROT: {e}")
             self._read_only_connection.commit()
+            raise DatabaseException(title="Database error, ROT", detail=e, status=123)
 
     def run_read_only_query(self, query):
         with self.read_only_transaction() as cursor:

@@ -47,3 +47,4 @@ make deploy
 cd query/
 make install test functional-tests
 ```
+
