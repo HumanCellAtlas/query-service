@@ -37,4 +37,6 @@ load_data_lambda/vendor/*
 target/
 load_data.zip
 create_async_query.zip
+db_cleanup.zip
+
 vendor/
