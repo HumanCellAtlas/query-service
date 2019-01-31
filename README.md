@@ -3,13 +3,10 @@
 
 Placeholder for the Metadata Query Service
 
-
 # Query Service
 [![Test Coverage](https://codecov.io/gh/HumanCellAtlas/query-service/branch/master/graph/badge.svg)](https://codecov.io/gh/HumanCellAtlas/query-service)
-
-######TODO add these links
-[![Production Health Check](health check badge SVG)](URL to service)
-[![Master Deployment Status](gitlab pipeline badge SVG)](https://allspark.dev.data.humancellatlas.org/HumanCellAtlas/query-service/pipelines)
+[![Production Health Check](https://status.data.humancellatlas.org/service/query-service-prod.svg)]()
+[![Master Build Status](https://status.dev.data.humancellatlas.org/build/HumanCellAtlas/metrics/master.svg)](https://allspark.dev.data.humancellatlas.org/HumanCellAtlas/query-service/commits/master)
 
 ## Overview
 
@@ -41,12 +38,12 @@ and [AWS Lambda](https://aws.amazon.com/lambda/). The full API documentation can
 
 The query service is subscribed to all updates to the [DCP Data Store (DSS)](https://github.com/HumanCellAtlas/data-store). 
 When data is added to the DSS a webhook containing the bundle id is sent to the Query API. The bundle_id is added to the
-  `dcp-query-data-input-queue-*` which eventually calls the `query-load-data-*` lambda which calls an extract transform 
+  `dcp-query-data-input-queue-[deployment-stage]` which eventually calls the `query-load-data-[deployment-stage]` lambda which calls an extract transform 
  load (ETL) function, retrieving the bundle data and loading it into the postgres db.
 
 #### Query
-Queries sent to the `/query/async` endpoint are added to the `dcp-query-async-query-queue-*` along with a unique 
-id (which is also returned to the user). Events in the queue call the `query-create-async-query-*` lambda to run the 
+Queries sent to the `/query/async` endpoint are added to the `dcp-query-async-query-queue-[deployment-stage]` along with a unique 
+id (which is also returned to the user). Events in the queue call the `query-create-async-query-[deployment-stage]` lambda to run the 
 query and eventually load the results into the `query-service-[account_id]` [Amazon S3](https://aws.amazon.com/s3/) 
 bucket. Users can use the returned unique id to to retrieve the job status and (eventually) a link to the result via 
 `/query/async/{job_id}` . Fast queries sent to the `/query` endpoint are resolved in the chalice app and the results 
