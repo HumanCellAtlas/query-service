@@ -1,6 +1,6 @@
 include ../common.mk
-export LOAD_DATA_QUEUE_URL := $(shell cd ../terraform && terraform output load_data_queue_url)
-export ASYNC_QUERY_QUEUE_URL := $(shell cd ../terraform && terraform output async_query_queue_url)
+export LOAD_DATA_QUEUE_URL := 'ANYTHING'
+export ASYNC_QUERY_QUEUE_URL := ANYTHING
 
 export EXPORT_ENV_VARS_TO_LAMBDA=DEPLOYMENT_STAGE \
 			API_HOST \
@@ -26,7 +26,7 @@ clean:
 clobber: clean
 	git checkout .chalice/*.json
 
-build: check-queue
+build:
 	rm -rf chalicelib/config
 	rm -rf chalicelib/query
 

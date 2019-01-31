@@ -30,6 +30,16 @@
         "API_HOST": "query.staging.data.humancellatlas.org",
         "LOAD_DATA_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/861229788715/dcp-query-data-input-queue-staging"
       }
+    },
+    "predev": {
+      "api_gateway_stage": "predev",
+      "environment_variables": {
+        "DEPLOYMENT_STAGE": "predev",
+        "API_HOST": "query.predev.data.humancellatlas.org",
+        "LOAD_DATA_QUEUE_URL": "'ANYTHING'",
+        "AWS_ACCOUNT_ID": "861229788715",
+        "ASYNC_QUERY_QUEUE_URL": "ANYTHING"
+      }
     }
   },
   "lambda_timeout": 300,
