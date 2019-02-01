@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 
 import requests
@@ -9,19 +10,22 @@ from lib.config import Config
 class TestQueryService(unittest.TestCase):
 
     def setUp(self):
-        print(f"\n\nTESTING ENVIRONMENT {Config.deployment_stage} at URL {Config.api_url}. \n")
+
+        _api_host = os.getenv("API_HOST")
+        self.api_url = f"https://{_api_host}/v1"
+        print(f"\n\nTESTING ENVIRONMENT {Config.deployment_stage} at URL {self.api_url}. \n")
 
     def test_health_check(self):
         self._make_request(
             description='CHECK SERVICE HEALTH',
             verb='GET',
-            url=f"{Config.api_url}/health",
+            url=f"{self.api_url}/health",
             expected_status=200)
 
     def test_query(self):
         query = "SELECT count(*) FROM FILES;"
         self.request = self._make_request(description='CHECK QUERY ENDPOINT', verb='POST',
-                                          url=f"{Config.api_url}/query", data=json.dumps(query), expected_status=200)
+                                          url=f"{self.api_url}/query", data=json.dumps(query), expected_status=200)
         response = self.request
         self.assertEqual(json.loads(response)['query'], query)
         self.assertGreaterEqual(json.loads(response)['results'][0]['count'], 0)
@@ -31,7 +35,7 @@ class TestQueryService(unittest.TestCase):
         response = self._make_request(
             description='CHECK CREATE LONG QUERIES ENDPOINT',
             verb='POST',
-            url=f"{Config.api_url}/query/async",
+            url=f"{self.api_url}/query/async",
             data=json.dumps(query),
             expected_status=202
         )
@@ -44,7 +48,7 @@ class TestQueryService(unittest.TestCase):
         response = self._make_request(
             description='CHECK CREATE LONG QUERIES ENDPOINT',
             verb='POST',
-            url=f"{Config.api_url}/query/async",
+            url=f"{self.api_url}/query/async",
             data=json.dumps(query),
             expected_status=202
         )
@@ -52,7 +56,7 @@ class TestQueryService(unittest.TestCase):
         response = self._make_request(
             description='CHECK GET LONG QUERIES ENDPOINT',
             verb='GET',
-            url=f"{Config.api_url}/query/async/{job_id}",
+            url=f"{self.api_url}/query/async/{job_id}",
             expected_status=200
         )
         self.assertEqual(json.loads(response)['job_id'], job_id)
@@ -64,7 +68,7 @@ class TestQueryService(unittest.TestCase):
         self._make_request(
             description='CHECK GET LONG QUERIES ENDPOINT',
             verb='GET',
-            url=f"{Config.api_url}/query/async/{job_id}",
+            url=f"{self.api_url}/query/async/{job_id}",
             expected_status=404
         )
 
