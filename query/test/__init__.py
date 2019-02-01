@@ -8,13 +8,14 @@ import time
 from uuid import UUID
 
 from psycopg2 import sql
-file_directory = os.path.dirname(__file__)
-pkg_root = os.path.abspath(os.path.join(file_directory, '..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
 
 from lib.etl.extract import Extractor
 from lib.model import Bundle, BundleManifest, File, FileMetadata
 from lib.logger import logger
+
+file_directory = os.path.dirname(__file__)
+pkg_root = os.path.abspath(os.path.join(file_directory, '..'))  # noqa
+sys.path.insert(0, pkg_root)  # noqa
 
 
 def load_fixture(fixture_file):
@@ -27,7 +28,6 @@ vx_bundle_fqid = '0c8d7f15-47c2-42c2-83de-47ae48e1eae1.2018-09-06T190237.485774Z
 vx_bundle_str = load_fixture('vx_bundle.json')
 fast_query_mock_result = json.loads(load_fixture('fast_query_mock_result.json'))
 fast_query_expected_results = json.loads(load_fixture('fast_query_expected_results.json'))
-
 vx_bundle = Bundle(
     fqid=vx_bundle_fqid,
     bundle_manifest=BundleManifest(**json.loads(vx_bundle_str)),
@@ -42,7 +42,6 @@ vx_bundle = Bundle(
 
 
 class FixtureExtractor(Extractor):
-
     _key_to_fixture_map = dict([
         (d.uuid, load_fixture(d.name))
         for d in BundleManifest(**json.loads(vx_bundle_str)).file_metadata
@@ -63,11 +62,11 @@ class FixtureExtractor(Extractor):
 def gen_random_chars(n: int):
     return ''.join(
         [random.choice(string.ascii_lowercase)] +
-        [random.choice(string.ascii_lowercase + string.digits) for _ in range(n-1)]
+        [random.choice(string.ascii_lowercase + string.digits) for _ in range(n - 1)]
     )
 
 
-def eventually(timeout: float, interval: float, errors: set={AssertionError}):
+def eventually(timeout: float, interval: float, errors: set = {AssertionError}):
     """
     @eventually runs a test until all assertions are satisfied or a timeout is reached.
     :param timeout: time until the test fails
@@ -75,6 +74,7 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
     :param errors: the exceptions to catch and retry on
     :return: the result of the function or a raised assertion error
     """
+
     def decorate(func):
         @functools.wraps(func)
         def call(*args, **kwargs):
@@ -90,6 +90,7 @@ def eventually(timeout: float, interval: float, errors: set={AssertionError}):
                     time.sleep(interval)
 
         return call
+
     return decorate
 
 

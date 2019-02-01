@@ -29,3 +29,6 @@ deploy:
 	$(MAKE) -C ../load_data_lambda $@
 	$(MAKE) -C ../async_query_lambda $@
 
+.PHONY: lint
+lint:
+	. venv/bin/activate && flake8

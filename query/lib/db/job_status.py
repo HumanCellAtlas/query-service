@@ -1,7 +1,6 @@
 import typing
 from uuid import UUID
 
-from query.lib.logger import logger
 from query.lib.model import datetime_to_version
 from query.lib.config import requires_admin_mode
 from query.lib.db.table import Table
@@ -47,10 +46,7 @@ class JobStatus(Table):
 
     def select_from_write_db(self, uuid: UUID) -> typing.Optional[dict]:
         self._cursor.execute(
-            """
-            SELECT * FROM job_status
-            WHERE job_id = %s FOR UPDATE 
-            """,
+            "SELECT * FROM job_status WHERE job_id = %s FOR UPDATE ",
             (
                 str(uuid),
             )

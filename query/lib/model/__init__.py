@@ -1,6 +1,6 @@
-from query.lib.model.bundle import *
-from query.lib.model.file import *
-from query.lib.model.metadata import *
+from query.lib.model.bundle import * # noqa
+from query.lib.model.file import * # noqa
+from query.lib.model.metadata import * # noqa
 
 from datetime import datetime
 

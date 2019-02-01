@@ -43,14 +43,6 @@ destroy: init
 clean:
 	rm -rf dist .terraform .chalice/deployments
 
-lint:
-	flake8 *.py test
-
-test: lint
-	python ./test/test.py -v
-
-.PHONY: deploy package init destroy clean lint test secrets install build stage
-
 install:
 	virtualenv -p python3 venv
 	. venv/bin/activate && pip install -r requirements.txt --upgrade
@@ -80,3 +72,5 @@ build:
 
 stage: build
 	aws s3 cp $(ZIP_FILE) s3://$(BUCKET)/$(STAGED_FILE_KEY)
+
+.PHONY: deploy package init destroy clean test secrets install build stage

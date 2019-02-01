@@ -9,5 +9,3 @@ class Table:
 
     def destroy(self):
         raise NotImplementedError()
-
-

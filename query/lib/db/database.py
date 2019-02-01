@@ -68,6 +68,3 @@ class PostgresDatabase:
             cursor.execute(query)
             column_names = map(lambda x: x[0], cursor.description)
             return cursor.fetchall(), list(column_names)
-
-
-
