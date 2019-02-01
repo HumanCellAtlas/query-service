@@ -3,7 +3,7 @@ import unittest
 
 from unittest.mock import patch
 
-# from test import *
+from lib.config import Config
 from test import fast_query_mock_result, fast_query_expected_results
 from test.unit.api_server import client_for_test_api_server
 
