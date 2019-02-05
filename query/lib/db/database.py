@@ -22,7 +22,7 @@ class Tables(NamedTuple):
 
 class PostgresDatabase:
 
-    def __init__(self, connection_uri: str):
+    def __init__(self, connection_uri: object) -> object:
         self._connection_uri = connection_uri
         self._connection = self._connect()
         self._read_only_connection = self._connect()

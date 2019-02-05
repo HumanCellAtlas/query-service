@@ -45,7 +45,8 @@ resource "aws_iam_role_policy" "query_daily_db_cleanup_lambda" {
         "logs:DescribeLogStreams"
       ],
       "Resource": [
-        "arn:aws:logs:*:*:*"
+        "arn:aws:logs:${local.aws_region}:${local.account_id}:log-group:/aws/lambda/query-daily-db-cleanup-${var.deployment_stage}",
+        "arn:aws:logs:${local.aws_region}:${local.account_id}:log-group:/aws/lambda/query-daily-db-cleanup-${var.deployment_stage}:*:*"
       ],
       "Effect": "Allow"
     },

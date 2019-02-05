@@ -150,6 +150,26 @@ class TestPostgresLoader(unittest.TestCase):
             job = tables.job_status.select(uuid)
             assert job['status'] == 'COMPLETE'
 
+    def test_job_status_old_row_removal(self):
+        uuid = uuid4()
+        with self.db.transaction() as (cursor, tables):
+            tables.job_status.insert(uuid)
+            assert _get_job_status_row_count(tables) == 1
+
+            tables.job_status.delete_old_rows()
+            assert _get_job_status_row_count(tables) == 1
+
+            tables.job_status._cursor.execute("UPDATE job_status set created_at=NOW() - INTERVAL '91 days'")
+
+            tables.job_status.delete_old_rows()
+            assert _get_job_status_row_count(tables) == 0
+
+
+def _get_job_status_row_count(tables):
+    tables.job_status._cursor.execute("SELECT COUNT(*) from job_status;")
+    response = tables.job_status._cursor.fetchall()
+    return response[0][0]
+
 
 if __name__ == '__main__':
     unittest.main()
