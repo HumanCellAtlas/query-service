@@ -23,7 +23,7 @@ plan:
 apply:
 	terraform apply --backup=-
 
-init:
+init: secrets
 	-rm -f .terraform/terraform.tfstate
 	terraform init \
 		-backend-config="bucket=${TF_S3_BUCKET}" \

@@ -28,6 +28,8 @@ deploy:
 	$(MAKE) -C ../chalice $@
 	$(MAKE) -C ../load_data_lambda $@
 	$(MAKE) -C ../async_query_lambda $@
+	$(MAKE) -C ../db_cleanup_lambda $@
+
 
 .PHONY: lint
 lint:

@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 from async_query_lambda.app import handler
 from query.lambdas.async_query.create_async_query import process_async_query
-# from query.lib.config import Config
 from query.test.unit import QueryTestCaseUsingMockAWS
 
 

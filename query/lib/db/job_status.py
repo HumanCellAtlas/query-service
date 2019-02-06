@@ -81,6 +81,9 @@ class JobStatus(Table):
             """
         )
 
+        result = self._cursor.rowcount
+        return result
+
     @requires_admin_mode
     def initialize(self):
         self._cursor.execute(
