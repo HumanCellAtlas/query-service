@@ -1,0 +1,103 @@
+{
+  "describedBy": "http://schema.dev.data.humancellatlas.org/system/1.1.1/links",
+  "schema_type": "link_bundle",
+  "schema_version": "1.1.1",
+  "links": [
+    {
+      "process": "process_0",
+      "inputs": [
+        "file_1",
+        "file_2",
+        "file_3"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "file_4",
+        "file_5"
+      ],
+      "output_type": "file",
+      "protocols": [
+        {
+          "protocol_type": "library_preparation_protocol",
+          "protocol_id": "protocol_0"
+        },
+        {
+          "protocol_type": "sequencing_protocol",
+          "protocol_id": "protocol_1"
+        }
+      ]
+    },
+    {
+      "process": "process_1",
+      "inputs": [
+        "file_4"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "file_6",
+        "file_7",
+        "file_8"
+      ],
+      "output_type": "biomaterial",
+      "protocols": [
+        {
+          "protocol_type": "dissociation_protocol",
+          "protocol_id": "protocol_2"
+        },
+        {
+          "protocol_type": "enrichment_protocol",
+          "protocol_id": "protocol_3"
+        }
+      ]
+    },
+    {
+      "process": "process_2",
+      "inputs": [
+        "file_6",
+        "file_4"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "file_9"
+      ],
+      "output_type": "biomaterial",
+      "protocols": []
+    },
+    {
+      "process": "process_3",
+      "inputs": [
+        "file_0"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "file_1"
+      ],
+      "output_type": "biomaterial",
+      "protocols": []
+    },
+    {
+      "process": "process_0",
+      "inputs": [
+        "file_1",
+        "file_2",
+        "file_3"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "file_4",
+        "file_5"
+      ],
+      "output_type": "file",
+      "protocols": [
+        {
+          "protocol_type": "library_preparation_protocol",
+          "protocol_id": "protocol_0"
+        },
+        {
+          "protocol_type": "sequencing_protocol",
+          "protocol_id": "protocol_1"
+        }
+      ]
+    }
+  ]
+}

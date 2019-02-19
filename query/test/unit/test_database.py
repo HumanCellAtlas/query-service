@@ -105,6 +105,26 @@ class TestPostgresLoader(unittest.TestCase):
                 )
             )
 
+            # insert process_links
+            process_uuid = 'process_uuid-0'
+            input_file_uuids = ['input-uuid-0']
+            output_file_uuids = ['output-uuid-0']
+            protocol_file_uuids = ['protocol_uuid-0']
+
+            row_count = tables.process_links.insert(
+                process_uuid, input_file_uuids, output_file_uuids, protocol_file_uuids
+            )
+            assert row_count == 1
+            # select process_links
+            process = tables.process_links.select_by_process_uuid(process_uuid)
+
+            assert process['uuid'] == process_uuid
+            assert process['input_file_uuids'] == input_file_uuids
+            assert process['output_file_uuids'] == output_file_uuids
+            assert process['protocol_file_uuids'] == protocol_file_uuids
+
+
+
     def test_table_create_list(self):
         num_test_tables = 3
         test_table_names = [
@@ -163,6 +183,8 @@ class TestPostgresLoader(unittest.TestCase):
 
             tables.job_status.delete_old_rows()
             assert _get_job_status_row_count(tables) == 0
+
+
 
 
 def _get_job_status_row_count(tables):

@@ -1,7 +1,7 @@
 from typing import List
 
-from lib.config import requires_admin_mode
-from lib.db.table import Table
+from query.lib.config import requires_admin_mode
+from query.lib.db.table import Table
 
 
 class ProcessLinks(Table):

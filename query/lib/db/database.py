@@ -5,7 +5,7 @@ from psycopg2 import DatabaseError
 import psycopg2
 import psycopg2.extras
 
-from lib.db.process_links import ProcessLinks
+from query.lib.db.process_links import ProcessLinks
 from query.lib.common.exceptions import DatabaseException
 from query.lib.db.job_status import JobStatus
 from query.lib.db.bundles import Bundles
