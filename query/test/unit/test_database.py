@@ -106,22 +106,22 @@ class TestPostgresLoader(unittest.TestCase):
             )
 
             # insert process_links
-            process_uuid = 'process_uuid-0'
-            input_file_uuids = ['input-uuid-0']
-            output_file_uuids = ['output-uuid-0']
-            protocol_file_uuids = ['protocol_uuid-0']
+            process_uuid = 'process-0-uuid'
+            file_uuid = 'file-0-uuid'
+            process_file_connection_type = 'input_entity'
+            file_type = 'file-0-type'
 
             row_count = tables.process_links.insert(
-                process_uuid, input_file_uuids, output_file_uuids, protocol_file_uuids
+                process_uuid, file_uuid, process_file_connection_type, file_type
             )
             assert row_count == 1
             # select process_links
             process = tables.process_links.select_by_process_uuid(process_uuid)
 
             assert process['uuid'] == process_uuid
-            assert process['input_file_uuids'] == input_file_uuids
-            assert process['output_file_uuids'] == output_file_uuids
-            assert process['protocol_file_uuids'] == protocol_file_uuids
+            assert process['file_uuid'] == file_uuid
+            assert process['process_file_connection_type'] == process_file_connection_type
+            assert process['file_type'] == file_type
 
 
 
