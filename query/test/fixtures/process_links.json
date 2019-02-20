@@ -76,6 +76,18 @@
       "protocols": []
     },
     {
+      "process": "process_4",
+      "inputs": [
+        "file_100"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "file_0"
+      ],
+      "output_type": "biomaterial",
+      "protocols": []
+    },
+    {
       "process": "process_0",
       "inputs": [
         "file_1",

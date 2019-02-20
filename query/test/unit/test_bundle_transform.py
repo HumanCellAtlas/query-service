@@ -1,14 +1,10 @@
 import json
-import os
-import sys
 import unittest
 
 from test import vx_bundle, load_fixture
 
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
 
-from lib.etl.transform import BundleDocumentTransform
+from query.lib.etl.bundle_transform import BundleDocumentTransform
 
 
 class TestTransform(unittest.TestCase):

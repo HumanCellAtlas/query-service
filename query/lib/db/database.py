@@ -5,7 +5,7 @@ from psycopg2 import DatabaseError
 import psycopg2
 import psycopg2.extras
 
-from query.lib.db.process_links import ProcessLinks
+from query.lib.db.hca_processes import HCAProcesses
 from query.lib.common.exceptions import DatabaseException
 from query.lib.db.job_status import JobStatus
 from query.lib.db.bundles import Bundles
@@ -19,7 +19,7 @@ class Tables(NamedTuple):
     files: Files
     bundles_files: BundlesFiles
     job_status: JobStatus
-    process_links: ProcessLinks
+    process_links: HCAProcesses
 
 
 class PostgresDatabase:
@@ -45,7 +45,7 @@ class PostgresDatabase:
                     files=Files(cursor),
                     bundles_files=BundlesFiles(cursor),
                     job_status=JobStatus(cursor),
-                    process_links=ProcessLinks(cursor)
+                    process_links=HCAProcesses(cursor)
                 )
             self._connection.commit()
         except DatabaseError as e:

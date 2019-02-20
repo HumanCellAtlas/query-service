@@ -88,6 +88,7 @@ class JobStatus(Table):
     def initialize(self):
         self._cursor.execute(
             """
+            CREATE TYPE job_status_enum AS ENUM ('CREATED', 'PROCESSING', 'COMPLETE', 'FAILED');
             CREATE TABLE IF NOT EXISTS job_status (
                 job_id UUID,
                 created_at TIMESTAMP DEFAULT NOW(),

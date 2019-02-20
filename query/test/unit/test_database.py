@@ -1,15 +1,10 @@
-import os
-import sys
 import unittest
 from uuid import uuid4
 
 from test import vx_bundle, clear_views, truncate_tables, eventually, gen_random_chars
 
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
-
-from lib.config import Config
-from lib.db.database import PostgresDatabase, Tables
+from query.lib.config import Config
+from query.lib.db.database import PostgresDatabase, Tables
 
 
 class TestReadOnlyTransactions(unittest.TestCase):
@@ -41,6 +36,7 @@ class TestPostgresLoader(unittest.TestCase):
         process_file = next(f for f in vx_bundle.files if f.metadata.name == 'process_0.json')
         with self.db.transaction() as (cursor, tables):
             # insert files
+
             result = tables.files.insert(project_file)
             self.assertEqual(result, 1)
             # select files
@@ -108,7 +104,7 @@ class TestPostgresLoader(unittest.TestCase):
             # insert process_links
             process_uuid = 'process-0-uuid'
             file_uuid = 'file-0-uuid'
-            process_file_connection_type = 'input_entity'
+            process_file_connection_type = 'INPUT_ENTITY'
             file_type = 'file-0-type'
 
             row_count = tables.process_links.insert(
@@ -123,7 +119,35 @@ class TestPostgresLoader(unittest.TestCase):
             assert process['process_file_connection_type'] == process_file_connection_type
             assert process['file_type'] == file_type
 
+            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid)
+            assert processes == [process_uuid]
 
+            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid, 'OUTPUT_ENTITY')
+            assert processes == []
+
+            # TODO @madison - refactor this into multiple tests
+            # insert - process_links_join_table
+            process1_uuid = 'process-1-uuid'
+            row_count = tables.process_links.insert_parent_child_link(process_uuid, process1_uuid)
+            assert row_count == 1
+
+            # select process_links_join_table_functions
+            process1_uuid = 'process-1-uuid'
+            process2_uuid = 'process-2-uuid'
+            process3_uuid = 'process-3-uuid'
+            process4_uuid = 'process-4-uuid'
+            process5_uuid = 'process-5-uuid'
+
+            tables.process_links.insert_parent_child_link(process_uuid, process2_uuid)
+            tables.process_links.insert_parent_child_link(process1_uuid, process3_uuid)
+            tables.process_links.insert_parent_child_link(process1_uuid, process4_uuid)
+            tables.process_links.insert_parent_child_link(process5_uuid, process4_uuid)
+
+            children = tables.process_links.list_direct_children_process_uuids(process_uuid)
+            assert children == [process1_uuid, process2_uuid]
+
+            parents = tables.process_links.list_direct_parent_process_uuids(process4_uuid)
+            assert parents == [process1_uuid, process5_uuid]
 
     def test_table_create_list(self):
         num_test_tables = 3
@@ -183,8 +207,6 @@ class TestPostgresLoader(unittest.TestCase):
 
             tables.job_status.delete_old_rows()
             assert _get_job_status_row_count(tables) == 0
-
-
 
 
 def _get_job_status_row_count(tables):

@@ -1,6 +1,7 @@
 import pylru
 from psycopg2 import IntegrityError
 
+from query.lib.etl.links_file_transform import LinksFileTransform
 from query.lib.logger import logger
 from query.lib.model import Bundle
 from query.lib.db.database import PostgresDatabase, Tables
@@ -50,6 +51,8 @@ class PostgresLoader(Loader):
         for file in bundle.files:
             if file.fqid not in self._inserted_files:
                 tables.files.insert(file)
+                if file.metadata.name == "links.json":
+                    LinksFileTransform().links_file_transformer(tables, file['links'])
             self._inserted_files[file.fqid] = True
             tables.bundles_files.insert(
                 bundle_uuid=bundle.uuid,
