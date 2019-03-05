@@ -34,7 +34,7 @@ class Config:
     deployment_stage = _get(os.environ, 'DEPLOYMENT_STAGE')
     _account_id = _get(os.environ, 'AWS_ACCOUNT_ID')
     query_service_bucket = f"query-service-{_account_id}"
-
+    _cluster_name = 'cluster-cdaogjt23uha.us-east-1.rds.amazonaws.com'
     _secret = json.loads(AwsSecret(f"dcp/query/{deployment_stage}/database").value)
     _pg_bouncer_dns_name = _get(_secret, 'pgbouncer_dns_name')
     _database_name = _get(_secret, 'database')
@@ -43,6 +43,11 @@ class Config:
 
     # TODO: automate creation of test database
     _database_uri_prefix = f"postgresql://{_user}:{_password}@{_pg_bouncer_dns_name}:5432/"
+    _db_uri_prefix = f"postgresql://{_user}:{_password}@query-{deployment_stage}.{_cluster_name}:5432/"
+
+    test_db_uri = _db_uri_prefix + "test"
+    serve_db_uri = _db_uri_prefix + _database_name
+
     test_database_uri = _database_uri_prefix + "test"
     serve_database_uri = _database_uri_prefix + _database_name
 
