@@ -4,110 +4,110 @@
   "schema_version": "1.1.1",
   "links": [
     {
-      "process": "process_0",
+      "process": "a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "inputs": [
-        "file_1",
-        "file_2",
-        "file_3"
+        "b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "input_type": "biomaterial",
       "outputs": [
-        "file_4",
-        "file_5"
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "output_type": "file",
       "protocols": [
         {
           "protocol_type": "library_preparation_protocol",
-          "protocol_id": "protocol_0"
+          "protocol_id": "c0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         },
         {
           "protocol_type": "sequencing_protocol",
-          "protocol_id": "protocol_1"
+          "protocol_id": "c0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         }
       ]
     },
     {
-      "process": "process_1",
+      "process": "a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "inputs": [
-        "file_4"
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "input_type": "biomaterial",
       "outputs": [
-        "file_6",
-        "file_7",
-        "file_8"
+        "b0000006-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000007-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000008-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "output_type": "biomaterial",
       "protocols": [
         {
           "protocol_type": "dissociation_protocol",
-          "protocol_id": "protocol_2"
+          "protocol_id": "c0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         },
         {
           "protocol_type": "enrichment_protocol",
-          "protocol_id": "protocol_3"
+          "protocol_id": "c0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         }
       ]
     },
     {
-      "process": "process_2",
+      "process": "a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "inputs": [
-        "file_6",
-        "file_4"
+        "b0000006-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "input_type": "biomaterial",
       "outputs": [
-        "file_9"
+        "b0000009-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "output_type": "biomaterial",
       "protocols": []
     },
     {
-      "process": "process_3",
+      "process": "a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "inputs": [
-        "file_0"
+        "b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "input_type": "biomaterial",
       "outputs": [
-        "file_1"
+        "b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "output_type": "biomaterial",
       "protocols": []
     },
     {
-      "process": "process_4",
+      "process": "a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "inputs": [
-        "file_100"
+        "b0000100-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "input_type": "biomaterial",
       "outputs": [
-        "file_0"
+        "b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "output_type": "biomaterial",
       "protocols": []
     },
     {
-      "process": "process_0",
+      "process": "a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "inputs": [
-        "file_1",
-        "file_2",
-        "file_3"
+        "b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "input_type": "biomaterial",
       "outputs": [
-        "file_4",
-        "file_5"
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
       ],
       "output_type": "file",
       "protocols": [
         {
           "protocol_type": "library_preparation_protocol",
-          "protocol_id": "protocol_0"
+          "protocol_id": "c0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         },
         {
           "protocol_type": "sequencing_protocol",
-          "protocol_id": "protocol_1"
+          "protocol_id": "c0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         }
       ]
     }

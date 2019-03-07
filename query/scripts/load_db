@@ -14,7 +14,7 @@ from query.lib.etl.load import PostgresLoader, Loader
 from query.lib.logger import logger
 from query.lib.model import datetime_to_version
 from query.lib.etl.extract import S3Client, S3Extractor, Extractor
-from query.lib.etl.bundle_transform import BundleDocumentTransform
+from query.lib.etl.transform import BundleDocumentTransform
 
 # this seems to be entirely IO bound, so we can have _lots_ of workers...
 CONCURRENCY = 50

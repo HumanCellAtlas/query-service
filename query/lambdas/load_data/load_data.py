@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from query.lib.etl.bundle_transform import BundleDocumentTransform
+from query.lib.etl.transform import BundleDocumentTransform
 from query.lib.etl.extract import Extractor
 from query.lib.etl.load import Loader
 from query.lib.common.logging import get_logger
