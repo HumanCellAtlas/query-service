@@ -10,14 +10,14 @@ sys.path.insert(0, pkg_root)  # noqa
 
 from query.lib.config import Config
 from query.lib.db.database import PostgresDatabase
-from query.lib.etl.load import PostgresLoader, Loader
+from query.lib.etl.load import PostgresLoader, Loader, DatabaseLoader
 from query.lib.logger import logger
 from query.lib.model import datetime_to_version
 from query.lib.etl.extract import S3Client, S3Extractor, Extractor
 from query.lib.etl.transform import BundleDocumentTransform
 
 # this seems to be entirely IO bound, so we can have _lots_ of workers...
-CONCURRENCY = 50
+CONCURRENCY = 30
 
 BUNDLE_FQID_REGEXP = re.compile(
     '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.][0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}[.][0-9]{6}Z$',
@@ -44,7 +44,7 @@ def extract_transform_load(extractor: Extractor, loader: Loader, bundle_fqid: st
 
 
 def process_batch(batch: typing.List[str]):
-    loader = PostgresLoader(PostgresDatabase(Config.serve_database_uri))
+    loader = DatabaseLoader()
     # TODO: don't hardcode to staging
     # TODO: don't read directly from s3
     extractor = S3Extractor(S3Client('us-east-1', 'org-humancellatlas-dss-staging'))
@@ -64,14 +64,15 @@ if __name__ == '__main__':
         bundle_fqids.append(line.strip())
 
     # eliminate fqids that have already been processed
-    db = PostgresDatabase(Config.serve_database_uri)
-    with db.transaction() as (cursor, _):
-        cursor.execute("SELECT bundle_uuid, bundle_version from bundles;")
-        already_processed_fqids = set(f"{ele[0]}.{datetime_to_version(ele[1])}" for ele in cursor.fetchall())
+    # Todo reimplement this
+    # db = PostgresDatabase(Config.serve_database_uri)
+    # with db.transaction() as (cursor, _):
+    #     cursor.execute("SELECT bundle_uuid, bundle_version from bundles;")
+    #     already_processed_fqids = set(f"{ele[0]}.{datetime_to_version(ele[1])}" for ele in cursor.fetchall())
 
     logger.info(f"Number of Bundle FQIDS before filtering: {len(bundle_fqids)}")
-    bundle_fqids = [fqid for fqid in bundle_fqids if fqid not in already_processed_fqids]
-    logger.info(f"Number of Bundle FQIDS after filtering: {len(bundle_fqids)}")
+    # bundle_fqids = [fqid for fqid in bundle_fqids if fqid not in already_processed_fqids]
+    # logger.info(f"Number of Bundle FQIDS after filtering: {len(bundle_fqids)}")
 
     with Pool(CONCURRENCY) as p:
         bundle_fqid_chunks = chunks(bundle_fqids, CONCURRENCY)
