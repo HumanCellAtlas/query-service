@@ -22,7 +22,7 @@ data.
 ### Components
 
 [LucidChart Architecture Diagram](https://www.lucidchart.com/invitations/accept/02e38662-6da1-48ad-87ac-0355bb3a03d8)
-![alt text](query_arch.svg)
+![Query architecture](docs/query_arch.svg)
 
 
 #### Query API
