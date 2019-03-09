@@ -36,3 +36,14 @@ class BundleDocumentTransform:
                     document[file.schema_type] = file
 
         return dict(**document)
+
+    @classmethod
+    def format_process_info(cls, link: object):
+        process_uuid = link['process']
+        protocol_uuids = []
+        for protocol in link['protocols']:
+            protocol_uuid = protocol['protocol_id']
+            protocol_uuids.append(protocol_uuid)
+
+        return {"process_uuid": process_uuid, "input_file_uuids": link["inputs"], "output_file_uuids": link["outputs"],
+                "protocol_uuids": protocol_uuids}

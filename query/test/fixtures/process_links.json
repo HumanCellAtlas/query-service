@@ -1,0 +1,115 @@
+{
+  "describedBy": "http://schema.dev.data.humancellatlas.org/system/1.1.1/links",
+  "schema_type": "link_bundle",
+  "schema_version": "1.1.1",
+  "links": [
+    {
+      "process": "a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "inputs": [
+        "b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "output_type": "file",
+      "protocols": [
+        {
+          "protocol_type": "library_preparation_protocol",
+          "protocol_id": "c0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        },
+        {
+          "protocol_type": "sequencing_protocol",
+          "protocol_id": "c0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "process": "a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "inputs": [
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "b0000006-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000007-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000008-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "output_type": "biomaterial",
+      "protocols": [
+        {
+          "protocol_type": "dissociation_protocol",
+          "protocol_id": "c0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        },
+        {
+          "protocol_type": "enrichment_protocol",
+          "protocol_id": "c0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "process": "a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "inputs": [
+        "b0000006-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "b0000009-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "output_type": "biomaterial",
+      "protocols": []
+    },
+    {
+      "process": "a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "inputs": [
+        "b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "output_type": "biomaterial",
+      "protocols": []
+    },
+    {
+      "process": "a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "inputs": [
+        "b0000100-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "output_type": "biomaterial",
+      "protocols": []
+    },
+    {
+      "process": "a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "inputs": [
+        "b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "input_type": "biomaterial",
+      "outputs": [
+        "b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "b0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      ],
+      "output_type": "file",
+      "protocols": [
+        {
+          "protocol_type": "library_preparation_protocol",
+          "protocol_id": "c0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        },
+        {
+          "protocol_type": "sequencing_protocol",
+          "protocol_id": "c0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        }
+      ]
+    }
+  ]
+}

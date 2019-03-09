@@ -1,14 +1,9 @@
 import json
-import os
-import sys
 import unittest
 
-from test import vx_bundle, load_fixture
+from test import vx_bundle, load_fixture, mock_links
 
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
-
-from lib.etl.transform import BundleDocumentTransform
+from query.lib.etl.transform import BundleDocumentTransform
 
 
 class TestTransform(unittest.TestCase):
@@ -19,6 +14,19 @@ class TestTransform(unittest.TestCase):
         self.assertDictEqual(bundle_dict, expected)
 
     _expected_document = dict()
+
+    def test_format_process_info_correctly_formats_link_object(self):
+        expected_process = {'process_uuid': 'a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                            'input_file_uuids': ['b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                                 'b0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                                 'b0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
+                            'output_file_uuids': ['b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                                  'b0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
+                            'protocol_uuids': ['c0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                               'c0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa']}
+        process = BundleDocumentTransform.format_process_info(mock_links['links'][0])
+        self.maxDiff = None
+        self.assertDictEqual(process, expected_process)
 
 
 if __name__ == '__main__':

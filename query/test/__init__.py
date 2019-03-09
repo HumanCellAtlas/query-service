@@ -28,6 +28,7 @@ vx_bundle_fqid = '0c8d7f15-47c2-42c2-83de-47ae48e1eae1.2018-09-06T190237.485774Z
 vx_bundle_str = load_fixture('vx_bundle.json')
 fast_query_mock_result = json.loads(load_fixture('fast_query_mock_result.json'))
 fast_query_expected_results = json.loads(load_fixture('fast_query_expected_results.json'))
+mock_links = json.loads(load_fixture('process_links.json'))
 vx_bundle = Bundle(
     fqid=vx_bundle_fqid,
     bundle_manifest=BundleManifest(**json.loads(vx_bundle_str)),
@@ -117,3 +118,5 @@ def truncate_tables(cursor):
     cursor.execute("TRUNCATE TABLE bundles CASCADE")
     cursor.execute("TRUNCATE TABLE bundles_files CASCADE")
     cursor.execute("TRUNCATE TABLE job_status CASCADE")
+    cursor.execute("TRUNCATE TABLE process_links_join_table CASCADE")
+    cursor.execute("TRUNCATE TABLE hca_processes CASCADE")

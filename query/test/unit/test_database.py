@@ -1,15 +1,11 @@
-import os
-import sys
 import unittest
 from uuid import uuid4
 
-from test import vx_bundle, clear_views, truncate_tables, eventually, gen_random_chars
+from lib.etl.load import PostgresLoader
+from test import vx_bundle, clear_views, truncate_tables, eventually, gen_random_chars, mock_links
 
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
-
-from lib.config import Config
-from lib.db.database import PostgresDatabase, Tables
+from query.lib.config import Config
+from query.lib.db.database import PostgresDatabase, Tables
 
 
 class TestReadOnlyTransactions(unittest.TestCase):
@@ -30,6 +26,7 @@ class TestReadOnlyTransactions(unittest.TestCase):
 class TestPostgresLoader(unittest.TestCase):
 
     db = PostgresDatabase(Config.test_database_uri)
+    loader = PostgresLoader(db)
 
     def setUp(self):
         with self.db._connection.cursor() as cursor:
@@ -41,6 +38,7 @@ class TestPostgresLoader(unittest.TestCase):
         process_file = next(f for f in vx_bundle.files if f.metadata.name == 'process_0.json')
         with self.db.transaction() as (cursor, tables):
             # insert files
+
             result = tables.files.insert(project_file)
             self.assertEqual(result, 1)
             # select files
@@ -105,6 +103,51 @@ class TestPostgresLoader(unittest.TestCase):
                 )
             )
 
+            # insert process_links
+            process_uuid = 'a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            file_uuid = 'b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process_file_connection_type = 'INPUT_ENTITY'
+
+            row_count = tables.process_links.insert(
+                process_uuid, file_uuid, process_file_connection_type
+            )
+            assert row_count == 1
+            # select process_links
+            process = tables.process_links.select_by_process_uuid(process_uuid)
+
+            assert process['uuid'] == process_uuid
+            assert process['file_uuid'] == file_uuid
+            assert process['process_file_connection_type'] == process_file_connection_type
+
+            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid)
+            assert processes == [process_uuid]
+
+            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid, 'OUTPUT_ENTITY')
+            assert processes == []
+
+            # TODO @madison - refactor this into multiple tests
+            # insert - process_links_join_table
+            process1_uuid = 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            row_count = tables.process_links.insert_parent_child_link(process_uuid, process1_uuid)
+            assert row_count == 1
+
+            # select process_links_join_table_functions
+            process2_uuid = 'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process3_uuid = 'a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process4_uuid = 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process5_uuid = 'a0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+
+            tables.process_links.insert_parent_child_link(process_uuid, process2_uuid)
+            tables.process_links.insert_parent_child_link(process1_uuid, process3_uuid)
+            tables.process_links.insert_parent_child_link(process1_uuid, process4_uuid)
+            tables.process_links.insert_parent_child_link(process5_uuid, process4_uuid)
+
+            children = tables.process_links.list_direct_children_process_uuids(process_uuid)
+            assert children == [process1_uuid, process2_uuid]
+
+            parents = tables.process_links.list_direct_parent_process_uuids(process4_uuid)
+            assert parents == [process1_uuid, process5_uuid]
+
     def test_table_create_list(self):
         num_test_tables = 3
         test_table_names = [
@@ -163,6 +206,23 @@ class TestPostgresLoader(unittest.TestCase):
 
             tables.job_status.delete_old_rows()
             assert _get_job_status_row_count(tables) == 0
+
+    def test_get_all_parents(self):
+        with self.db.transaction() as (cursor, tables):
+            self.loader.load_links(tables, mock_links['links'])
+
+            parent_processes = tables.process_links.list_all_parents('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+
+        expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
+        self.assertCountEqual(expected_parents, parent_processes)
+
+    def test_get_all_children(self):
+        with self.db.transaction() as (cursor, tables):
+            self.loader.load_links(tables, mock_links['links'])
+            child_processes = tables.process_links.list_all_children('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+        expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                             'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
+        self.assertCountEqual(expected_children, child_processes)
 
 
 def _get_job_status_row_count(tables):
