@@ -1,0 +1,6 @@
+psycopg2-binary
+sqlalchemy
+requests-http-signature
+hca
+dcplib
+connexion[swagger-ui]

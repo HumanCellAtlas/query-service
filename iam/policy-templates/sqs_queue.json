@@ -1,0 +1,19 @@
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "0",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": [
+        "SQS:SendMessage",
+        "SQS:ReceiveMessage",
+        "SQS:DeleteMessage",
+        "SQS:ChangeMessageVisibility",
+        "SQS:GetQueueUrl",
+        "SQS:GetQueueAttributes"
+      ],
+      "Resource": "${queue_arn}"
+    }
+  ]
+}
