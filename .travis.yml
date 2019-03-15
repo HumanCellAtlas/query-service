@@ -1,8 +1,21 @@
+dist: xenial
+sudo: required
 language: python
 cache: pip
 
 python:
   - 3.6
+
+addons:
+  postgresql: "10"
+  apt:
+    packages:
+    - postgresql-10
+    - postgresql-client-10
+    - moreutils
+
+services:
+  - postgresql
 
 env:
   global:
@@ -12,8 +25,11 @@ env:
 install:
   - pip install -r requirements-dev.txt
 
-script:
+before_script:
   - source environment
+  - make build-chalice-config init-db load-test-data
+
+script:
   - make test
 
 after_success:

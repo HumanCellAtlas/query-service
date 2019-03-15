@@ -6,10 +6,11 @@ import os, sys, argparse, json, logging
 import boto3
 from hca.dss import DSSClient
 
+from dcplib.aws import clients
+
 
 def update_webhooks(action, replica, callback_url):
     dss = DSSClient()
-    secretsmanager = boto3.client("secretsmanager")
     if action == "install":
         for subscription in dss.get_subscriptions(replica=replica, subscription_type="jmespath")["subscriptions"]:
             if callback_url != subscription["callback_url"]:
@@ -20,9 +21,8 @@ def update_webhooks(action, replica, callback_url):
             break
         else:
             print("Registering new subscription with", dss.host)
-            secretsmanager = boto3.client("secretsmanager")
             secret_id = f"{os.environ['APP_NAME']}/{os.environ['STAGE']}/webhook-auth-config"
-            res = secretsmanager.get_secret_value(SecretId=secret_id)
+            res = clients.secretsmanager.get_secret_value(SecretId=secret_id)
             webhook_keys = json.loads(res["SecretString"])["hmac_keys"]
             hmac_key_id = json.loads(res["SecretString"])["active_hmac_key"]
             res = dss.put_subscription(replica=replica,

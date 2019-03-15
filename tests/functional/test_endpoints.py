@@ -4,16 +4,17 @@ import unittest
 
 import requests
 
-from lib.config import Config
+from dcpquery import config
 
 
+@unittest.skip("WIP")
 class TestQueryService(unittest.TestCase):
 
     def setUp(self):
 
         _api_host = os.getenv("API_HOST")
         self.api_url = f"https://{_api_host}/v1"
-        print(f"\n\nTESTING ENVIRONMENT {Config.deployment_stage} at URL {self.api_url}. \n")
+        print(f"\n\nTESTING ENVIRONMENT {config.stage} at URL {self.api_url}. \n")
 
     def test_health_check(self):
         self._make_request(

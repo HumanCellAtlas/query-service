@@ -1,8 +1,36 @@
-import os, sys, re, json, collections, logging
+import os, sys, re, json, collections, logging, datetime, uuid
+from decimal import Decimal
 
-import boto3, sqlalchemy, requests, connexion, chalice
+import requests, connexion, chalice
+from sqlalchemy.engine.result import RowProxy
 from connexion.resolver import RestyResolver
 from connexion.lifecycle import ConnexionResponse
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            if o.tzinfo:
+                # eg: '2015-09-25T23:14:42.588601+00:00'
+                return o.isoformat('T')
+            else:
+                # No timezone present - assume UTC.
+                # eg: '2015-09-25T23:14:42.588601Z'
+                return o.isoformat('T') + 'Z'
+
+        if isinstance(o, datetime.date):
+            return o.isoformat()
+
+        if isinstance(o, uuid.UUID):
+            return str(o)
+
+        if isinstance(o, RowProxy):
+            return dict(o)
+
+        if isinstance(o, Decimal):
+            return float(o)
+
+        return json.JSONEncoder.default(self, o)
 
 
 class ChaliceWithConnexion(chalice.Chalice):
@@ -22,6 +50,7 @@ class ChaliceWithConnexion(chalice.Chalice):
 
     def create_connexion_app(self):
         app = connexion.App(self.app_name)
+        app.app.json_encoder = JSONEncoder
         resolver = RestyResolver(self.app_name + '.api', collection_endpoint_name="list")
         app.add_api(self.swagger_spec_path, resolver=resolver, validate_responses=True, arguments=os.environ)
         return app

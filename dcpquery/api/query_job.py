@@ -1,7 +1,9 @@
 import uuid
 import requests
 
-from .. import aws, config
+from dcplib import aws
+
+from .. import config
 
 
 def create_async_query_job(query):

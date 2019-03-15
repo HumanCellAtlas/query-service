@@ -1,6 +1,6 @@
-from query.lib.model.bundle import * # noqa
-from query.lib.model.file import * # noqa
-from query.lib.model.metadata import * # noqa
+from .bundle import BundleManifest, Bundle
+from .file import File
+from .metadata import FileMetadata
 
 from datetime import datetime
 

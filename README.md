@@ -69,6 +69,15 @@ Errors while running `source environment` can be ignored if you are just experim
 After starting `chalice local`, you can open the Query Service in your browser at http://127.0.0.1:8000 to experiment
 with it.
 
+### Updating the requirements
+
+Runtime Python dependencies for the Query Service app are listed in `requirements.txt.in`. Test/development Python
+dependencies are listed in `requirements-dev.txt.in`. These files are compiled into `pip freeze` output files,
+which are stored in `requirements.txt` and `requirements-dev.txt`, respectively.
+
+To update the requirements files for the application, edit the `*.in` files and run `make refresh-all-requirements`,
+then commit all the `requirements*` file changes to version control.
+
 ### Loading Test Data
 
 To load a test dataset into the Query Service for experimenting, run `make load-test-data`. This script fetches and
@@ -95,15 +104,15 @@ the `environment` file to set essential variables to control the deployment:
 
 Run `source environment` to set the results of the above edits in your shell.
 
-In the same shell, run `make init-secrets install-secrets` to initialize and upload credentials that Query Service
+In the same shell, run `make install-secrets` to initialize and upload credentials that Query Service
 components need to communicate with each other.
 
 Finally, to deploy the Query Service, run `make deploy` in the same shell.
 
 #### Minor app updates
 
-After deploying, you can update just the Lambda function codebase by running `make update` (this is faster, but no
-dependencies, routes, or IAM policies will be updated).
+After deploying, you can update just the Lambda function codebase by running `make update-lambda` (this is faster, but
+no dependencies, routes, or IAM policies will be updated).
 
 If you are using an AWS Assume Role profile, credentials expire in 15 minutes by default. Terraform does not integrate
 with the AWS CLI, and will not automatically refresh these credentials. If your commands fail with an "ExpiredToken"
@@ -133,7 +142,8 @@ to be deployed.
 
 ### Monitoring your app
 
-To get logs for the last 5 minutes from the app, type `make get_logs` in this directory.
+To get logs for the last 5 minutes from the app, install [Aegea](https://github.com/kislyuk/aegea) using
+`pip install aegea`, then type `make get_logs` in this directory.
 
 Lambda is automatically set up to emit logs
 to [CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html), which you can

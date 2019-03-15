@@ -6,8 +6,8 @@ endif
 
 SAM_TX="import sys, json, boto3, samtranslator.translator.transform as t, samtranslator.public.translator as pt; \
         print(json.dumps(t.transform(json.load(sys.stdin), {}, pt.ManagedPolicyLoader(boto3.client('iam')))))"
-GET_CREDS="import json, boto3.session as s; \
-           print(json.dumps(s.Session().get_credentials().get_frozen_credentials()._asdict()))"
+GET_CREDS="import json, boto3.session as s; c = s.Session().get_credentials(); \
+           print(json.dumps(c.get_frozen_credentials()._asdict())) if c else exit('Please set your AWS credentials')"
 
 deploy: init-tf package
 	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
@@ -22,42 +22,40 @@ deploy: init-tf package
 	terraform apply
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
-	$(MAKE) get-tf-output | jq -r .rds_cluster_endpoint.value | aegea secrets put $(APP_NAME)/$(STAGE)/db/hostname
-	$(MAKE) get-tf-output | jq -r .rds_cluster_readonly_endpoint.value | aegea secrets put $(APP_NAME)/$(STAGE)/db/readonly_hostname
 	$(MAKE) get-tf-output
 
 $(TFSTATE_FILE):
 	terraform state pull > $(TFSTATE_FILE)
 
-init-secrets:
-	python -c "import secrets; print(secrets.token_urlsafe(32))" > secrets/db_password
-	export SECRET=$$(python -c "import secrets; print(secrets.token_urlsafe(32))"); \
-	 cat secrets/webhook_template.json | envsubst > secrets/webhook.json
-
 install-webhooks:
-	FUNCTION_NAME=$$($(MAKE) get-tf-output | jq -r .api_handler_name.value); \
-	 APIHANDLER_IAM_ROLE=$$(aws lambda get-function --function-name $$FUNCTION_NAME | jq -r .Configuration.Role | cut -d / -f 2); \
-	 cat secrets/webhook.json | aegea secrets put $(WEBHOOK_SECRET_NAME) --iam-role $$APIHANDLER_IAM_ROLE
+	LC_ALL=C WHS=$$(tr -dc A-Za-z0-9 < /dev/urandom | head -c32) \
+	 jq -n '.active_hmac_key=env.STAGE|.hmac_keys[env.STAGE]=env.WHS' | \
+	 aws secretsmanager put-secret-value --secret-id $(WEBHOOK_SECRET_NAME) --secret-string file:///dev/stdin
 	python -m $(APP_NAME).webhooks install --callback-url=$$($(MAKE) get-tf-output | jq -r .api_endpoint_url.value)bundles/event
 
 install-secrets:
-	echo -n $(APP_NAME) | aegea secrets put $(APP_NAME)/$(STAGE)/db/username
-	cat secrets/db_password | aegea secrets put $(APP_NAME)/$(STAGE)/db/password
+	LC_ALL=C tr -dc A-Za-z0-9 < /dev/urandom | head -c32 | aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string file:///dev/stdin
+
+build-chalice-config:
+	envsubst < iam/policy-templates/$(APP_NAME)-lambda.json > .chalice/policy-$(STAGE).json
+	cd .chalice; jq .app_name=env.APP_NAME < config.in.json > config.json
+	cd .chalice; for var in $$EXPORT_ENV_VARS_TO_LAMBDA; do \
+            jq .stages.$(STAGE).environment_variables.$$var=env.$$var config.json | sponge config.json; \
+        done
 
 package:
 	rm -rf vendor
 	mkdir vendor
 	cp -a $(APP_NAME) $(APP_NAME)-api.yml vendor
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
-	cat iam/policy-templates/$(APP_NAME)-lambda.json | envsubst > .chalice/policy-$(STAGE).json
-	cd .chalice; jq .app_name=env.APP_NAME config.json | sponge config.json
-	cd .chalice; for var in $$EXPORT_ENV_VARS_TO_LAMBDA; do \
-            jq .stages.$(STAGE).environment_variables.$$var=env.$$var config.json | sponge config.json; \
-        done
+	$(MAKE) build-chalice-config
 	chalice package --stage $(STAGE) dist
 
+prune:
+	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
+
 get-config:
-	@python -c $(GET_CREDS) | jq ".region=env.AWS_DEFAULT_REGION | .bucket=env.TF_S3_BUCKET | .key=env.APP_NAME"
+	@python -c $(GET_CREDS) | jq ".region=env.AWS_DEFAULT_REGION | .bucket=env.TF_S3_BUCKET | .key=env.APP_NAME+env.STAGE"
 
 get-tf-output:
 	@terraform output -module=$(APP_NAME) -json
@@ -74,11 +72,11 @@ clean:
 	git clean -Xdf dist .terraform .chalice
 
 lint:
-	flake8 *.py $(APP_NAME) test
+	flake8 *.py $(APP_NAME) tests
 	mypy $(APP_NAME) --ignore-missing-imports
 
 test: lint
-	coverage run -m unittest discover --start-directory test --top-level-directory . --verbose
+	coverage run -m unittest discover --start-directory tests --top-level-directory . --verbose
 
 fetch:
 	scripts/fetch.py
@@ -92,7 +90,7 @@ load: init-db
 load-test-data: init-db
 	python -m $(APP_NAME).db load-test
 
-update: $(TFSTATE_FILE)
+update-lambda: $(TFSTATE_FILE)
 	zip -r dist/deployment.zip app.py $(APP_NAME) $(APP_NAME)-api.yml
 	$(MAKE) get-tf-output | jq -r '.|values[].value' | egrep "^$(APP_NAME)-.+Handler-" | \
 	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --zip-file fileb://dist/deployment.zip
@@ -102,10 +100,10 @@ get-logs:
 	 jq -r .logGroups[].logGroupName | \
 	 xargs -n 1 aegea logs --start-time=-5m
 
-refresh_all_requirements:
+refresh-all-requirements:
 	@echo -n '' >| requirements.txt
 	@echo -n '' >| requirements-dev.txt
-	@if [ $$(uname -s) == "Darwin" ]; then sleep 1; fi  # this is require because Darwin HFS+ only has second-resolution for timestamps.
+	@if [ $$(uname -s) == "Darwin" ]; then sleep 1; fi  # this is required because Darwin HFS+ only has second-resolution for timestamps.
 	@touch requirements.txt.in requirements-dev.txt.in
 	@$(MAKE) requirements.txt requirements-dev.txt
 
@@ -120,4 +118,5 @@ requirements.txt requirements-dev.txt : %.txt : %.txt.in
 
 requirements-dev.txt : requirements.txt.in
 
-.PHONY: deploy package init-tf init-db destroy clean lint test
+.PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package get-config get-tf-output init-tf init-db destroy
+.PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements

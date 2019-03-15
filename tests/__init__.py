@@ -5,43 +5,50 @@ import random
 import string
 import sys
 import time
+import logging
 from uuid import UUID
 
 from psycopg2 import sql
 
-from lib.etl.extract import Extractor
-from lib.model import Bundle, BundleManifest, File, FileMetadata
-from lib.logger import logger
+from dcplib.etl import DSSExtractor
+from dcpquery.db import Bundle, File, BundleFileLink
+from dcpquery import config
 
-file_directory = os.path.dirname(__file__)
-pkg_root = os.path.abspath(os.path.join(file_directory, '..'))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
+logger = logging.getLogger(__name__)
 
 
 def load_fixture(fixture_file):
-    with open(f'{file_directory}/fixtures/{fixture_file}', 'r') as fh:
+    with open(f'{os.path.dirname(__file__)}/fixtures/{fixture_file}', 'r') as fh:
         txt = fh.read()
     return txt
 
 
 vx_bundle_fqid = '0c8d7f15-47c2-42c2-83de-47ae48e1eae1.2018-09-06T190237.485774Z'
-vx_bundle_str = load_fixture('vx_bundle.json')
+vx_bundle_manifest = load_fixture('vx_bundle.json')
+vx_bundle_aggregate_md = load_fixture('vx_bundle_document.json')
 fast_query_mock_result = json.loads(load_fixture('fast_query_mock_result.json'))
 fast_query_expected_results = json.loads(load_fixture('fast_query_expected_results.json'))
 mock_links = json.loads(load_fixture('process_links.json'))
-vx_bundle = Bundle(
-    fqid=vx_bundle_fqid,
-    bundle_manifest=BundleManifest(**json.loads(vx_bundle_str)),
-    files=[
-        File(
-            FileMetadata(d),
-            **(json.loads(load_fixture(d['name'])) if d['name'].endswith('.json') else {})
-        )
-        for d in json.loads(vx_bundle_str)['files']
-    ]
-)
+vx_bundle = Bundle(fqid=vx_bundle_fqid,
+                   manifest=json.loads(vx_bundle_manifest),
+                   aggregate_metadata=vx_bundle_aggregate_md)
+vx_bf_links = []
+
+for f in json.loads(vx_bundle_manifest)['files']:
+    if f["content-type"] == "application/json":
+        f_row = File(uuid=f["uuid"], version=f["version"], body=json.loads(load_fixture(f["name"])),
+                     content_type=f["content-type"], size=f["size"])
+        vx_bf_links.append(BundleFileLink(bundle=vx_bundle, file=f_row, name=f["name"]))
 
 
+def write_fixtures_to_db():
+    config.db_session.add_all(vx_bf_links)
+    config.db_session.commit()
+
+
+write_fixtures_to_db()
+
+'''
 class FixtureExtractor(Extractor):
     _key_to_fixture_map = dict([
         (d.uuid, load_fixture(d.name))
@@ -58,13 +65,7 @@ class FixtureExtractor(Extractor):
 
     def _get_file_data(self, file_metadata: FileMetadata) -> dict:
         return self._extract(file_metadata.uuid)
-
-
-def gen_random_chars(n: int):
-    return ''.join(
-        [random.choice(string.ascii_lowercase)] + [random.choice(string.ascii_lowercase + string.digits)
-                                                   for _ in range(n - 1)]
-    )
+'''
 
 
 def eventually(timeout: float, interval: float, errors: set = {AssertionError}):

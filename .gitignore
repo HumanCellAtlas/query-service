@@ -41,6 +41,7 @@ npm-debug.log
 /.terraform
 /terraform/variables.tf
 
+/.chalice/config.json
 /.chalice/policy*.json
 /.chalice/deployments/
 /.chalice/venv/

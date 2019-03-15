@@ -1,7 +1,7 @@
 module "query_db" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "1.10.0"
-  name = "querydb"
+  name = "${var.APP_NAME}-${var.STAGE}"
   vpc_id = "${aws_default_vpc.query_db_vpc.id}"
   subnets = ["${data.aws_subnet_ids.query_db_subnets.ids}"]
   engine = "aurora-postgresql"
@@ -12,8 +12,7 @@ module "query_db" {
   publicly_accessible = true
   apply_immediately = true
   skip_final_snapshot = true
-  username = "${data.aws_secretsmanager_secret_version.query_db_username.secret_string}"
-  password = "${data.aws_secretsmanager_secret_version.query_db_password.secret_string}"
+  username = "${aws_secretsmanager_secret_version.query_db_username.secret_string}"
 }
 
 resource "aws_default_vpc" "query_db_vpc" {}
@@ -31,18 +30,37 @@ data "aws_subnet_ids" "query_db_subnets" {
   vpc_id = "${aws_default_vpc.query_db_vpc.id}"
 }
 
-data "aws_secretsmanager_secret" "query_db_username" {
-  name = "${var.APP_NAME}/${var.STAGE}/db/username"
+resource "aws_secretsmanager_secret" "query_db_hostname" {
+  name = "${var.APP_NAME}/${var.STAGE}/postgresql/hostname"
 }
 
-data "aws_secretsmanager_secret_version" "query_db_username" {
-  secret_id = "${data.aws_secretsmanager_secret.query_db_username.id}"
+resource "aws_secretsmanager_secret_version" "query_db_hostname" {
+  secret_id = "${aws_secretsmanager_secret.query_db_hostname.id}"
+  secret_string = "${module.query_db.this_rds_cluster_endpoint}"
 }
 
-data "aws_secretsmanager_secret" "query_db_password" {
-  name = "${var.APP_NAME}/${var.STAGE}/db/password"
+resource "aws_secretsmanager_secret" "query_db_readonly_hostname" {
+  name = "${var.APP_NAME}/${var.STAGE}/postgresql/readonly_hostname"
 }
 
-data "aws_secretsmanager_secret_version" "query_db_password" {
-  secret_id = "${data.aws_secretsmanager_secret.query_db_password.id}"
+resource "aws_secretsmanager_secret_version" "query_db_readonly_hostname" {
+  secret_id = "${aws_secretsmanager_secret.query_db_readonly_hostname.id}"
+  secret_string = "${module.query_db.this_rds_cluster_reader_endpoint}"
 }
+
+resource "aws_secretsmanager_secret" "query_db_username" {
+  name = "${var.APP_NAME}/${var.STAGE}/postgresql/username"
+}
+
+resource "aws_secretsmanager_secret_version" "query_db_username" {
+  secret_id = "${aws_secretsmanager_secret.query_db_username.id}"
+  secret_string = "${var.APP_NAME}"
+}
+
+resource "aws_secretsmanager_secret" "query_db_password" {
+  name = "${var.APP_NAME}/${var.STAGE}/postgresql/password"
+}
+
+# The database password is managed out of band.
+# Run "make install-secrets" to set the password.
+# Run "aws secretsmanager get-secret-value --secret-id dcpquery/dev/postgresql/password" to retrieve it.

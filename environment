@@ -6,8 +6,13 @@ export APP_HOME="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 set -a
 APP_NAME=dcpquery
 STAGE="${DEPLOYMENT_STAGE:-dev}"
-API_DOMAIN_NAME=query.${STAGE}.data.humancellatlas.org
-API_DNS_ZONE=${STAGE}.data.humancellatlas.org.
+if [[ $STAGE == "prod" ]]; then
+   API_DOMAIN_NAME=query.data.humancellatlas.org
+   API_DNS_ZONE=data.humancellatlas.org.
+else
+   API_DOMAIN_NAME=query.${STAGE}.data.humancellatlas.org
+   API_DNS_ZONE=${STAGE}.data.humancellatlas.org.
+fi
 BUNDLE_EVENTS_QUEUE_NAME=${APP_NAME}-${STAGE}-bundle-events
 ASYNC_QUERIES_QUEUE_NAME=${APP_NAME}-${STAGE}-async-queries
 WEBHOOK_SECRET_NAME=${APP_NAME}/${STAGE}/webhook-auth-config
@@ -21,12 +26,15 @@ TFSTATE_FILE=.terraform/remote.tfstate
 TF_CLI_ARGS_output="--state ${TFSTATE_FILE}"
 TF_CLI_ARGS_init="--backend-config ${APP_HOME}/.terraform/aws_config"
 
-AWS_DEFAULT_REGION=$(aws configure get region)
+if [[ ! -v AWS_DEFAULT_REGION ]]; then
+   AWS_DEFAULT_REGION=$(aws configure get region)
+fi
+
 AWS_ACCOUNT_ID=$(aws configure get role_arn | cut -f 5 -d : || aws sts get-caller-identity | jq -r .Account)
 TF_S3_BUCKET=tfstate-$AWS_ACCOUNT_ID
 SERVICE_S3_BUCKET="$APP_NAME-$STAGE-$AWS_ACCOUNT_ID"
 
-EXPORT_ENV_VARS_TO_LAMBDA="APP_NAME STAGE BUNDLE_EVENTS_QUEUE_NAME ASYNC_QUERIES_QUEUE_NAME API_DOMAIN_NAME API_DNS_ZONE AWS_ACCOUNT_ID SERVICE_S3_BUCKET"
+EXPORT_ENV_VARS_TO_LAMBDA="APP_NAME STAGE BUNDLE_EVENTS_QUEUE_NAME ASYNC_QUERIES_QUEUE_NAME WEBHOOK_SECRET_NAME API_DOMAIN_NAME API_DNS_ZONE AWS_ACCOUNT_ID SERVICE_S3_BUCKET"
 EXPORT_ENV_VARS_TO_TF=$EXPORT_ENV_VARS_TO_LAMBDA
 set +a
 

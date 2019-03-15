@@ -4,8 +4,8 @@ furl
 requests
 boto3
 awscli
-aegea
 flake8
 mypy
 coverage
+sqlalchemy-utils
 -r requirements.txt.in

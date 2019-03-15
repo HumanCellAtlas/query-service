@@ -10,9 +10,10 @@ from .query_job import create_async_query_job
 def post(body):
     query = body["query"]
     # FIXME: make sure tests include readonly enforcement
+    # TODO: for async query, introduce hidden parameter for seconds to wait for S3 to settle
     try:
-        result = run_query(query).fetchall()
+        results = run_query(query).fetchall()
     except QueryTimeoutError:
         job_id = create_async_query_job(query)
         return redirect(f"query_jobs/{job_id}")
-    return {"query": query, "result": result}, requests.codes.ok
+    return {"query": query, "results": results}, requests.codes.ok
