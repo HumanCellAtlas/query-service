@@ -62,8 +62,8 @@ class FixtureExtractor(Extractor):
 
 def gen_random_chars(n: int):
     return ''.join(
-        [random.choice(string.ascii_lowercase)] +
-        [random.choice(string.ascii_lowercase + string.digits) for _ in range(n - 1)]
+        [random.choice(string.ascii_lowercase)] + [random.choice(string.ascii_lowercase + string.digits)
+                                                   for _ in range(n - 1)]
     )
 
 

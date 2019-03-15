@@ -9,8 +9,6 @@ SAM_TX="import sys, json, boto3, samtranslator.translator.transform as t, samtra
 GET_CREDS="import json, boto3.session as s; \
            print(json.dumps(s.Session().get_credentials().get_frozen_credentials()._asdict()))"
 
-WEBHOOK_SECRET_NAME=$(APP_NAME)/$(STAGE)/webhook-auth-config
-
 deploy: init-tf package
 	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
 	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip

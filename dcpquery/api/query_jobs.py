@@ -16,5 +16,6 @@ def get(job_id):
     if "result_location" in job_status:
         result_url = resources.s3.generate_presigned_url(ClientMethod="GetObject",
                                                          Params=dict(**job_status["result_location"]),
-                                                         ExpiresIn=60*60*24*7)
+                                                         ExpiresIn=60 * 60 * 24 * 7)
+        job_status["result_url"] = result_url
     return job_status

@@ -2,7 +2,7 @@
 This module provides a SQLAlchemy-based database schema for the DCP Query Service.
 """
 
-import os, sys, argparse, json, logging
+import os, sys, argparse, json, logging, typing
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions
@@ -14,7 +14,7 @@ from ..exceptions import DCPQueryError, QueryTimeoutError
 
 logger = logging.getLogger(__name__)
 
-Base = declarative_base()
+Base = declarative_base()  # type: typing.Any
 
 
 class BundlesFiles(Base):

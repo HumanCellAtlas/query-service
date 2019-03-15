@@ -10,6 +10,7 @@ API_DOMAIN_NAME=query.${STAGE}.data.humancellatlas.org
 API_DNS_ZONE=${STAGE}.data.humancellatlas.org.
 BUNDLE_EVENTS_QUEUE_NAME=${APP_NAME}-${STAGE}-bundle-events
 ASYNC_QUERIES_QUEUE_NAME=${APP_NAME}-${STAGE}-async-queries
+WEBHOOK_SECRET_NAME=${APP_NAME}/${STAGE}/webhook-auth-config
 
 # Set DEBUG=0 to disable debugging and set the app log level to ERROR.
 # Set DEBUG=1 to change the log level to INFO and cause stack traces to appear in error responses.

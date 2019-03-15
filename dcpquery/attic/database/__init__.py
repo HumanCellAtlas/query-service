@@ -8,10 +8,15 @@ from query.lib.database.tables import Base
 
 class Database:
     def __init__(self, db_string):
-        # The echo flag is a shortcut to setting up SQLAlchemy logging, which is accomplished via Python’s standard logging module. With it enabled, we’ll see all the generated SQL produced. I
+        # The echo flag is a shortcut to setting up SQLAlchemy
+        # logging, which is accomplished via Python’s standard logging
+        # module. With it enabled, we’ll see all the generated SQL
+        # produced. I
         self.db = create_engine(db_string, echo=True)
 
-        # Bind the engine to the metadata of the Base class so that the declaratives can be accessed through a DBSession instance
+        # Bind the engine to the metadata of the Base class so that
+        # the declaratives can be accessed through a DBSession
+        # instance
         Base.metadata.bind = self.db
         self.session = sessionmaker(bind=self.db)
 

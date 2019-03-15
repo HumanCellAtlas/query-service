@@ -1,4 +1,4 @@
-import os, sys, json, logging, getpass
+import os, sys, json, logging, getpass, typing
 
 from dcplib.aws_secret import AwsSecret
 import sqlalchemy
@@ -24,7 +24,7 @@ class ConfigFactory:
     db_statement_timeout = 20
     _db = None
     _db_session_factory = None
-    _db_sessions = {}
+    _db_sessions: typing.Dict[int, typing.Any] = {}
     _webhook_keys = None
     _db_engine_params = {
         "echo": True,
