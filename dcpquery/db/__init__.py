@@ -39,7 +39,7 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
     version = Column(DateTime, nullable=False)
     manifest = Column(JSONB)
     aggregate_metadata = Column(JSONB)
-    files = relationship("File", secondary='bundle_file_links')  # , back_populates="bundles")
+    files = relationship("File", secondary='bundle_file_links')
 
 
 class SchemaType(SQLAlchemyBase):
@@ -59,7 +59,6 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     body = Column(JSONB)
     content_type = Column(String)
     size = Column(Integer)
-    # bundles = relationship("Bundle", secondary=BundleFileLink, back_populates="files")
 
 
 class BundleFileLink(SQLAlchemyBase):
