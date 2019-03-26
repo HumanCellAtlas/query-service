@@ -8,6 +8,11 @@ from connexion.lifecycle import ConnexionResponse
 
 
 class JSONEncoder(json.JSONEncoder):
+    """
+    This JSON encoder subclass is inserted into the Connexion/Flask app instance so it can encode response bodies.
+
+    Unlike the default JSON encoder, it knows how to serialize datetime, UUID, and SQLAlchemy RowProxy objects.
+    """
     def default(self, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo:
@@ -34,6 +39,9 @@ class JSONEncoder(json.JSONEncoder):
 
 
 class ChaliceWithConnexion(chalice.Chalice):
+    """
+    Subclasses Chalice to host a Connexion app, route and proxy requests to it.
+    """
     def __init__(self, swagger_spec_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.swagger_spec_path = swagger_spec_path
@@ -80,6 +88,9 @@ class ChaliceWithConnexion(chalice.Chalice):
 
 
 class ChaliceWithLoggingConfig(chalice.Chalice):
+    """
+    Subclasses Chalice to configure all Python loggers to our liking.
+    """
     silence_debug_loggers = ["botocore"]
 
     def __init__(self, *args, **kwargs):
