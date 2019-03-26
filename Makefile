@@ -42,6 +42,9 @@ build-chalice-config:
 	cd .chalice; for var in $$EXPORT_ENV_VARS_TO_LAMBDA; do \
             jq .stages.$(STAGE).environment_variables.$$var=env.$$var config.json | sponge config.json; \
         done
+	cd .chalice; jq .stages.$(STAGE).tags.env=env.STAGE config.json | sponge config.json
+	cd .chalice; jq .stages.$(STAGE).tags.project=env.APP_NAME config.json | sponge config.json
+	export OWNER=$$(aws sts get-caller-identity | jq -r .Arn); cd .chalice; jq .stages.$(STAGE).tags.owner=env.OWNER config.json | sponge config.json
 
 package:
 	rm -rf vendor
