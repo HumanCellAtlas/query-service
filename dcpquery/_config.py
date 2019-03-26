@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 logger = logging.getLogger(__name__)
 
 
-class ConfigFactory:
+class DCPQueryConfig:
     app_name = os.environ["APP_NAME"]
     app = None
     stage = os.environ["STAGE"]

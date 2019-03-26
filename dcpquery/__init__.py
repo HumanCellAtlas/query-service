@@ -1,3 +1,3 @@
-from ._config import ConfigFactory
+from ._config import DCPQueryConfig
 
-config = ConfigFactory()
+config = DCPQueryConfig()
