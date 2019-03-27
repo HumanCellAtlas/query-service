@@ -34,7 +34,7 @@ install-webhooks:
 	python -m $(APP_NAME).webhooks install --callback-url=$$($(MAKE) get-tf-output | jq -r .api_endpoint_url.value)bundles/event
 
 install-secrets:
-	python -c 'import secrets; print(secrets.token_urlsafe(32), end="")' | aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string file:///dev/stdin
+	aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string $$(python -c 'import secrets; print(secrets.token_urlsafe(32))')
 	aws rds modify-db-cluster --db-cluster-identifier dcpquery-dev --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
 
 build-chalice-config:
