@@ -26,7 +26,7 @@ TFSTATE_FILE=.terraform/remote.tfstate
 TF_CLI_ARGS_output="--state ${TFSTATE_FILE}"
 TF_CLI_ARGS_init="--backend-config ${APP_HOME}/.terraform/aws_config"
 
-if [[ ! -v AWS_DEFAULT_REGION ]]; then
+if [[ -z "$AWS_DEFAULT_REGION" ]]; then
    AWS_DEFAULT_REGION=$(aws configure get region)
 fi
 
