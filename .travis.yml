@@ -21,8 +21,11 @@ env:
   global:
   - AWS_DEFAULT_REGION=us-east-1
   - AWS_DEFAULT_OUTPUT=json
+  - TERRAFORM_VERSION=0.11.13
 
 install:
+  - curl -Os https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+  - sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
   - pip install -r requirements-dev.txt
 
 before_script:
