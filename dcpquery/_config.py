@@ -48,8 +48,7 @@ class DCPQueryConfig:
             if self.local_mode:
                 db_user = getpass.getuser()
                 db_password = ""
-                db_host = "localhost"
-                db_name = getpass.getuser()
+                db_host = ""
             else:
                 db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
                 db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
@@ -58,7 +57,7 @@ class DCPQueryConfig:
                 else:
                     db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/hostname"
                 db_host = AwsSecret(db_host_secret_name).value.strip()
-                db_name = self.app_name
+            db_name = self.app_name
             self._db = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}",
                                                 **self._db_engine_params)
         return self._db

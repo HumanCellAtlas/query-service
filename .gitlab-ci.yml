@@ -1,56 +1,31 @@
-image: humancellatlas/query-service-build-box:latest
+image: ubuntu:bionic
 
 variables:
-  ## variables for the build
   AWS_DEFAULT_REGION: us-east-1
-  DEPLOYMENT_STAGE: dev
-  ## variables for docker
-  # When using dind service we need to instruct docker, to talk with the
-  # daemon started inside of the service. The daemon is available with
-  # a network connection instead of the default /var/run/docker.sock socket.
-  #
-  # The 'docker' hostname is the alias of the service container as described at
-  # https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#accessing-the-services
-  #
-  # Note that if you're using Kubernetes executor, the variable should be set to
-  # tcp://localhost:2375 because of how Kubernetes executor connects services
-  # to the job container
-  DOCKER_HOST: tcp://localhost:2375/
-  # When using dind, it's wise to use the overlayfs driver for
-  # improved performance.
-  DOCKER_DRIVER: overlay2
-
-services:
-- docker:dind
+  AWS_DEFAULT_OUTPUT: json
+  DEBIAN_FRONTEND: noninteractive
 
 stages:
-- infra
-- test
-- deploy
-- functional_tests
+  - test
+  - deploy
+  - integration_test
 
 before_script:
-  - export IMAGE_TAG=${CI_BUILD_REF_NAME}-$(git describe --tags --always)-${CI_PIPELINE_ID}
-  - eval "$(aws ecr get-login --no-include-email)"
-  - if [[ integration != "$CI_COMMIT_REF_NAME" && staging != "$CI_COMMIT_REF_NAME" ]]; then
-  -   export DEPLOYMENT_STAGE=dev
-  - else
-  -   export DEPLOYMENT_STAGE="$CI_COMMIT_REF_NAME"
-  - fi
+  - source /etc/profile
+  - apt-get update > /dev/null
+  - apt-get install --yes sudo jq moreutils gettext make virtualenv postgresql > /dev/null
+  - service postgresql start
+  - sudo -u postgres createuser --superuser $(whoami)
+  - virtualenv --python=python3.6 v
+  - source v/bin/activate
+  - pip install --quiet -r requirements-dev.txt
   - source environment
-  - export AWS_REGION=us-east-1
-  - export LC_ALL=C.UTF-8
-  - export LANG=C.UTF-8
-
-infra:
-  stage: infra
-  script:
-    - cd terraform/ && make secrets gitlab-init plan
+  - make build-chalice-config init-db load-test-data
 
 test:
   stage: test
   script:
-    - cd query/ && make install lint unit-test
+    - make test
 
 deploy:
   stage: deploy
@@ -60,10 +35,9 @@ deploy:
       - integration
       - staging
   script:
-    - cd terraform && make secrets gitlab-init
-    - cd ../query && make deploy
+    - make deploy
 
-functional_tests:
-  stage: functional_tests
+integration_test:
+  stage: integration_test
   script:
-    - cd query && make install functional-tests
+    - make integration_test
