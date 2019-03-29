@@ -4,6 +4,7 @@ variables:
   AWS_DEFAULT_REGION: us-east-1
   AWS_DEFAULT_OUTPUT: json
   DEBIAN_FRONTEND: noninteractive
+  TERRAFORM_VERSION: 0.11.13
 
 stages:
   - test
@@ -13,15 +14,17 @@ stages:
 before_script:
   - source /etc/profile
   - apt-get update > /dev/null
-  - apt-get install --yes sudo jq moreutils gettext make virtualenv postgresql > /dev/null
+  - apt-get install --yes sudo jq moreutils gettext make virtualenv postgresql unzip > /dev/null
   - service postgresql start
   - sudo -u postgres createuser --superuser $(whoami)
-  - virtualenv --python=python3.6 v
-  - source v/bin/activate
+  - curl -Os https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+  - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
+  - virtualenv --python=python3.6 .venv
+  - source .venv/bin/activate
   - pip install --quiet -r requirements-dev.txt
   - if [[ $CI_COMMIT_REF_NAME =~ (staging|integration|prod) ]]; then export DEPLOYMENT_STAGE=$CI_COMMIT_REF_NAME; fi
   - source environment
-  - make build-chalice-config init-db load-test-data
+  - make build-chalice-config init-db load-test-data init-tf
 
 test:
   stage: test

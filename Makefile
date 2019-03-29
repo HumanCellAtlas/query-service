@@ -66,7 +66,7 @@ get-tf-output:
 
 init-tf:
 	-rm -f .terraform/*.tfstate
-	$(MAKE) get-config > .terraform/aws_config
+	$(MAKE) --no-print-directory get-config > .terraform/aws_config.json
 	terraform init
 
 destroy: init-tf

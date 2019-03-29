@@ -7,11 +7,11 @@ set -a
 APP_NAME=dcpquery
 STAGE="${DEPLOYMENT_STAGE:-dev}"
 if [[ $STAGE == "prod" ]]; then
-   API_DOMAIN_NAME=query.data.humancellatlas.org
-   API_DNS_ZONE=data.humancellatlas.org.
+    API_DOMAIN_NAME=query.data.humancellatlas.org
+    API_DNS_ZONE=data.humancellatlas.org.
 else
-   API_DOMAIN_NAME=query.${STAGE}.data.humancellatlas.org
-   API_DNS_ZONE=${STAGE}.data.humancellatlas.org.
+    API_DOMAIN_NAME=query.${STAGE}.data.humancellatlas.org
+    API_DNS_ZONE=${STAGE}.data.humancellatlas.org.
 fi
 BUNDLE_EVENTS_QUEUE_NAME=${APP_NAME}-${STAGE}-bundle-events
 ASYNC_QUERIES_QUEUE_NAME=${APP_NAME}-${STAGE}-async-queries
@@ -24,10 +24,10 @@ DEBUG=1
 
 TFSTATE_FILE=.terraform/remote.tfstate
 TF_CLI_ARGS_output="--state ${TFSTATE_FILE}"
-TF_CLI_ARGS_init="--backend-config ${APP_HOME}/.terraform/aws_config"
+TF_CLI_ARGS_init="--backend-config ${APP_HOME}/.terraform/aws_config.json"
 
 if [[ -z "$AWS_DEFAULT_REGION" ]]; then
-   AWS_DEFAULT_REGION=$(aws configure get region)
+    AWS_DEFAULT_REGION=$(aws configure get region)
 fi
 
 AWS_ACCOUNT_ID=$(aws configure get role_arn | cut -f 5 -d : || aws sts get-caller-identity | jq -r .Account)
@@ -38,5 +38,5 @@ EXPORT_ENV_VARS_TO_LAMBDA="APP_NAME STAGE BUNDLE_EVENTS_QUEUE_NAME ASYNC_QUERIES
 EXPORT_ENV_VARS_TO_TF=$EXPORT_ENV_VARS_TO_LAMBDA
 set +a
 
-make get-config > "${APP_HOME}/.terraform/aws_config"
+make --no-print-directory get-config > "${APP_HOME}/.terraform/aws_config.json"
 for v in $EXPORT_ENV_VARS_TO_TF; do echo "variable $v { default = \"${!v}\" }"; done > terraform/variables.tf
