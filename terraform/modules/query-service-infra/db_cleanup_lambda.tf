@@ -17,53 +17,19 @@ resource "aws_iam_role" "query_daily_db_cleanup_lambda" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "query_daily_db_cleanup_lambda" {
-  name = "query-daily-db-cleanup-${var.deployment_stage}"
-  role = "${aws_iam_role.query_daily_db_cleanup_lambda.name}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "LambdaPolicy",
-      "Action": [
-        "events:*",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListRolePolicies",
-        "iam:ListRoles",
-        "iam:PassRole"
-      ],
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Sid": "LambdaLogging",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogStreams"
-      ],
-      "Resource": [
-        "arn:aws:logs:${local.aws_region}:${local.account_id}:log-group:/aws/lambda/query-daily-db-cleanup-${var.deployment_stage}",
-        "arn:aws:logs:${local.aws_region}:${local.account_id}:log-group:/aws/lambda/query-daily-db-cleanup-${var.deployment_stage}:*:*"
-      ],
-      "Effect": "Allow"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "secretsmanager:DescribeSecret",
-        "secretsmanager:GetSecretValue"
-      ],
-      "Resource": [
-        "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:query/${var.deployment_stage}/*",
-        "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:dcp/query/${var.deployment_stage}/database-*"
-      ]
-    }
-  ]
+data "template_file" "db_cleanup_lambda_policy_doc" {
+  template = "${file("${path.module}/../../../iam/policy-templates/db_cleanup_lambda.json")}"
+  vars = {
+    logs_group_arn = "arn:aws:logs:${local.aws_region}:${local.account_id}:log-group:/aws/lambda/query-daily-db-cleanup-${var.deployment_stage}",
+    logs_arn = "arn:aws:logs:${local.aws_region}:${local.account_id}:log-group:/aws/lambda/query-daily-db-cleanup-${var.deployment_stage}:*:*",
+    secrets_arn = "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:query/${var.deployment_stage}/*",
+    db_secrets_arn = "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:dcp/query/${var.deployment_stage}/database-*"
+  }
 }
-EOF
+
+resource "aws_iam_role_policy" "db_cleanup_lambda_access" {
+  role = "${aws_iam_role.query_daily_db_cleanup_lambda.name}"
+  policy = "${data.template_file.db_cleanup_lambda_policy_doc.rendered}"
 }
 
 resource "aws_lambda_function" "query_daily_db_cleanup_lambda" {

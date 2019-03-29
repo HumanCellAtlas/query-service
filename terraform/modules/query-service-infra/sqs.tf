@@ -8,22 +8,12 @@ resource "aws_sqs_queue" "load_data_queue" {
 
 }
 
-output "load_data" {
-  value = "${aws_sqs_queue.load_data_queue.id}"
-}
-
-
 resource "aws_sqs_queue" "async_query_queue" {
   name                      = "dcp-query-async-query-queue-${var.deployment_stage}"
-//  Queue visibility timeout must be larger than (triggered lambda) function timeout
   visibility_timeout_seconds = 900
   message_retention_seconds = 86400
   redrive_policy            = "{\"deadLetterTargetArn\":\"${aws_sqs_queue.deadletter_queue.arn}\",\"maxReceiveCount\":4}"
 
-}
-
-output "async_query" {
-  value = "${aws_sqs_queue.async_query_queue.id}"
 }
 
 resource "aws_sqs_queue" "deadletter_queue" {
@@ -31,71 +21,44 @@ resource "aws_sqs_queue" "deadletter_queue" {
   message_retention_seconds = 1209600
 }
 
+data "template_file" "load_data_queue_policy_doc" {
+  template = "${file("${path.module}/../../../iam/policy-templates/sqs_queue.json")}"
+  vars = {
+    queue_arn = "${aws_sqs_queue.load_data_queue.arn}",
+    lambda_arn = "arn:aws:lambda:*:*:function:query-load-data-${var.deployment_stage}"
+  }
+}
+
 resource "aws_sqs_queue_policy" "load_data_queue_access" {
   queue_url = "${aws_sqs_queue.load_data_queue.id}"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "sqspolicy",
-  "Statement": [
-  {
-      "Sid": "First",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "SQS:SendMessage",
-      "Resource": "${aws_sqs_queue.load_data_queue.arn}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "lambda:CreateEventSourceMapping",
-        "lambda:ListEventSourceMappings",
-        "lambda:ListFunction"
-      ],
-      "Resource": [
-        "arn:aws:lambda:*:*:function:query-load-data-${var.deployment_stage}"
-      ]
-    }
-  ]
+  policy = "${data.template_file.load_data_queue_policy_doc.rendered}"
 }
-POLICY
+
+data "template_file" "async_query_queue_policy_doc" {
+  template = "${file("${path.module}/../../../iam/policy-templates/sqs_queue.json")}"
+  vars = {
+    queue_arn = "${aws_sqs_queue.async_query_queue.arn}",
+    lambda_arn = "arn:aws:lambda:*:*:function:query-create-async-query-${var.deployment_stage}"
+  }
 }
 
 resource "aws_sqs_queue_policy" "async_query_queue_access" {
   queue_url = "${aws_sqs_queue.async_query_queue.id}"
+  policy = "${data.template_file.async_query_queue_policy_doc.rendered}"
+}
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "sqspolicy",
-  "Statement": [
-  {
-      "Sid": "First",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "SQS:SendMessage",
-      "Resource": "${aws_sqs_queue.async_query_queue.arn}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "lambda:CreateEventSourceMapping",
-        "lambda:ListEventSourceMappings",
-        "lambda:ListFunction"
-      ],
-      "Resource": [
-        "arn:aws:lambda:*:*:function:query-create-async-query-${var.deployment_stage}"
-      ]
-    }
-  ]
-}
-POLICY
-}
 
 resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   batch_size = 1
   event_source_arn  = "${aws_sqs_queue.async_query_queue.arn}"
   enabled           = true
   function_name     = "${aws_lambda_function.query_create_async_query_lambda.arn}"
+}
+
+output "load_data" {
+  value = "${aws_sqs_queue.load_data_queue.id}"
+}
+
+output "async_query" {
+  value = "${aws_sqs_queue.async_query_queue.id}"
 }

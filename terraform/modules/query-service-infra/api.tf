@@ -1,7 +1,6 @@
 // DNS
 data "aws_route53_zone" "primary" {
   name         = "${var.parent_zone_domain_name}."
-  private_zone = false
 }
 
 resource "aws_acm_certificate" "cert" {
@@ -24,7 +23,6 @@ resource "aws_acm_certificate_validation" "cert" {
 
 resource "aws_api_gateway_domain_name" "query_api" {
   domain_name = "${var.domain_name}"
-
   certificate_arn = "${aws_acm_certificate.cert.arn}"
 }
 

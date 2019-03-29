@@ -17,74 +17,22 @@ resource "aws_iam_role" "query_create_async_query_lambda" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "query_create_async_query_lambda" {
-  name = "query-create-async-query-${var.deployment_stage}"
-  role = "${aws_iam_role.query_create_async_query_lambda.name}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "LambdaPolicy",
-      "Action": [
-        "events:*",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListRolePolicies",
-        "iam:ListRoles",
-        "iam:PassRole"
-      ],
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Sid": "LambdaLogging",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogStreams"
-      ],
-      "Resource": [
-        "arn:aws:logs:*:*:*"
-      ],
-      "Effect": "Allow"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "secretsmanager:DescribeSecret",
-        "secretsmanager:GetSecretValue"
-      ],
-      "Resource": [
-        "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:query/${var.deployment_stage}/*",
-        "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:dcp/query/${var.deployment_stage}/database-*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:ChangeMessageVisibility",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Resource": [
-        "arn:aws:sqs:*:*:${aws_sqs_queue.async_query_queue.name}"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action":["s3:GetObject", "s3:PutObject", "s3:PutObjectAcl"],
-      "Resource": [
-        "arn:aws:s3:::*",
-        "arn:aws:s3:::*/*"
-        ]
-    }
-  ]
-}
-EOF
+data "template_file" "async_query_lambda_policy_doc" {
+  template = "${file("${path.module}/../../../iam/policy-templates/async_query_lambda.json")}"
+  vars = {
+    logs_arn = "arn:aws:logs:*:*:*",
+    secrets_arn = "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:query/${var.deployment_stage}/*",
+    db_secrets_arn = "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:dcp/query/${var.deployment_stage}/database-*",
+    queue_arn = "arn:aws:sqs:*:*:${aws_sqs_queue.async_query_queue.name}",
+    s3_arn = "arn:aws:s3:::*"
+    s3_object_arn = "arn:aws:s3:::*/*"
+  }
 }
 
+resource "aws_iam_role_policy" "async_query_lambda_access" {
+  role = "${aws_iam_role.query_create_async_query_lambda.name}"
+  policy = "${data.template_file.async_query_lambda_policy_doc.rendered}"
+}
 
 resource "aws_lambda_function" "query_create_async_query_lambda" {
   function_name    = "query-create-async-query-${var.deployment_stage}"

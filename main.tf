@@ -5,13 +5,13 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "=0.11.10"
+  required_version = "=0.11.11"
 
   backend "s3" {}
 }
 
 module "database" {
-  source              = "modules/database"
+  source              = "./terraform/modules/database"
   db_instance_count   = "${var.db_instance_count}"
   db_password         = "${var.db_password}"
   db_username         = "${var.db_username}"
@@ -23,7 +23,7 @@ module "database" {
 }
 
 module "query-service-infra" {
-  source = "modules/query-service-infra"
+  source = "./terraform/modules/query-service-infra"
   domain_name = "${var.domain_name}"
   parent_zone_domain_name = "${var.parent_zone_domain_name}"
   api_id = "${var.api_id}"

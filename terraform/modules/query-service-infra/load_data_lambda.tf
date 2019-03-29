@@ -17,74 +17,22 @@ resource "aws_iam_role" "query_load_data_lambda" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "query_load_data_lambda" {
-  name = "query-load-data-${var.deployment_stage}"
-  role = "${aws_iam_role.query_load_data_lambda.name}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "LambdaPolicy",
-      "Action": [
-        "events:*",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListRolePolicies",
-        "iam:ListRoles",
-        "iam:PassRole"
-      ],
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Sid": "LambdaLogging",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogStreams"
-      ],
-      "Resource": [
-        "arn:aws:logs:*:*:*"
-      ],
-      "Effect": "Allow"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "secretsmanager:DescribeSecret",
-        "secretsmanager:GetSecretValue"
-      ],
-      "Resource": [
-        "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:query/${var.deployment_stage}/*",
-        "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:dcp/query/${var.deployment_stage}/database-*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:ChangeMessageVisibility",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Resource": [
-        "arn:aws:sqs:*:*:${aws_sqs_queue.load_data_queue.name}"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action":["s3:GetObject"],
-      "Resource": [
-        "arn:aws:s3:::*",
-        "arn:aws:s3:::*/*"
-        ]
-    }
-  ]
-}
-EOF
+data "template_file" "load_data_lambda_policy_doc" {
+  template = "${file("${path.module}/../../../iam/policy-templates/load_data_lambda.json")}"
+  vars = {
+    logs_arn = "arn:aws:logs:*:*:*",
+    secrets_arn = "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:query/${var.deployment_stage}/*",
+    db_secrets_arn = "arn:aws:secretsmanager:${local.aws_region}:${local.account_id}:secret:dcp/query/${var.deployment_stage}/database-*",
+    queue_arn = "arn:aws:sqs:*:*:${aws_sqs_queue.load_data_queue.name}",
+    s3_arn = "arn:aws:s3:::*"
+    s3_object_arn = "arn:aws:s3:::*/*"
+  }
 }
 
+resource "aws_iam_role_policy" "load_data_lambda_access" {
+  role = "${aws_iam_role.query_load_data_lambda.name}"
+  policy = "${data.template_file.load_data_lambda_policy_doc.rendered}"
+}
 
 resource "aws_lambda_function" "query_load_data_lambda" {
   function_name    = "query-load-data-${var.deployment_stage}"
