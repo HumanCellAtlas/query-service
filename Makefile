@@ -82,7 +82,7 @@ lint:
 test: lint
 	coverage run -m unittest discover --start-directory tests --top-level-directory . --verbose
 
-integration_test:
+integration-test:
 	echo TODO
 
 fetch:

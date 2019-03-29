@@ -19,6 +19,7 @@ before_script:
   - virtualenv --python=python3.6 v
   - source v/bin/activate
   - pip install --quiet -r requirements-dev.txt
+  - if [[ $CI_COMMIT_REF_NAME =~ (staging|integration|prod) ]]; then export DEPLOYMENT_STAGE=$CI_COMMIT_REF_NAME; fi
   - source environment
   - make build-chalice-config init-db load-test-data
 
@@ -40,4 +41,4 @@ deploy:
 integration_test:
   stage: integration_test
   script:
-    - make integration_test
+    - make integration-test

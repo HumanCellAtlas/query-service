@@ -137,7 +137,7 @@ python -m dcpquery.db connect --db remote
 
 ### Testing
 
-Run `make test` to run unit tests. Run `make integration_test` to run integration tests, which require the Query Service
+Run `make test` to run unit tests. Run `make integration-test` to run integration tests, which require the Query Service
 to be deployed.
 
 ### Monitoring your app
