@@ -15,7 +15,8 @@ def get(job_id, redirect_when_waiting=False, redirect_when_done=False):
         job_status = json.load(job_status_object.get()["Body"])
     except botocore.exceptions.ClientError as e:
         if "Not Found" in str(e):
-            job_status = {"job_id": job_id, "status": "new"}
+            return Response(status=requests.codes.not_found,
+                            response=json.dumps({}).encode())
     if job_status["status"] in {"new", "running"} and redirect_when_waiting:
         return Response(status=requests.codes.moved,
                         headers={"Location": job_id + "?" + urlencode(config.app.current_request.query_params),
