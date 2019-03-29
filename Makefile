@@ -80,7 +80,7 @@ lint:
 	mypy $(APP_NAME) --ignore-missing-imports
 
 test: lint
-	coverage run -m unittest discover --start-directory tests --top-level-directory . --verbose
+	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests --top-level-directory . --verbose
 
 integration-test:
 	echo TODO
