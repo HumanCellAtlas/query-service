@@ -11,7 +11,7 @@ documentation at https://query.staging.data.humancellatlas.org/.
 
 For long-running queries (runtime over 20 seconds), the Query Service supports asynchronous tracking of query results.
 When a long-running query triggers this mode, the caller will receive a
-[`303 See Other`](https://en.wikipedia.org/wiki/HTTP_303) response status code with a `Retry-After` header. The caller
+[`301 Moved Permanently`](https://en.wikipedia.org/wiki/HTTP_301) response status code with a `Retry-After` header. The caller
 is expected to wait the specified amount of time before checking the redirect destination, or use the query job ID
 returned in the response JSON body to check the status of the query job. The caller may turn off this functionality
 (and cause the API to time out and return an error when a long-running query is encountered) by setting the
