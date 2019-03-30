@@ -1,0 +1,187 @@
+openapi: "3.0.0"
+
+info:
+  title: DCP Query Service API
+  description: Data Coordination Platform Query Service API
+  version: "0.1.0"
+
+servers:
+  - url: https://{{API_HOST}}/v1
+
+paths:
+  /query:
+    post:
+      summary: Query the database
+      description: Query the database
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+      responses:
+        200:
+          description: Query received and processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryResult"
+        301:
+          description: >
+            The query is still being executed. The request is being handled asynchronously. The client should follow the
+            redirect after the delay specified in the Retry-After header.
+          headers:
+            Retry-After:
+              description: Delay in seconds. The client should follow the redirect after waiting for this duration.
+              schema:
+                type: integer
+                format: int64
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /query_job:
+    post:
+      summary: >
+        Submit a database query and return a query job ID.
+      description: >
+        Query the database. The semantics of this route are identical to `POST query`, except that it assumes
+        immediately that the query will take longer than 20 seconds to execute, and returns the query job ID that can
+        explicitly track the query state and result.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+      responses:
+        202:
+          description: Query job created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  query:
+                    type: string
+                    description: Submitted query
+                  job_id:
+                    type: string
+                    description: Job identifier in RFC4122-compliant UUID format
+                    pattern: "[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /query_jobs/{job_id}:
+    get:
+      summary: Check the status of a long running query job, and retrieve its results when available.
+      description: >
+        Given the ID of a job returned by `POST query` or `POST query/job`, returns the status of the job and a
+        reference or redirect to the query results.
+      parameters:
+        - name: job_id
+          in: path
+          description: Job identifier in RFC4122-compliant UUID format
+          required: true
+          schema:
+            type: string
+            pattern: "[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"
+        - name: redirect_when_done
+          in: query
+          description: >
+            If set, the response will send a `302 Found` HTTP redirect to the query results when the job is done.
+          schema:
+            type: boolean
+        - name: redirect_when_waiting
+          in: query
+          description: >
+            If set, and the job being described is still running, the response will be a `301 Moved` HTTP redirect back
+            to this route with a Retry-After header.
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Job found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryJobDescription"
+        301:
+          description: >
+            The query is still being executed. This is a convenience redirect back to the job description while we wait
+            for the query to complete. The client should follow the redirect after the delay specified in the
+            Retry-After header.
+          headers:
+            Retry-After:
+              description: Delay in seconds. The client should follow the redirect after waiting for this duration.
+              schema:
+                type: integer
+                format: int64
+        302:
+          description: >
+            Query execution is complete. The client is being redirected to a JSON file containing the query results.
+        404:
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Query:
+      type: object
+      properties:
+        query:
+          type: string
+          description: Query to run, given as a SQL string.
+  
+    QueryJobDescription:
+      type: object
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          # TODO: reconcile with old status codes PROCESSING, COMPLETE, FAILED
+          enum: [new, running, done, failed]
+        results:
+          type: array
+  
+    QueryResult:
+      type: object
+      description: Result of query
+      properties:
+        query:
+          type: string
+          description: Submitted query
+        results:
+          type: array
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+          description: HTTP error code.
+        title:
+          type: string
+          description: Human-readable error message.
+        detail:
+          type: string
+          description: Exception stacktrace, if any.
+      required:
+        - status
+        - title

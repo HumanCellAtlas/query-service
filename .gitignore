@@ -1,42 +1,49 @@
-# Compiled files
-*.tfstate
-*.tfstate.*.backup
-*.tfstate.backup
-*tfvars
-*.terraform.tfstate
+# Reminder:
+# - A leading slash means the pattern is anchored at the root.
+# - No leading slash means the pattern matches at any depth.
 
-# Module directory
-.terraform/
-terraform/**/terraform.d
-
-# legacy
-.rato_pass
-
-# Pycharm folder
-.idea
-
+# Python files
+*.pyc
 __pycache__/
-venv/
-virtualenv/
+.mypy_cache/
+.tox/
+*.egg-info/
+/build/
+/dist/
+/.eggs/
+/.venv/
 
-tags
+# Sphinx documentation
+/docs/_build/
 
+# IDE project files
+/.pydevproject
 
-chalice/.chalice/deployments/
-chalice/.chalice/venv/
-chalice/vendor/
-chalice/chalicelib/
+# vim python-mode plugin
+/.ropeproject
 
-/config/environment.dev
-load_data_lambda/load_data.zip
-load_data_lambda/target/*
-load_data_lambda/vendor/*
+# IntelliJ IDEA / PyCharm project files
+/.idea
+/*.iml
 
+# JS/node/npm/web dev files
+node_modules
+npm-debug.log
+
+# OS X metadata files
+.DS_Store
+
+# Python coverage
 .coverage
+.coverage.*
 
-target/
-load_data.zip
-create_async_query.zip
-db_cleanup.zip
+# Terraform files
+/.terraform
+/terraform/variables.tf
 
-vendor/
+/.chalice/config.json
+/.chalice/policy*.json
+/.chalice/deployments/
+/.chalice/venv/
+/vendor/
+/secrets/

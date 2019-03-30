@@ -1,17 +1,36 @@
+dist: xenial
+sudo: required
 language: python
+cache: pip
+
 python:
-- 3.6
-before_install:
-- export BOTO_CONFIG=/dev/null
-install:
-- pip install -r query/requirements-dev.txt
-script:
-- source environment
-- cd query/ && make install tests report
-after_success:
-- bash <(curl -s https://codecov.io/bash)
+  - 3.6
+
+addons:
+  postgresql: "10"
+  apt:
+    packages:
+    - postgresql-10
+    - postgresql-client-10
+    - moreutils
+
+services:
+  - postgresql
+
 env:
   global:
-  # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-  - secure: bmSQ0OfTDtId7J09g7ZTr1fbYDvu2mNm+bg1rPF8VbIoO+ls3LVKPPGw4lXqrjOtf1RpGq7YvO5qoufHkep3O3/b86CYGWnqw5QA07z+Q5SxI9MR1C0RuqAEJbHGlFDHN2/HM9TLlU5RlHnDuS8RUQUCQmAwcnmHc5yei8zDAdVNcxW+kqk8r3IXZ6VC558n3XtTFI8DPjJdbGbjdS+QWWFKY5H/fPlRZaInaeX9N2/JV/D8J3kXG5KrBqWHQ9NaKLoyRxByhdSje5hNCcLmB3XMCTKN7EAhW1i/mXcswMVQ/CCXcCDj7atQTmmSsEJeeQ+ottR/e6eIcevuCWEcdDvtNPpKJu7IwpdLixry+QXbyCb6bVybJDhrcsY+LTfy/s8KWSKFcKznDrgaM6DEABgS0bsLfs4fUrZz5+aBPM51ohVcNyVuyN1HANGRHhoLRB1W3tP9DnHwHbeaobmSbUhQ2ItAWX/q9vfgYj7OTtkwHp/g/6LmY9pUgqaUsAnUNcOWQDpaVD7KGNpuT0l3CXldGoywHncUPFv+I49EdzP5U1/J3xJAT4t9JvKxIig+TmzT+7w0gaiPmwpxNsv1bh4Yq9yPiuIHo4oWOQMzH/5wRHP/pMAIgj1SVHHsgVcPeQvSpTh8RMMuVrp3LPnxVwAxl3gGAPcflHcGbASNtTE=
-  - secure: mFPfMiFwFym3Cs72FXB7EsAssEAhMNtLZj2nmD4/K7vS0NSM33HKnazNuwolCJ7bPoVgr7RGbSpv9KZin8JxXSvvG6bLbmdqsNTnsGT1yiLo7jdk4OaA2+T/GIqoAXJiFFb9y2bkVckclpeVGP4dxumDoUNLtIhBvjSjhGakr+w1WhjfswTtFTs/m91VD5mISZla6fCNPVws6ECDkSwECz/V0sTvaN7co6Vwixp5J8NlrN6/RcXXbzQq/7T9BVKNzWgNrhgZ/WIGRf5jt2ZXHxSbQWcvKwZ3CajHtTJ2DgcFLTR00Er1OWBr4I2S4C18SW+LhSz0Mra2MlvdrGhhKdpNTGizYMg9Sb62OeAoQktWyrfwbMYUgv71HRaUIIr+728ZxvBRFrhcb8W31Stgw1jIB0PPJ822Mj6FUNsQzjXu9UbYB56gu7RefC+4NmeF3cWhv6ncSIS4Q+yYCoKMNx2W1TSERjJwiovGZpaJf3HcGS6qYsgbhSN5wftuj9xcxTCMHJN4QlTPkyb71LYdF25xvHrgkbP60Lx74bY/+A+pObsTY4SzOnQ/dbIeiWyWYQ2FS98bGsN98KVsYcKtz5Hf42dvmqJxvCAJ7WE/Afml607cJBQAzIPn7Hzhw8asMbebM7hj5nvhK5Jg8AohALipdc1s33ugv6F8Br1jarM=
+  - AWS_DEFAULT_REGION=us-east-1
+  - AWS_DEFAULT_OUTPUT=json
+
+install:
+  - pip install -r requirements-dev.txt
+
+before_script:
+  - source environment
+  - make build-chalice-config init-db load-test-data
+
+script:
+  - make test
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

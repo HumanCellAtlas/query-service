@@ -1,0 +1,11 @@
+chalice
+aws-sam-translator
+furl
+requests
+boto3
+awscli
+flake8
+mypy
+coverage
+sqlalchemy-utils
+-r requirements.txt.in
