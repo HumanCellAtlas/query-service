@@ -26,7 +26,7 @@ elif args.action in {"load", "load-test"}:
     if args.action == "load":
         extractor_args = {}  # type: ignore
     else:
-        extractor_args = {"query": {"query": {"match": {"uuid": "000f989a-bea2-46cb-9ec1-b4de8c292931"}}}}
+        extractor_args = {"query": {"query": {"match": {"uuid": "ffffc43a-c586-4163-a24d-20d756f43a36"}}}}
 
     DSSExtractor(staging_directory=".").extract(transformer=transform_bundle, loader=load_bundle, **extractor_args)
 elif args.action == "connect":
