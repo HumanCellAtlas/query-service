@@ -4,7 +4,7 @@ terraform {
 }
 
 data "external" "aws_config" {
-  program = ["make", "get-config"]
+  program = ["cat", ".terraform/aws_config.json"]
 }
 
 provider "aws" {

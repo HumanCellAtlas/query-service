@@ -5,6 +5,8 @@ variables:
   AWS_DEFAULT_OUTPUT: json
   DEBIAN_FRONTEND: noninteractive
   TERRAFORM_VERSION: 0.11.13
+  LANG: C.UTF-8
+  LC_ALL: C.UTF-8
 
 stages:
   - test
@@ -12,7 +14,6 @@ stages:
   - integration_test
 
 before_script:
-  - source /etc/profile
   - apt-get update > /dev/null
   - apt-get install --yes sudo jq moreutils gettext make virtualenv postgresql unzip > /dev/null
   - service postgresql start
@@ -38,6 +39,8 @@ deploy:
       - master
       - integration
       - staging
+  variables:
+    TF_CLI_ARGS_apply: -auto-approve
   script:
     - make deploy
 
