@@ -163,19 +163,15 @@ def create_recursive_process_functions_in_db():
 
 
 def run_query(query, timeout_seconds=20, rows_per_page=100):
-    # TODO: pagination of results
-    # Warning: timeout_seconds is only effective once at startup when db is not yet initialized
     if config.db_statement_timeout_seconds != timeout_seconds:
-        config.db_statement_timeout_seconds = timeout_seconds
+        config.reset_db_timeout_seconds(timeout_seconds)
     try:
-        cursor = config.db_session.query(query)
+        cursor = config.db_session.execute(query)
         hold = True
-        position = 0
         while hold:
-            rows = cursor.slice(position, position + rows_per_page).all()
+            rows = cursor.fetchmany(size=rows_per_page)
             for row in rows:
                 yield row
-            position += rows_per_page
             if not rows:
                 hold = False
 

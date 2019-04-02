@@ -1,10 +1,11 @@
 import json
 
-import requests, sqlalchemy
+import requests
 from flask import redirect
 
+from dcpquery.api import JSONEncoder
 from .. import config
-from ..exceptions import DCPQueryError, QueryTimeoutError, QuerySizeError
+from ..exceptions import QueryTimeoutError, QuerySizeError
 from ..db import run_query
 from .query_job import create_async_query_job
 
@@ -16,8 +17,9 @@ def post(body):
     try:
         results = []
         total_result_size = 0
-        for result in run_query(query):
-            total_result_size += len(json.dumps(result))
+        for row in run_query(query):
+            result = {column: value for column, value in row.items()}
+            total_result_size += len(json.dumps(result, cls=JSONEncoder))
             results.append(result)
             if total_result_size > config.API_GATEWAY_MAX_RESULT_SIZE:
                 raise QuerySizeError()

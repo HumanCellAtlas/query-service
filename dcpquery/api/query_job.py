@@ -1,3 +1,4 @@
+import json
 import uuid
 import requests
 
@@ -7,8 +8,9 @@ from .. import config
 
 
 def create_async_query_job(query):
-    sqs_receipt = aws.send_sqs_message(queue_name=config.async_queries_queue_name, message=query)
-    return sqs_receipt["MessageId"]
+    q = aws.resources.sqs.Queue(aws.clients.sqs.get_queue_url(QueueName=config.bundle_events_queue_name)["QueueUrl"])
+    res = q.send_message(MessageBody=json.dumps(query))
+    return res['MessageId']
 
 
 def post(body):

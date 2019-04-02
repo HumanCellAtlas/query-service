@@ -24,14 +24,21 @@ class TestEndpoints(TestChaliceApp):
         self.assertEqual(response.status_code, 200)
 
     def test_query_endpoint(self):
-        query = "select * from files;"
+        query = "select * from files limit 10"
         res = self.assertResponse("POST", "/v1/query", requests.codes.ok, {"query": query})
-        with open("res.json", "w") as fh:
-            json.dump(res.json, fh, indent=4)
-        expected_response_data = {"query": query, "results": fast_query_expected_results}
-        with open("exp.json", "w") as fh:
-            json.dump(expected_response_data, fh, indent=4)
-        self.assertEqual(res.json, expected_response_data)
+        self.assertEqual(len(res.json['results']), 10)
+
+    def test_query_endpoint_redirects_timeouts(self):
+        config.reset_db_timeout_seconds(3)
+        query = "select pg_sleep(5); select * from files limit 10"
+        self.assertResponse("POST", "/v1/query", requests.codes.found, {"query": query})
+        config.reset_db_timeout_seconds(20)
+
+    def test_query_endpoint_redirects_too_large_responses(self):
+        config.API_GATEWAY_MAX_RESULT_SIZE = 10
+        query = "select * from files"
+        self.assertResponse("POST", "/v1/query", requests.codes.found, {"query": query})
+        config.API_GATEWAY_MAX_RESULT_SIZE = 8 * 1024 * 1024
 
     @patch('dcplib.aws.resources.sqs.Queue')
     def test_webhook_endpoint(self, mock_sqs_queue):

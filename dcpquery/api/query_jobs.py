@@ -1,9 +1,12 @@
 import os, sys, json
 import botocore, requests
+from dcplib import aws
 from flask import Response
 from urllib.parse import urlencode
 from dcplib.aws import clients, resources
 
+from dcpquery.db import run_query
+from dcpquery.exceptions import DCPQueryError
 from .. import config
 
 
@@ -32,3 +35,26 @@ def get(job_id, redirect_when_waiting=False, redirect_when_done=False):
                             headers={"Location": result_url, "Content-Type": "application/json"},
                             response=json.dumps(job_status).encode())
     return job_status
+
+
+def process_async_query(job_id, query):
+    bucket = aws.resources.s3.Bucket(config.s3_bucket_name)
+    job_status_object = bucket.Object(f"job_status/{job_id}")
+    job_result_object = bucket.Object(f"job_result/{job_id}")
+    try:
+        results = []
+        total_result_size = 0
+        for result in run_query(query, timeout_seconds=880):
+            total_result_size += len(json.dumps(result))
+            results.append(result)
+            if total_result_size > config.S3_SINGLE_UPLOAD_MAX_SIZE:
+                # TODO stream large query results to s3
+                break
+        job_result_doc = {"job_id": job_id, "status": "done", "result": results, "error": None}
+        job_result_object.put(Body=json.dumps(job_result_doc).encode())
+        job_status_doc = {"job_id": job_id, "status": "done", "error": None,
+                          "result_location": {"Bucket": bucket.name, "Key": job_result_object.name}}
+    except DCPQueryError as e:
+        job_status_doc = {"job_id": job_id, "status": "done", "error": e.to_problem.body, "result_location": None}
+
+    job_status_object.put(Body=json.dumps(job_status_doc).encode())

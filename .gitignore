@@ -48,4 +48,3 @@ npm-debug.log
 /vendor/
 /secrets/
 
-/tests/terraform/.terraform/

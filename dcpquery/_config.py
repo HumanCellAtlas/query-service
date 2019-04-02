@@ -43,6 +43,12 @@ class DCPQueryConfig:
             self._webhook_keys = json.loads(secret.value)["hmac_keys"]
         return self._webhook_keys
 
+    def reset_db_timeout_seconds(self, timeout_seconds):
+        self.db_statement_timeout_seconds = timeout_seconds
+        self._db_sessions.clear()
+        self._db_session_factory = None
+        self._db = None
+
     @property
     def db(self):
         if self._db is None:

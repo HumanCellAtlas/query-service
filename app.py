@@ -7,6 +7,7 @@ from dcplib import aws
 from dcplib.etl import DSSExtractor
 
 from dcpquery import api, config
+from dcpquery.api.query_jobs import process_async_query
 from dcpquery.db import run_query
 from dcpquery.exceptions import DCPQueryError
 
@@ -57,27 +58,11 @@ def bundle_event_handler(event):
 @app.on_sqs_message(queue=config.async_queries_queue_name)
 def async_query_handler(event):
     for record in event:
-        # TODO refactor into func process_async_query
         job_id = record.to_dict()["messageId"]
+
         bucket = aws.resources.s3.Bucket(config.s3_bucket_name)
         job_status_object = bucket.Object(f"job_status/{job_id}")
-        job_result_object = bucket.Object(f"job_result/{job_id}")
         job_status_doc = {"job_id": job_id, "status": "running"}
         job_status_object.put(Body=json.dumps(job_status_doc).encode())
         query = json.loads(record.body)
-        try:
-            results = []
-            total_result_size = 0
-            for result in run_query(query, timeout_seconds=880):
-                total_result_size += len(json.dumps(result))
-                results.append(result)
-                if total_result_size > config.S3_SINGLE_UPLOAD_MAX_SIZE:
-                    # TODO handle stream large query results to s3
-                    break
-            job_result_doc = {"job_id": job_id, "status": "done", "result": results, "error": None}
-            job_result_object.put(Body=json.dumps(job_result_doc).encode())
-            job_status_doc = {"job_id": job_id, "status": "done", "error": None,
-                              "result_location": {"Bucket": bucket.name, "Key": job_result_object.name}}
-            job_status_object.put(Body=json.dumps(job_status_doc).encode())
-        except DCPQueryError as e:
-            job_status_doc = {"job_id": job_id, "status": "done", "error": e.to_problem.body, "result_location": None}
+        process_async_query(job_id, query)
