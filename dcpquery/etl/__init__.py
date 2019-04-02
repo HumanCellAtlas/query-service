@@ -1,5 +1,8 @@
-import os, sys, re, json
+import os, sys, re, json, tempfile
 from collections import defaultdict
+
+from hca.dss import DSSClient
+from dcplib.etl import DSSExtractor
 
 from .. import config
 from ..db import Bundle, File, BundleFileLink
@@ -46,3 +49,16 @@ def load_bundle(bundle, extractor, transformer):
 
     config.db_session.add_all(bf_links)
     config.db_session.commit()
+
+
+def etl_one_bundle(bundle_uuid, bundle_version):
+    dss_client = DSSClient(swagger_url=f"https://{os.environ['DSS_HOST']}/v1/swagger.json")
+    extractor = DSSExtractor(staging_directory=tempfile.gettempdir(), dss_client=dss_client)
+    os.makedirs(f"{extractor.sd}/files", exist_ok=True)
+    os.makedirs(f"{extractor.sd}/bundles", exist_ok=True)
+    _, _, files_to_fetch = extractor.get_files_to_fetch_for_bundle(bundle_uuid=bundle_uuid,
+                                                                   bundle_version=bundle_version)
+    for f in files_to_fetch:
+        extractor.get_file(f, bundle_uuid=bundle_uuid, bundle_version=bundle_version)
+    extractor.dispatch_callbacks(bundle_uuid=bundle_uuid, bundle_version=bundle_version,
+                                 transformer=transform_bundle, loader=load_bundle)

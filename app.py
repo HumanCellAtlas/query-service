@@ -1,16 +1,14 @@
 import os, sys, json
 
-import boto3, requests, sqlalchemy, tempfile
+import boto3, requests, sqlalchemy
 from requests_http_signature import HTTPSignatureAuth
 from chalice import Chalice, Response
-from hca.dss import DSSClient
 from dcplib import aws
-from dcplib.etl import DSSExtractor
 
 from dcpquery import api, config
 from dcpquery.db import run_query
 from dcpquery.exceptions import DCPQueryError
-from dcpquery.etl import transform_bundle, load_bundle
+from dcpquery.etl import etl_one_bundle
 
 swagger_spec_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{os.environ["APP_NAME"]}-api.yml')
 app = api.DCPQueryServer(app_name=os.environ["APP_NAME"], swagger_spec_path=swagger_spec_path)
@@ -53,13 +51,7 @@ def bundle_event_handler(event):
         record = record.body
         if record["event_type"] != "CREATE":
             continue
-
-        dss_client = DSSClient(swagger_url=f"https://{os.environ['DSS_HOST']}/v1/swagger.json")
-        extractor = DSSExtractor(staging_directory=tempfile.gettempdir(), dss_client=dss_client)
-        _, _, files_to_fetch = extractor.get_files_to_fetch_for_bundle(**record["match"])
-        for f in files_to_fetch:
-            extractor.get_file(**f)
-        extractor.dispatch_callbacks(transformer=transform_bundle, loader=load_bundle, **record["match"])
+        etl_one_bundle(**record["match"])
 
 
 @app.on_sqs_message(queue=config.async_queries_queue_name)

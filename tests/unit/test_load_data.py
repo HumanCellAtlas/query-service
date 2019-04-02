@@ -1,13 +1,55 @@
-import unittest
+#!/usr/bin/env python
+
+import json, io, unittest, logging, uuid, datetime
 from unittest.mock import Mock, patch
 
-# from lambdas.load_data.load_data import extract_transform_load
-# from load_data_lambda.app import load_data
+from requests.models import Response
+import dcplib.etl
+
+import dcpquery.etl
 
 
-@unittest.skip("WIP")
+class MockDSSClient:
+    host = "localhost"
+    swagger_url = "swagger_url"
+    files = [
+        {"name": hex(i), "content-type": 'application/json; dcp-type="metadata/test"', "uuid": str(uuid.uuid4()),
+         "version": str(datetime.datetime.utcnow()), "sha256": "0", "size": 2}
+        for i in range(256)
+    ]
+
+    class MockDSSMethod:
+        def __call__(self, es_query, replica):
+            return {"total_hits": 1}
+
+        def iterate(self, es_query, replica, per_page):
+            for i in range(4):
+                yield {"bundle_fqid": "a%d.b" % i}
+
+    post_search = MockDSSMethod()
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def get(self, url, params):
+        if "files" in url:
+            payload = {}
+        else:
+            payload = {"bundle": {"files": self.files}}
+        res = Response()
+        res.status_code = 200
+        res.raw = io.BytesIO(json.dumps(payload).encode())
+        return res
+
+
 class TestLoadData(unittest.TestCase):
+    def test_etl_one_bundle(self):
+        dcpquery.etl.DSSClient = MockDSSClient
+        dcplib.etl.http = MockDSSClient()
+        dcpquery.etl.etl_one_bundle(bundle_uuid="9a5cbcbd-866c-4b6a-9fdb-6581a2d47f3c",
+                                    bundle_version="2018-11-27T211302.714868Z")
 
+    @unittest.skip("WIP")
     @patch('load_data_lambda.app.extract_transform_load')
     @patch('load_data_lambda.app.extractor', 'foo')
     @patch('load_data_lambda.app.loader', 'bah')
@@ -35,6 +77,7 @@ class TestLoadData(unittest.TestCase):
             bundle_version='2018-11-27T211302.714868Z'
         )
 
+    @unittest.skip("WIP")
     @patch('query.lambdas.load_data.load_data.BundleDocumentTransform.transform')
     def test_extract_transform_load(self, mock_transform):
         mock_transform.return_value = 'TRANSFORMED BUNDLE'
@@ -45,3 +88,7 @@ class TestLoadData(unittest.TestCase):
         extractor.extract_bundle.assert_called_once_with('UUID', 'VERSION')
         mock_transform.assert_called_once_with('BUNDLE')
         loader.load.assert_called_once_with('BUNDLE', 'TRANSFORMED BUNDLE')
+
+
+if __name__ == '__main__':
+    unittest.main()
