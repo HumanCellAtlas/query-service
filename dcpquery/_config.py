@@ -11,6 +11,8 @@ class DCPQueryConfig:
     app_name = os.environ["APP_NAME"]
     app = None
     stage = os.environ["STAGE"]
+    API_GATEWAY_MAX_RESULT_SIZE = 8 * 1024 * 1024
+    S3_SINGLE_UPLOAD_MAX_SIZE = 64 * 1024 * 1024
     bundle_events_queue_name = os.environ["BUNDLE_EVENTS_QUEUE_NAME"]
     async_queries_queue_name = os.environ["ASYNC_QUERIES_QUEUE_NAME"]
     s3_bucket_name = os.environ["SERVICE_S3_BUCKET"]
@@ -49,7 +51,7 @@ class DCPQueryConfig:
             if self.local_mode:
                 db_user = getpass.getuser()
                 db_password = ""
-                db_host = ""
+                db_host = "localhost"
             else:
                 db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
                 db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
