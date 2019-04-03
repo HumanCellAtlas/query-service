@@ -9,7 +9,10 @@
       "api_gateway_stage": "api",
       "iam_policy_file": "policy-dev.json",
       "environment_variables": {},
-      "tags": {}
+      "tags": {
+        "managedBy": "chalice",
+        "project": "dcp"
+      }
     }
   }
 }
