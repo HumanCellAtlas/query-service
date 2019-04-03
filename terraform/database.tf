@@ -13,6 +13,13 @@ module "query_db" {
   apply_immediately = true
   skip_final_snapshot = true
   username = "${aws_secretsmanager_secret_version.query_db_username.secret_string}"
+  tags = {
+    managedBy = "terraform"
+    project = "dcp"
+    env = "${var.STAGE}"
+    service = "${var.APP_NAME}"
+    owner = "${var.OWNER}"
+  }
 }
 
 resource "aws_default_vpc" "query_db_vpc" {}
