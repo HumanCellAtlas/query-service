@@ -1,7 +1,7 @@
 """
 This module provides a SQLAlchemy-based database schema for the DCP Query Service.
 """
-
+import enum
 import os, sys, argparse, json, logging, typing
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -70,6 +70,32 @@ class BundleFileLink(SQLAlchemyBase):
     name = Column(String, nullable=False)
 
 
+class ConnectionTypeEnum(enum.Enum):
+    INPUT_ENTITY = 'INPUT_ENTITY'
+    OUTPUT_ENTITY = 'OUTPUT_ENTITY'
+    PROTOCOL_ENTITY = 'PROTOCOL_ENTITY'
+
+
+class Process(SQLAlchemyBase):
+    __tablename__ = 'process'
+    process_uuid = Column(UUID, primary_key=True)
+
+
+class ProcessFileLink(SQLAlchemyBase):
+    __tablename__ = 'process_process_file_link'
+    id = Column(Integer, primary_key=True)
+    process = relationship(Process)
+    file = relationship(File)
+    process_file_connection_type = Column('value', Enum(ConnectionTypeEnum))
+
+
+class ProcessProcessLink(SQLAlchemyBase):
+    __tablename__ = 'process_join_table'
+    id = Column(Integer, primary_key=True)
+    parent_process = relationship(Process)
+    child_process = relationship(Process)
+
+
 def init_database(db, dry_run=True, action="init"):
     assert db in {"local", "remote"}
     from sqlalchemy_utils import database_exists, create_database
@@ -82,6 +108,19 @@ def init_database(db, dry_run=True, action="init"):
     if not database_exists(config.db.url):
         logger.info("Creating database")
         create_database(config.db.url)
+        config.db_session.execute("""
+        CREATE or REPLACE FUNCTION get_all_children(IN parent_process UUID)
+            RETURNS TABLE(child_process UUID) as $$
+              WITH RECURSIVE recursive_table AS (
+                SELECT child_process FROM process_join_table
+                WHERE parent_process=$1
+                UNION
+                SELECT process_join_table.child_process FROM process_join_table
+                INNER JOIN recursive_table
+                ON process_join_table.parent_process = recursive_table.child_process)
+            SELECT * from recursive_table;
+            $$ LANGUAGE SQL;
+        """)
 
     logger.info("Initializing database")
     if dry_run:
