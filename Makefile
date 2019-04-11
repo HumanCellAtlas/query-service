@@ -61,6 +61,8 @@ prune:
 get-tf-output:
 	@terraform output -module=$(APP_NAME) -json
 
+# init-tf prepares the repo for Terraform commands. It assembles the partial S3 backend config as a JSON file, `aws_config.json`.
+# This file is referenced by the TF_CLI_ARGS_init environment variable, which is set by running `source environment`.
 init-tf:
 	-rm -f .terraform/*.tfstate
 	jq -n ".region=env.AWS_DEFAULT_REGION | .bucket=env.TF_S3_BUCKET | .key=env.APP_NAME+env.STAGE" > .terraform/aws_config.json
