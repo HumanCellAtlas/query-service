@@ -5,7 +5,6 @@ from tests import vx_bundle, clear_views, truncate_tables, mock_links
 from dcpquery import config
 
 
-@unittest.skip("WIP")
 class TestPostgresLoader(unittest.TestCase):
     _test_identifier = secrets.token_hex(16)
 

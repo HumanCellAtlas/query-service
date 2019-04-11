@@ -4,7 +4,6 @@ import unittest
 from tests import vx_bundle, load_fixture, mock_links
 
 
-@unittest.skip("WIP")
 class TestTransform(unittest.TestCase):
 
     def test_construct_documents(self):

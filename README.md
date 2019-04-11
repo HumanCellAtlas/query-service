@@ -121,7 +121,7 @@ like `duration_seconds = 43200` in your profile in `~/.aws/config`.
 
 #### Database management
 
-Run `python -m dcpquery.db --help` for a list of commands available to maange the database. By default, this script
+Run `python -m dcpquery.db --help` for a list of commands available to manage the database. By default, this script
 connects to the PostgreSQL database running on localhost. To connect to the remote database listed in the service
 configuration, add `--db remote` to the command.
 

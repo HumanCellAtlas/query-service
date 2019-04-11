@@ -119,5 +119,6 @@ def truncate_tables(cursor):
     cursor.execute("TRUNCATE TABLE bundles CASCADE")
     cursor.execute("TRUNCATE TABLE bundles_files CASCADE")
     cursor.execute("TRUNCATE TABLE job_status CASCADE")
-    cursor.execute("TRUNCATE TABLE process_links_join_table CASCADE")
-    cursor.execute("TRUNCATE TABLE hca_processes CASCADE")
+    cursor.execute("TRUNCATE TABLE process_join_table CASCADE")
+    cursor.execute("TRUNCATE TABLE process_file_table CASCADE")
+    cursor.execute("TRUNCATE TABLE processes CASCADE")
