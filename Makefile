@@ -58,15 +58,14 @@ package:
 prune:
 	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
 
-get-config:
-	@python -c $(GET_CREDS) | jq ".region=env.AWS_DEFAULT_REGION | .bucket=env.TF_S3_BUCKET | .key=env.APP_NAME+env.STAGE"
-
 get-tf-output:
 	@terraform output -module=$(APP_NAME) -json
 
+# init-tf prepares the repo for Terraform commands. It assembles the partial S3 backend config as a JSON file, `aws_config.json`.
+# This file is referenced by the TF_CLI_ARGS_init environment variable, which is set by running `source environment`.
 init-tf:
 	-rm -f .terraform/*.tfstate
-	$(MAKE) --no-print-directory get-config > .terraform/aws_config.json
+	jq -n ".region=env.AWS_DEFAULT_REGION | .bucket=env.TF_S3_BUCKET | .key=env.APP_NAME+env.STAGE" > .terraform/aws_config.json
 	terraform init
 
 destroy: init-tf
@@ -78,7 +77,7 @@ clean:
 lint:
 	flake8 *.py $(APP_NAME) tests
 	mypy $(APP_NAME) --ignore-missing-imports
-	cd tests/terraform; terraform init; terraform validate
+	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
 test: lint
 	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests --top-level-directory . --verbose
@@ -126,5 +125,5 @@ requirements.txt requirements-dev.txt : %.txt : %.txt.in
 
 requirements-dev.txt : requirements.txt.in
 
-.PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package get-config get-tf-output init-tf init-db destroy
+.PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package get-tf-output init-tf init-db destroy
 .PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements

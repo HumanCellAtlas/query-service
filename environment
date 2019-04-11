@@ -26,6 +26,9 @@ TFSTATE_FILE=.terraform/remote.tfstate
 TF_CLI_ARGS_output="--state ${TFSTATE_FILE}"
 TF_CLI_ARGS_init="--backend-config ${APP_HOME}/.terraform/aws_config.json"
 
+# See https://github.com/terraform-providers/terraform-provider-aws/issues/1184
+AWS_SDK_LOAD_CONFIG=1
+
 if [[ -z "$AWS_DEFAULT_REGION" ]]; then
     AWS_DEFAULT_REGION=$(aws configure get region)
 fi
@@ -39,5 +42,4 @@ EXPORT_ENV_VARS_TO_TF="APP_NAME STAGE OWNER BUNDLE_EVENTS_QUEUE_NAME ASYNC_QUERI
 EXPORT_ENV_VARS_TO_LAMBDA=$EXPORT_ENV_VARS_TO_TF
 set +a
 
-make --no-print-directory get-config > "${APP_HOME}/.terraform/aws_config.json"
 for v in $EXPORT_ENV_VARS_TO_TF; do echo "variable $v { default = \"${!v}\" }"; done > terraform/variables.tf
