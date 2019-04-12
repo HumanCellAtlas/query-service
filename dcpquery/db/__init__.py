@@ -4,9 +4,10 @@ This module provides a SQLAlchemy-based database schema for the DCP Query Servic
 import enum
 import os, sys, argparse, json, logging, typing
 
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship, sessionmaker
 
 from .. import config
@@ -37,8 +38,8 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
     fqid = Column(String, primary_key=True, unique=True, nullable=False)
     uuid = Column(UUID, nullable=False)
     version = Column(DateTime, nullable=False)
-    manifest = Column(JSONB)
-    aggregate_metadata = Column(JSONB)
+    manifest = Column(MutableDict.as_mutable(JSONB))
+    aggregate_metadata = Column(MutableDict.as_mutable(JSONB))
     files = relationship("File", secondary='bundle_file_links')
 
 
@@ -56,7 +57,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     version = Column(DateTime, nullable=False)
     schema_type_id = Column(Integer, ForeignKey("schema_types.id"))
     schema_type = relationship("SchemaType", back_populates="files")
-    body = Column(JSONB)
+    body = Column(MutableDict.as_mutable(JSONB))
     content_type = Column(String)
     size = Column(Integer)
 
