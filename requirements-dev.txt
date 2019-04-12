@@ -35,7 +35,7 @@ hca==4.10.0
 idna==2.8
 inflection==0.3.1
 itsdangerous==1.1.0
-Jinja2==2.10
+Jinja2==2.10.1
 jmespath==0.9.4
 jsonpointer==1.14
 jsonschema==2.6.0
@@ -47,7 +47,7 @@ oauthlib==3.0.1
 openapi-spec-validator==0.2.6
 orderedmultidict==1.0
 pathlib==1.0.1
-psycopg2-binary==2.8
+psycopg2-binary==2.8.1
 puremagic==1.4
 pyasn1==0.4.5
 pyasn1-modules==0.2.4
@@ -66,7 +66,7 @@ six==1.12.0
 SQLAlchemy==1.3.2
 SQLAlchemy-Utils==0.33.11
 swagger-ui-bundle==0.0.3
-tenacity==5.0.3
+tenacity==5.0.4
 tweak==1.0.2
 typed-ast==1.3.1
 typing==3.6.4
