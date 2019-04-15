@@ -77,6 +77,7 @@ clean:
 lint:
 	flake8 *.py $(APP_NAME) tests
 	mypy $(APP_NAME) --ignore-missing-imports
+	source environment
 	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
 test: lint

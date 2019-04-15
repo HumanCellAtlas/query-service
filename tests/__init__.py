@@ -90,6 +90,7 @@ def eventually(timeout: float, interval: float, errors: set = {AssertionError}):
                         raise
                     logger.debug("Error in %s: %s. Retrying after %s s...", func, e, interval)
                     time.sleep(interval)
+                    ''
 
         return call
 
