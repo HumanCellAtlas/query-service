@@ -50,7 +50,6 @@ def load_bundle(bundle, extractor, transformer):
         bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
     config.db_session.add_all(bf_links)
     config.db_session.commit()
-    # Todo is this the best way to avoid race conditions?
     load_links(links)
 
 

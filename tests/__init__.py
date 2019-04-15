@@ -90,6 +90,7 @@ def eventually(timeout: float, interval: float, errors: set = {AssertionError}):
                         raise
                     logger.debug("Error in %s: %s. Retrying after %s s...", func, e, interval)
                     time.sleep(interval)
+                    ''
 
         return call
 
@@ -114,11 +115,10 @@ def clear_views(cursor):
         )
 
 
-def truncate_tables():
-    # config.db_session.execute("TRUNCATE TABLE files CASCADE")
-    # config.db_session.execute("TRUNCATE TABLE bundles CASCADE")
-    # config.db_session.execute("TRUNCATE TABLE bundles_files CASCADE")
-    config.db_session.execute("TRUNCATE TABLE process_join_table CASCADE")
-    config.db_session.execute("TRUNCATE TABLE process_file_join_table CASCADE")
-    config.db_session.execute("TRUNCATE TABLE processes CASCADE")
-    config.db_session.commit()
+def truncate_tables(cursor):
+    cursor.execute("TRUNCATE TABLE files CASCADE")
+    cursor.execute("TRUNCATE TABLE bundles CASCADE")
+    cursor.execute("TRUNCATE TABLE bundles_files CASCADE")
+    cursor.execute("TRUNCATE TABLE job_status CASCADE")
+    cursor.execute("TRUNCATE TABLE process_links_join_table CASCADE")
+    cursor.execute("TRUNCATE TABLE hca_processes CASCADE")

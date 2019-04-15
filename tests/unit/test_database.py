@@ -25,12 +25,6 @@ class TestReadOnlyTransactions(unittest.TestCase):
 
 class TestPostgresLoader(unittest.TestCase):
 
-    # db = PostgresDatabase(Config.test_database_uri)
-    # loader = PostgresLoader(db)
-
-    def setUp(self):
-        truncate_tables()
-
     @unittest.skip("WIP")
     def test_insert_select(self):
         project_file = next(f for f in vx_bundle.files if f.metadata.name == 'project_0.json')

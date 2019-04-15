@@ -122,16 +122,12 @@ class ProcessProcessLink(SQLAlchemyBase):
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
 
 
-def init_database(db, dry_run=True, action="init", test=False):
+def init_database(db, dry_run=True, action="init"):
     assert db in {"local", "remote"}
     from sqlalchemy_utils import database_exists, create_database
 
     if db == "remote":
         config.local_mode = False
-
-    if action == "init-test-db":
-        # ToDo make this work
-        config.db_session.execute("TRUNCATE TABLE processes CASCADE;")
 
     logger.info("Initializing database at %s", repr(config.db.url))
     if not database_exists(config.db.url):
@@ -142,10 +138,10 @@ def init_database(db, dry_run=True, action="init", test=False):
     if dry_run:
         config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
     SQLAlchemyBase.metadata.create_all(config.db)
-    create_recursive_processs_functions_in_db()
+    create_recursive_process_functions_in_db()
 
 
-def create_recursive_processs_functions_in_db():
+def create_recursive_process_functions_in_db():
     config.db_session.execute("""
                     CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
                         RETURNS TABLE(child_process UUID) as $$

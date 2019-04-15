@@ -47,3 +47,5 @@ npm-debug.log
 /.chalice/venv/
 /vendor/
 /secrets/
+
+/tests/terraform/.terraform/

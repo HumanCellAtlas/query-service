@@ -77,6 +77,8 @@ clean:
 lint:
 	flake8 *.py $(APP_NAME) tests
 	mypy $(APP_NAME) --ignore-missing-imports
+	source environment
+	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
 test: lint
 	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests --top-level-directory . --verbose
@@ -90,13 +92,10 @@ fetch:
 init-db:
 	python -m $(APP_NAME).db init
 
-init-test-db:
-	python -m $(APP_NAME).db init-test-db
-
 load: init-db
 	python -m $(APP_NAME).db load
 
-load-test-data: init-test-db
+load-test-data: init-db
 	python -m $(APP_NAME).db load-test
 
 update-lambda: $(TFSTATE_FILE)

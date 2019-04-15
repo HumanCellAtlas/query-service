@@ -4,27 +4,14 @@ from mock import patch
 
 from dcpquery.etl import load_links, get_child_process_uuids, get_parent_process_uuids, create_process_file_links, \
     link_parent_and_child_processes
-from tests import vx_bundle, clear_views, truncate_tables, mock_links
-
-from dcpquery import config
+from tests import vx_bundle, mock_links
 
 
 class TestPostgresLoader(unittest.TestCase):
     _test_identifier = secrets.token_hex(16)
 
-    # loader = PostgresLoader(db)
-
     def setUp(self):
-        # assert (self.db._connection_uri == Config.test_database_uri and Config.test_database_uri.endswith('/test'))
         load_links(mock_links['links'])
-        # with self.db._connection.cursor() as cursor:
-        #     self._clear_tables(cursor)
-        #     self.loader._existing_view_names.clear()
-        # with self.db.transaction() as (_, tables):
-        #     self.loader._prepare_database(tables, vx_bundle)
-
-    def tearDown(self):
-        truncate_tables()
 
     @unittest.skip("WIP")
     def test_prepare_database(self):
