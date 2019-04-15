@@ -114,11 +114,11 @@ def clear_views(cursor):
         )
 
 
-def truncate_tables(cursor):
-    cursor.execute("TRUNCATE TABLE files CASCADE")
-    cursor.execute("TRUNCATE TABLE bundles CASCADE")
-    cursor.execute("TRUNCATE TABLE bundles_files CASCADE")
-    cursor.execute("TRUNCATE TABLE job_status CASCADE")
-    cursor.execute("TRUNCATE TABLE process_join_table CASCADE")
-    cursor.execute("TRUNCATE TABLE process_file_table CASCADE")
-    cursor.execute("TRUNCATE TABLE processes CASCADE")
+def truncate_tables():
+    # config.db_session.execute("TRUNCATE TABLE files CASCADE")
+    # config.db_session.execute("TRUNCATE TABLE bundles CASCADE")
+    # config.db_session.execute("TRUNCATE TABLE bundles_files CASCADE")
+    config.db_session.execute("TRUNCATE TABLE process_join_table CASCADE")
+    config.db_session.execute("TRUNCATE TABLE process_file_join_table CASCADE")
+    config.db_session.execute("TRUNCATE TABLE processes CASCADE")
+    config.db_session.commit()

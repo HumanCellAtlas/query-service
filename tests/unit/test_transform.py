@@ -1,11 +1,13 @@
 import json
 import unittest
 
+from dcpquery.etl import format_process_info
 from tests import vx_bundle, load_fixture, mock_links
 
 
 class TestTransform(unittest.TestCase):
 
+    @unittest.skip("WIP")
     def test_construct_documents(self):
         bundle_dict = {}  # BundleDocumentTransform.transform(vx_bundle)
         expected = json.loads(load_fixture('vx_bundle_document.json'))
@@ -22,8 +24,7 @@ class TestTransform(unittest.TestCase):
                                                   'b0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
                             'protocol_uuids': ['c0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                                'c0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa']}
-        process = {}  # BundleDocumentTransform.format_process_info(mock_links['links'][0])
-        self.maxDiff = None
+        process = format_process_info(mock_links['links'][0])
         self.assertDictEqual(process, expected_process)
 
 
