@@ -66,7 +66,10 @@ class DCPQueryConfig:
                 @sqlalchemy.event.listens_for(self._db, 'before_cursor_execute', retval=True)
                 def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
                     if statement.startswith("INSERT"):
-                        statement += " ON CONFLICT DO NOTHING"
+                        if "RETURNING" in statement:
+                            statement.replace("RETURNING", "ON CONFLICT DO NOTHING RETURNING")
+                        else:
+                            statement += " ON CONFLICT DO NOTHING"
                     return statement, parameters
 
         return self._db
