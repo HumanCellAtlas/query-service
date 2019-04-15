@@ -94,7 +94,7 @@ init-test-db:
 	python -m $(APP_NAME).db init-test-db
 
 load: init-db
-	python -m $(APP_NAME).db load0
+	python -m $(APP_NAME).db load
 
 load-test-data: init-test-db
 	python -m $(APP_NAME).db load-test

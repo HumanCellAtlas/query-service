@@ -2,6 +2,8 @@ import unittest, secrets
 from uuid import uuid4
 
 # from lib.etl.load import PostgresLoader
+from dcpquery.db import Process
+from dcpquery.etl import load_links
 from tests import vx_bundle, clear_views, truncate_tables, eventually, mock_links
 
 from dcpquery import config
@@ -21,17 +23,15 @@ class TestReadOnlyTransactions(unittest.TestCase):
         self.assertEqual(column_names, ['file_uuid', 'file_version', 'fqid', 'name', 'schema_type_id', 'json'])
 
 
-@unittest.skip("WIP")
 class TestPostgresLoader(unittest.TestCase):
 
     # db = PostgresDatabase(Config.test_database_uri)
     # loader = PostgresLoader(db)
 
     def setUp(self):
-        with self.db._connection.cursor() as cursor:
-            clear_views(cursor)
-            truncate_tables(cursor)
+        truncate_tables()
 
+    @unittest.skip("WIP")
     def test_insert_select(self):
         project_file = next(f for f in vx_bundle.files if f.metadata.name == 'project_0.json')
         process_file = next(f for f in vx_bundle.files if f.metadata.name == 'process_0.json')
@@ -147,6 +147,7 @@ class TestPostgresLoader(unittest.TestCase):
             parents = tables.process_links.list_direct_parent_process_uuids(process4_uuid)
             assert parents == [process1_uuid, process5_uuid]
 
+    @unittest.skip("WIP")
     def test_table_create_list(self):
         num_test_tables = 3
         test_table_names = [
@@ -175,61 +176,20 @@ class TestPostgresLoader(unittest.TestCase):
             with self.db.transaction() as (_, tables):
                 test_list(tables, 0)
 
-    def test_job_status_creation(self):
-        uuid = uuid4()
-        with self.db.transaction() as (cursor, tables):
-            row_count = tables.job_status.insert(uuid)
-            assert row_count == 1
-            job = tables.job_status.select(uuid)
-            assert job['status'] == 'CREATED'
-            job = tables.job_status.select_from_write_db(uuid)
-            assert job['status'] == 'CREATED'
-
-    def test_job_status_status_update(self):
-        uuid = uuid4()
-        with self.db.transaction() as (cursor, tables):
-            row_count = tables.job_status.insert(uuid)
-            assert row_count == 1
-            tables.job_status.update_job_status(uuid, 'COMPLETE')
-            job = tables.job_status.select(uuid)
-            assert job['status'] == 'COMPLETE'
-
-    def test_job_status_old_row_removal(self):
-        uuid = uuid4()
-        with self.db.transaction() as (cursor, tables):
-            tables.job_status.insert(uuid)
-            assert _get_job_status_row_count(tables) == 1
-
-            tables.job_status.delete_old_rows()
-            assert _get_job_status_row_count(tables) == 1
-
-            tables.job_status._cursor.execute("UPDATE job_status set created_at=NOW() - INTERVAL '91 days'")
-
-            tables.job_status.delete_old_rows()
-            assert _get_job_status_row_count(tables) == 0
-
     def test_get_all_parents(self):
-        with self.db.transaction() as (cursor, tables):
-            self.loader.load_links(tables, mock_links['links'])
+        load_links(mock_links['links'])
 
-            parent_processes = tables.process_links.list_all_parents('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-
+        parent_processes = Process.list_all_parent_processes('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_parents, parent_processes)
 
     def test_get_all_children(self):
-        with self.db.transaction() as (cursor, tables):
-            self.loader.load_links(tables, mock_links['links'])
-            child_processes = tables.process_links.list_all_children('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+        load_links(mock_links['links'])
+
+        child_processes = Process.list_all_child_processes('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                              'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_children, child_processes)
-
-
-def _get_job_status_row_count(tables):
-    tables.job_status._cursor.execute("SELECT COUNT(*) from job_status;")
-    response = tables.job_status._cursor.fetchall()
-    return response[0][0]
 
 
 if __name__ == '__main__':

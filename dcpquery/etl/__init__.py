@@ -81,7 +81,7 @@ def get_child_process_uuids(output_file_uuids):
         child_uuids = config.db_session.query(ProcessFileLink).with_entities(ProcessFileLink.process_uuid).filter(
             ProcessFileLink.file_uuid == file_uuid,
             ProcessFileLink.process_file_connection_type == 'INPUT_ENTITY').all()
-        children = children + [c[0] for c in child_uuids]
+        children = children + [child[0] for child in child_uuids]
     return list(set(children))
 
 
@@ -93,7 +93,7 @@ def get_parent_process_uuids(input_file_uuids):
             ProcessFileLink.process_file_connection_type == 'OUTPUT_ENTITY'
         ).all()
 
-        parents = parents + [p[0] for p in parent_uuids]
+        parents = parents + [parent[0] for parent in parent_uuids]
     return list(set(parents))
 
 
