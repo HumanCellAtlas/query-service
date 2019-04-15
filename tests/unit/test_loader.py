@@ -1,6 +1,6 @@
 import unittest, secrets
 
-from mock import patch
+from unittest.mock import patch
 
 from dcpquery.etl import load_links, get_child_process_uuids, get_parent_process_uuids, create_process_file_links, \
     link_parent_and_child_processes
