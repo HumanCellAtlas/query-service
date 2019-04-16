@@ -21,7 +21,7 @@ if args.db == "remote":
     config.local_mode = False
 
 if args.action == "init":
-    init_database(**vars(args))
+    init_database(dry_run=args.dry_run)
 elif args.action in {"load", "load-test"}:
     if args.action == "load":
         extractor_args = {}  # type: ignore

@@ -122,12 +122,8 @@ class ProcessProcessLink(SQLAlchemyBase):
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
 
 
-def init_database(db, dry_run=True, action="init"):
-    assert db in {"local", "remote"}
+def init_database(dry_run=True):
     from sqlalchemy_utils import database_exists, create_database
-
-    if db == "remote":
-        config.local_mode = False
 
     logger.info("Initializing database at %s", repr(config.db.url))
     if not database_exists(config.db.url):
