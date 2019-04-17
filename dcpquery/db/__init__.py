@@ -162,9 +162,7 @@ def create_recursive_process_functions_in_db():
     config.db_session.commit()
 
 
-def run_query(query, timeout_seconds=20, rows_per_page=100):
-    if config.db_statement_timeout_seconds != timeout_seconds:
-        config.reset_db_timeout_seconds(timeout_seconds)
+def run_query(query, rows_per_page=100):
     try:
         cursor = config.db_session.execute(query)
         hold = True

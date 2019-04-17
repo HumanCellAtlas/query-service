@@ -31,6 +31,7 @@ class TestEndpoints(TestChaliceApp):
     def test_query_endpoint_redirects_timeouts(self):
         config.reset_db_timeout_seconds(3)
         query = "select pg_sleep(5); select * from files limit 10"
+
         self.assertResponse("POST", "/v1/query", requests.codes.found, {"query": query})
         config.reset_db_timeout_seconds(20)
 

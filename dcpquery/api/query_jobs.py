@@ -1,4 +1,5 @@
 import os, sys, json
+
 import botocore, requests
 from dcplib import aws
 from flask import Response
@@ -44,7 +45,8 @@ def process_async_query(job_id, query):
     try:
         results = []
         total_result_size = 0
-        for result in run_query(query, timeout_seconds=880):
+        config.reset_db_timeout_seconds(880)
+        for result in run_query(query):
             total_result_size += len(json.dumps(result))
             results.append(result)
             if total_result_size > config.S3_SINGLE_UPLOAD_MAX_SIZE:

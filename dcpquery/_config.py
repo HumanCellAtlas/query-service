@@ -44,10 +44,11 @@ class DCPQueryConfig:
         return self._webhook_keys
 
     def reset_db_timeout_seconds(self, timeout_seconds):
-        self.db_statement_timeout_seconds = timeout_seconds
-        self._db_sessions.clear()
-        self._db_session_factory = None
-        self._db = None
+        if self.db_statement_timeout_seconds != timeout_seconds:
+            self.db_statement_timeout_seconds = timeout_seconds
+            self._db = None
+            self._db_session_factory = None
+            self._db_sessions.clear()
 
     @property
     def db(self):
