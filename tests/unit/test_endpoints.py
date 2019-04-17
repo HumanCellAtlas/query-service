@@ -2,6 +2,7 @@
 
 import json
 import unittest
+from contextlib import contextmanager
 
 from unittest.mock import patch
 
@@ -29,11 +30,10 @@ class TestEndpoints(TestChaliceApp):
         self.assertEqual(len(res.json['results']), 10)
 
     def test_query_endpoint_redirects_timeouts(self):
-        config.reset_db_timeout_seconds(3)
-        query = "select pg_sleep(5); select * from files limit 10"
+        with manage_query_timeout(3):
+            query = "select pg_sleep(5); select * from files limit 10"
 
-        self.assertResponse("POST", "/v1/query", requests.codes.found, {"query": query})
-        config.reset_db_timeout_seconds(20)
+            self.assertResponse("POST", "/v1/query", requests.codes.found, {"query": query})
 
     def test_query_endpoint_redirects_too_large_responses(self):
         config.API_GATEWAY_MAX_RESULT_SIZE = 10
@@ -108,6 +108,15 @@ class TestEndpoints(TestChaliceApp):
             'job_id': self.uuid,
             'status': 'COMPLETE',
             'presigned_url': 'www.ThisUrlShouldWork.com'})
+
+
+@contextmanager
+def manage_query_timeout(timeout_seconds):
+    resource = config.reset_db_timeout_seconds(timeout_seconds)
+    try:
+        yield resource
+    finally:
+        config.reset_db_timeout_seconds(20)
 
 
 if __name__ == '__main__':
