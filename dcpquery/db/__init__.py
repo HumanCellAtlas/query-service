@@ -165,13 +165,12 @@ def create_recursive_process_functions_in_db():
 def run_query(query, rows_per_page=100):
     try:
         cursor = config.db_session.execute(query)
-        hold = True
-        while hold:
+        while True:
             rows = cursor.fetchmany(size=rows_per_page)
             for row in rows:
                 yield row
             if not rows:
-                hold = False
+                break
 
     except sqlalchemy_exceptions.ProgrammingError as e:
         raise DCPQueryError(title=e.orig.pgerror, detail={"pgcode": e.orig.pgcode})

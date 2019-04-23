@@ -46,9 +46,12 @@ class DCPQueryConfig:
     def reset_db_timeout_seconds(self, timeout_seconds):
         if self.db_statement_timeout_seconds != timeout_seconds:
             self.db_statement_timeout_seconds = timeout_seconds
-            self._db = None
-            self._db_session_factory = None
-            self._db_sessions.clear()
+            self.reset_db_session()
+
+    def reset_db_session(self):
+        self._db = None
+        self._db_session_factory = None
+        self._db_sessions.clear()
 
     @property
     def db(self):

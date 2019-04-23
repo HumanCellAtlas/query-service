@@ -112,9 +112,9 @@ class TestEndpoints(TestChaliceApp):
 
 @contextmanager
 def manage_query_timeout(timeout_seconds):
-    resource = config.reset_db_timeout_seconds(timeout_seconds)
+    config.reset_db_timeout_seconds(timeout_seconds)
     try:
-        yield resource
+        yield
     finally:
         config.reset_db_timeout_seconds(20)
 

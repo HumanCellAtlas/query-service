@@ -18,8 +18,8 @@ def post(body):
         results = []
         total_result_size = 0
         for row in run_query(query):
-            result = {column: value for column, value in row.items()}
-            total_result_size += len(json.dumps(result, cls=JSONEncoder))
+            result = dict(row.items())
+            total_result_size += len(json.dumps(result, cls=JSONEncoder)) + 2
             results.append(result)
             if total_result_size > config.API_GATEWAY_MAX_RESULT_SIZE:
                 raise QuerySizeError()
