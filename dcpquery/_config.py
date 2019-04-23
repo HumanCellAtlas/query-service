@@ -61,7 +61,7 @@ class DCPQueryConfig:
             if self.local_mode:
                 db_user = getpass.getuser()
                 db_password = ""
-                db_host = "localhost"
+                db_host = ""
             else:
                 db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
                 db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
