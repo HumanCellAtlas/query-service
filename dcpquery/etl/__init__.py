@@ -17,7 +17,8 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
                   manifest=json.load(open(bundle_manifest_path)),
                   aggregate_metadata=defaultdict(list),
                   files=[])
-    for f in os.listdir(bundle_path):
+    bundle_fetched_files = os.listdir(bundle_path) if os.path.exists(bundle_path) else []
+    for f in bundle_fetched_files:
         if re.match(r"(.+)_(\d+).json", f):
             metadata_key, index = re.match(r"(.+)_(\d+).json", f).groups()
         elif re.match(r"(.+).json", f):
