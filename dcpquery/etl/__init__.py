@@ -53,7 +53,11 @@ def load_bundle(bundle, extractor, transformer):
         bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
     config.db_session.add_all(bf_links)
     config.db_session.commit()
-    load_links(metadata_links)
+    try:
+        load_links(metadata_links)
+    except Exception as e:
+        import warnings
+        warnings.warn("Error while loading links: {}".format(e))
 
 
 def load_links(links):
