@@ -8,6 +8,7 @@ from dcplib.etl import DSSExtractor
 
 from dcpquery import api, config
 from dcpquery.db import run_query
+from dcpquery.etl import etl_one_bundle
 from dcpquery.exceptions import DCPQueryError
 
 swagger_spec_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{os.environ["APP_NAME"]}-api.yml')
@@ -50,8 +51,7 @@ def bundle_event_handler(event):
         print("Processing:", record.body)
         if record["event_type"] != "CREATE":
             continue
-        # retrieve bundle using extractor (in-mem?)
-        print(DSSExtractor().get_files_to_fetch_for_bundle(**record["match"]))
+        etl_one_bundle(**record.body["match"])
 
 
 @app.on_sqs_message(queue=config.async_queries_queue_name)
