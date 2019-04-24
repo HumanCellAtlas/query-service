@@ -32,6 +32,7 @@ elif args.action in {"load", "load-test"}:
         extractor_args = {"query": {"query": {"match": {"uuid": "000f989a-bea2-46cb-9ec1-b4de8c292931"}}}}
 
     dss_client = DSSClient(swagger_url=args.dss_swagger_url)
-    DSSExtractor(staging_directory=".").extract(transformer=transform_bundle, loader=load_bundle, **extractor_args)
+    dss_extractor = DSSExtractor(staging_directory=".", dss_client=dss_client)
+    dss_extractor.extract(transformer=transform_bundle, loader=load_bundle, **extractor_args)
 elif args.action == "connect":
     os.execvp("psql", ["psql", str(config.db.url).replace("postgresql+psycopg2://", "postgres://")])
