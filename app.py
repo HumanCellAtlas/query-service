@@ -4,7 +4,6 @@ import boto3, requests, sqlalchemy
 from requests_http_signature import HTTPSignatureAuth
 from chalice import Chalice, Response
 from dcplib import aws
-from dcplib.etl import DSSExtractor
 
 from dcpquery import api, config
 from dcpquery.db import run_query
