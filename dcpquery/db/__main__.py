@@ -4,6 +4,7 @@ This module provides access to administrative commands for the DCP Query Service
 
 import os, sys, argparse, logging, json
 
+from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
 
 from .. import config
@@ -30,6 +31,8 @@ logging.basicConfig(level=logging.INFO)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("action", choices={"init", "load", "load-test", "connect"})
 parser.add_argument("--db", choices={"local", "remote"}, default="local")
+parser.add_argument("--dss-swagger-url",
+                    default=f"https://dss.{config.stage}.data.humancellatlas.org/v1/swagger.json")
 parser.add_argument("--dry-run", action="store_true", help="Print commands that would be executed without running them")
 parser.add_argument("--test-query", type=json.loads, default=default_test_query)
 args = parser.parse_args(sys.argv[1:])
@@ -45,6 +48,7 @@ elif args.action in {"load", "load-test"}:
     else:
         extractor_args = {"query": args.test_query}
 
+    dss_client = DSSClient(swagger_url=args.dss_swagger_url)
     DSSExtractor(staging_directory=".").extract(transformer=transform_bundle, loader=load_bundle, **extractor_args)
 elif args.action == "connect":
     os.execvp("psql", ["psql", str(config.db.url).replace("postgresql+psycopg2://", "postgres://")])
