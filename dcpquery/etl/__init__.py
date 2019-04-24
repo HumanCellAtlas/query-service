@@ -1,9 +1,11 @@
-import os, sys, re, json
+import os, sys, re, json, tempfile
 from collections import defaultdict
 from uuid import UUID
 
 import psycopg2
 from sqlalchemy.exc import IntegrityError
+from hca.dss import DSSClient
+from dcplib.etl import DSSExtractor
 
 from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink
@@ -157,3 +159,10 @@ def link_parent_and_child_processes(process):
 
     config.db_session.add_all(process_process_links)
     config.db_session.commit()
+
+
+def etl_one_bundle(bundle_uuid, bundle_version):
+    dss_client = DSSClient(swagger_url=f"https://{os.environ['DSS_HOST']}/v1/swagger.json")
+    extractor = DSSExtractor(staging_directory=tempfile.gettempdir(), dss_client=dss_client)
+    print(extractor.get_files_to_fetch_for_bundle(bundle_uuid=bundle_uuid, bundle_version=bundle_version))
+    # TODO: (akislyuk): implement etl_one_bundle
