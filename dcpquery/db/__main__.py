@@ -15,8 +15,7 @@ logging.basicConfig(level=logging.INFO)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("action", choices={"init", "load", "load-test", "connect"})
 parser.add_argument("--db", choices={"local", "remote"}, default="local")
-parser.add_argument("--dss-swagger-url",
-                    default=f"https://dss.{config.stage}.data.humancellatlas.org/v1/swagger.json")
+parser.add_argument("--dss-swagger-url", default=f"https://{config.dss_host}/v1/swagger.json")
 parser.add_argument("--dry-run", action="store_true", help="Print commands that would be executed without running them")
 args = parser.parse_args(sys.argv[1:])
 

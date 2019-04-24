@@ -11,6 +11,7 @@ class DCPQueryConfig:
     app_name = os.environ["APP_NAME"]
     app = None
     stage = os.environ["STAGE"]
+    dss_host = os.environ["DSS_HOST"]
     bundle_events_queue_name = os.environ["BUNDLE_EVENTS_QUEUE_NAME"]
     async_queries_queue_name = os.environ["ASYNC_QUERIES_QUEUE_NAME"]
     s3_bucket_name = os.environ["SERVICE_S3_BUCKET"]
