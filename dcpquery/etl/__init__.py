@@ -43,17 +43,17 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
 
 
 def load_bundle(bundle, extractor, transformer):
-    bf_links = []
+    bf_links, metadata_links = [], []
     bundle_row = Bundle(uuid=bundle["uuid"], version=bundle["version"], manifest=bundle["manifest"])
     for f in bundle["files"]:
         filename = f.pop("name")
         if filename == "links.json":
-            links = f['body']['links']
+            metadata_links = f['body']['links']
         file_row = File(**f)
         bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
     config.db_session.add_all(bf_links)
     config.db_session.commit()
-    load_links(links)
+    load_links(metadata_links)
 
 
 def load_links(links):
