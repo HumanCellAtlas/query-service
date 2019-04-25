@@ -11,6 +11,8 @@ class DCPQueryConfig:
     app_name = os.environ["APP_NAME"]
     app = None
     stage = os.environ["STAGE"]
+    API_GATEWAY_MAX_RESULT_SIZE = 8 * 1024 * 1024
+    S3_SINGLE_UPLOAD_MAX_SIZE = 64 * 1024 * 1024
     bundle_events_queue_name = os.environ["BUNDLE_EVENTS_QUEUE_NAME"]
     async_queries_queue_name = os.environ["ASYNC_QUERIES_QUEUE_NAME"]
     s3_bucket_name = os.environ["SERVICE_S3_BUCKET"]
@@ -40,6 +42,16 @@ class DCPQueryConfig:
             secret = AwsSecret(self.webhook_secret_name)
             self._webhook_keys = json.loads(secret.value)["hmac_keys"]
         return self._webhook_keys
+
+    def reset_db_timeout_seconds(self, timeout_seconds):
+        if self.db_statement_timeout_seconds != timeout_seconds:
+            self.db_statement_timeout_seconds = timeout_seconds
+            self.reset_db_session()
+
+    def reset_db_session(self):
+        self._db = None
+        self._db_session_factory = None
+        self._db_sessions.clear()
 
     @property
     def db(self):

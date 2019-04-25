@@ -11,3 +11,7 @@ class DatabaseError(DCPQueryError):
 
 class QueryTimeoutError(DatabaseError):
     pass
+
+
+class QuerySizeError(DatabaseError):
+    pass

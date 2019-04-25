@@ -27,10 +27,6 @@ class DCPQueryModelHelper:
             assert "fqid" not in kwargs
             kwargs["fqid"] = kwargs["uuid"] + "." + kwargs["version"]
         super().__init__(*args, **kwargs)
-        self.foo = 1
-
-    def bar(self):
-        return self.foo
 
 
 class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
@@ -167,13 +163,16 @@ def create_recursive_process_functions_in_db():
     config.db_session.commit()
 
 
-def run_query(query, timeout_seconds=20):
-    # TODO: pagination of results
-    # Warning: timeout_seconds is only effective once at startup when db is not yet initialized
-    if config.db_statement_timeout_seconds != timeout_seconds:
-        config.db_statement_timeout_seconds = timeout_seconds
+def run_query(query, rows_per_page=100):
     try:
-        return config.db_session.execute(query)
+        cursor = config.db_session.execute(query)
+        while True:
+            rows = cursor.fetchmany(size=rows_per_page)
+            for row in rows:
+                yield row
+            if not rows:
+                break
+
     except sqlalchemy_exceptions.ProgrammingError as e:
         raise DCPQueryError(title=e.orig.pgerror, detail={"pgcode": e.orig.pgcode})
     except sqlalchemy_exceptions.OperationalError as e:
