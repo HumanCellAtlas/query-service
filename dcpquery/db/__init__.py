@@ -4,7 +4,8 @@ This module provides a SQLAlchemy-based database schema for the DCP Query Servic
 import enum
 import os, sys, argparse, json, logging, typing
 
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions, text
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions, text, \
+    UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableDict
@@ -102,9 +103,13 @@ class ProcessFileLink(SQLAlchemyBase):
     __tablename__ = 'process_file_join_table'
     id = Column(Integer, primary_key=True)
     process_uuid = Column(UUID, ForeignKey("processes.process_uuid"))
-    process_file_connection_type = Column('value', Enum(ConnectionTypeEnum))
+    process_file_connection_type = Column(Enum(ConnectionTypeEnum))
     process = relationship(Process)
     file_uuid = Column(UUID)
+
+    __table_args__ = (UniqueConstraint
+                      ('process_uuid', 'process_file_connection_type', 'file_uuid',
+                       name='process_file_connection_type_uc'),)
 
     def get_most_recent_file(self):
         return config.db_session.query(File).filter(File.uuid == self.file_uuid).order_by(File.version.desc()).first()
@@ -159,6 +164,16 @@ def create_recursive_process_functions_in_db():
                             ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
                         SELECT * from recursive_table;
                         $$ LANGUAGE SQL;
+                    CREATE OR REPLACE RULE db_table_ignore_duplicate_inserts AS
+                        ON INSERT TO process_file_join_table
+                        WHERE EXISTS (
+                            SELECT 1
+                            FROM process_file_join_table
+                            WHERE process_uuid = NEW.process_uuid
+                            AND process_file_connection_type=NEW.process_file_connection_type
+                            AND file_uuid=NEW.file_uuid
+                        )
+                        DO INSTEAD NOTHING;
                     """)
     config.db_session.commit()
 

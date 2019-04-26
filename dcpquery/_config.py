@@ -72,7 +72,7 @@ class DCPQueryConfig:
                 db_host = AwsSecret(db_host_secret_name).value.strip()
             db_name = self.app_name
             self._db = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}",
-                                                **self._db_engine_params)
+                                                implicit_returning=False, **self._db_engine_params)
 
             if self._db_ignore_insert_conflicts:
                 @sqlalchemy.event.listens_for(self._db, 'before_cursor_execute', retval=True)
