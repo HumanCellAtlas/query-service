@@ -148,64 +148,22 @@ class ProcessProcessLink(SQLAlchemyBase):
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
 
 
-def init_database(dry_run=True):
-    from sqlalchemy_utils import database_exists, create_database
-
-    logger.info("Initializing database at %s", repr(config.db.url))
-    if not database_exists(config.db.url):
-        logger.info("Creating database")
-        create_database(config.db.url)
-    logger.info("Initializing database")
-
-    if dry_run:
-        config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
-    SQLAlchemyBase.metadata.create_all(config.db)
-    init_db = InitDB()
-    init_db.create_recursive_functions_in_db()
-    init_db.create_upsert_rules_in_db()
-
-
-# def create_recursive_process_functions_in_db():
-#     config.db_session.execute(f"""
-#                     CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
-#                         RETURNS TABLE(child_process UUID) as $$
-#                           WITH RECURSIVE recursive_table AS (
-#                             SELECT child_process_uuid FROM process_join_table
-#                             WHERE parent_process_uuid=$1
-#                             UNION
-#                             SELECT process_join_table.child_process_uuid FROM process_join_table
-#                             INNER JOIN recursive_table
-#                             ON process_join_table.parent_process_uuid = recursive_table.child_process_uuid)
-#                         SELECT * from recursive_table;
-#                         $$ LANGUAGE SQL;
-#
-#                     CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
-#                         RETURNS TABLE(parent_process UUID) as $$
-#                           WITH RECURSIVE recursive_table AS (
-#                             SELECT parent_process_uuid FROM process_join_table
-#                             WHERE child_process_uuid=$1
-#                             UNION
-#                             SELECT process_join_table.parent_process_uuid FROM process_join_table
-#                             INNER JOIN recursive_table
-#                             ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
-#                         SELECT * from recursive_table;
-#                         $$ LANGUAGE SQL;
-#                     CREATE OR REPLACE RULE db_table_ignore_duplicate_inserts AS
-#                         ON INSERT TO process_file_join_table
-#                         WHERE EXISTS (
-#                             SELECT 1
-#                             FROM process_file_join_table
-#                             WHERE process_uuid = NEW.process_uuid
-#                             AND process_file_connection_type=NEW.process_file_connection_type
-#                             AND file_uuid=NEW.file_uuid
-#                         )
-#                         DO INSTEAD NOTHING;
-#                         {self.upsert_process_file_link_sql}
-#                     """)
-#     config.db_session.commit()
-
-
 class InitDB:
+    def __init__(self, dry_run=True):
+        from sqlalchemy_utils import database_exists, create_database
+
+        logger.info("Initializing database at %s", repr(config.db.url))
+        if not database_exists(config.db.url):
+            logger.info("Creating database")
+            create_database(config.db.url)
+        logger.info("Initializing database")
+
+        if dry_run:
+            config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
+        SQLAlchemyBase.metadata.create_all(config.db)
+        self.create_recursive_functions_in_db()
+        self.create_upsert_rules_in_db()
+
     upsert_process_file_link_rule_sql = """
                         CREATE OR REPLACE RULE process_file_join_table_ignore_duplicate_inserts AS
                             ON INSERT TO process_file_join_table
