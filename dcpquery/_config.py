@@ -34,7 +34,6 @@ class DCPQueryConfig:
         "connect_args": {"options": ""}
     }
     _readonly_db = True
-    _db_ignore_insert_conflicts = True
 
     @property
     def webhook_keys(self):
@@ -73,16 +72,6 @@ class DCPQueryConfig:
             db_name = self.app_name
             self._db = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}",
                                                 implicit_returning=False, **self._db_engine_params)
-
-            if self._db_ignore_insert_conflicts:
-                @sqlalchemy.event.listens_for(self._db, 'before_cursor_execute', retval=True)
-                def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-                    if statement.startswith("INSERT"):
-                        if "RETURNING" in statement:
-                            statement.replace("RETURNING", "ON CONFLICT DO NOTHING RETURNING")
-                        else:
-                            statement += " ON CONFLICT DO NOTHING"
-                    return statement, parameters
 
         return self._db
 

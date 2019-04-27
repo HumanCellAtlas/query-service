@@ -114,6 +114,30 @@ class ProcessFileLink(SQLAlchemyBase):
     def get_most_recent_file(self):
         return config.db_session.query(File).filter(File.uuid == self.file_uuid).order_by(File.version.desc()).first()
 
+        self.upsert_process_file_link_sql = """
+        CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
+                        RETURNS TABLE(parent_process UUID) as $$
+                          WITH RECURSIVE recursive_table AS (
+                            SELECT parent_process_uuid FROM process_join_table
+                            WHERE child_process_uuid=$1
+                            UNION
+                            SELECT process_join_table.parent_process_uuid FROM process_join_table
+                            INNER JOIN recursive_table
+                            ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
+                        SELECT * from recursive_table;
+                        $$ LANGUAGE SQL;
+                    CREATE OR REPLACE RULE db_table_ignore_duplicate_inserts AS
+                        ON INSERT TO process_file_join_table
+                        WHERE EXISTS (
+                            SELECT 1
+                            FROM process_file_join_table
+                            WHERE process_uuid = NEW.process_uuid
+                            AND process_file_connection_type=NEW.process_file_connection_type
+                            AND file_uuid=NEW.file_uuid
+                        )
+                        DO INSTEAD NOTHING;
+        """
+
 
 class ProcessProcessLink(SQLAlchemyBase):
     __tablename__ = 'process_join_table'
@@ -136,46 +160,144 @@ def init_database(dry_run=True):
     if dry_run:
         config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
     SQLAlchemyBase.metadata.create_all(config.db)
-    create_recursive_process_functions_in_db()
+    init_db = InitDB()
+    init_db.create_recursive_functions_in_db()
+    init_db.create_upsert_rules_in_db()
 
 
-def create_recursive_process_functions_in_db():
-    config.db_session.execute("""
-                    CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
-                        RETURNS TABLE(child_process UUID) as $$
-                          WITH RECURSIVE recursive_table AS (
-                            SELECT child_process_uuid FROM process_join_table
-                            WHERE parent_process_uuid=$1
-                            UNION
-                            SELECT process_join_table.child_process_uuid FROM process_join_table
-                            INNER JOIN recursive_table
-                            ON process_join_table.parent_process_uuid = recursive_table.child_process_uuid)
-                        SELECT * from recursive_table;
-                        $$ LANGUAGE SQL;
+# def create_recursive_process_functions_in_db():
+#     config.db_session.execute(f"""
+#                     CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
+#                         RETURNS TABLE(child_process UUID) as $$
+#                           WITH RECURSIVE recursive_table AS (
+#                             SELECT child_process_uuid FROM process_join_table
+#                             WHERE parent_process_uuid=$1
+#                             UNION
+#                             SELECT process_join_table.child_process_uuid FROM process_join_table
+#                             INNER JOIN recursive_table
+#                             ON process_join_table.parent_process_uuid = recursive_table.child_process_uuid)
+#                         SELECT * from recursive_table;
+#                         $$ LANGUAGE SQL;
+#
+#                     CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
+#                         RETURNS TABLE(parent_process UUID) as $$
+#                           WITH RECURSIVE recursive_table AS (
+#                             SELECT parent_process_uuid FROM process_join_table
+#                             WHERE child_process_uuid=$1
+#                             UNION
+#                             SELECT process_join_table.parent_process_uuid FROM process_join_table
+#                             INNER JOIN recursive_table
+#                             ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
+#                         SELECT * from recursive_table;
+#                         $$ LANGUAGE SQL;
+#                     CREATE OR REPLACE RULE db_table_ignore_duplicate_inserts AS
+#                         ON INSERT TO process_file_join_table
+#                         WHERE EXISTS (
+#                             SELECT 1
+#                             FROM process_file_join_table
+#                             WHERE process_uuid = NEW.process_uuid
+#                             AND process_file_connection_type=NEW.process_file_connection_type
+#                             AND file_uuid=NEW.file_uuid
+#                         )
+#                         DO INSTEAD NOTHING;
+#                         {self.upsert_process_file_link_sql}
+#                     """)
+#     config.db_session.commit()
 
-                    CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
-                        RETURNS TABLE(parent_process UUID) as $$
-                          WITH RECURSIVE recursive_table AS (
-                            SELECT parent_process_uuid FROM process_join_table
-                            WHERE child_process_uuid=$1
-                            UNION
-                            SELECT process_join_table.parent_process_uuid FROM process_join_table
-                            INNER JOIN recursive_table
-                            ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
-                        SELECT * from recursive_table;
-                        $$ LANGUAGE SQL;
-                    CREATE OR REPLACE RULE db_table_ignore_duplicate_inserts AS
-                        ON INSERT TO process_file_join_table
-                        WHERE EXISTS (
-                            SELECT 1
-                            FROM process_file_join_table
-                            WHERE process_uuid = NEW.process_uuid
-                            AND process_file_connection_type=NEW.process_file_connection_type
-                            AND file_uuid=NEW.file_uuid
-                        )
-                        DO INSTEAD NOTHING;
-                    """)
-    config.db_session.commit()
+
+class InitDB:
+    upsert_process_file_link_rule_sql = """
+                        CREATE OR REPLACE RULE process_file_join_table_ignore_duplicate_inserts AS
+                            ON INSERT TO process_file_join_table
+                                WHERE EXISTS (
+                                  SELECT 1
+                                FROM process_file_join_table
+                                WHERE process_uuid = NEW.process_uuid
+                                AND process_file_connection_type=NEW.process_file_connection_type
+                                AND file_uuid=NEW.file_uuid
+                            )
+                            DO INSTEAD NOTHING;
+                        """
+    upsert_file_rule_sql = """
+                            CREATE OR REPLACE RULE file_table_ignore_duplicate_inserts AS
+                                ON INSERT TO files
+                                    WHERE EXISTS (
+                                      SELECT 1
+                                    FROM files
+                                    WHERE fqid = NEW.fqid
+                                )
+                                DO INSTEAD NOTHING;
+                            """
+    upsert_bundle_rule_sql = """
+                                CREATE OR REPLACE RULE bundle_table_ignore_duplicate_inserts AS
+                                    ON INSERT TO bundles
+                                        WHERE EXISTS (
+                                          SELECT 1
+                                        FROM bundles
+                                        WHERE fqid = NEW.fqid
+                                    )
+                                    DO INSTEAD NOTHING;
+                                """
+    upsert_bundle_file_link_rule_sql = """
+                                CREATE OR REPLACE RULE bundle_file_join_table_ignore_duplicate_inserts AS
+                                    ON INSERT TO bundle_file_links
+                                        WHERE EXISTS (
+                                          SELECT 1
+                                        FROM bundle_file_links
+                                        WHERE bundle_fqid = NEW.bundle_fqid
+                                        AND file_fqid = NEW.file_fqid
+                                    )
+                                    DO INSTEAD NOTHING;
+                                """
+    upsert_process_rule_sql = """
+                                    CREATE OR REPLACE RULE process_table_ignore_duplicate_inserts AS
+                                        ON INSERT TO processes
+                                            WHERE EXISTS (
+                                              SELECT 1
+                                            FROM processes
+                                            WHERE process_uuid = NEW.process_uuid
+                                        )
+                                        DO INSTEAD NOTHING;
+                                    """
+
+    get_all_children_function_sql = """
+                        CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
+                            RETURNS TABLE(child_process UUID) as $$
+                              WITH RECURSIVE recursive_table AS (
+                                SELECT child_process_uuid FROM process_join_table
+                                WHERE parent_process_uuid=$1
+                                UNION
+                                SELECT process_join_table.child_process_uuid FROM process_join_table
+                                INNER JOIN recursive_table
+                                ON process_join_table.parent_process_uuid = recursive_table.child_process_uuid)
+                            SELECT * from recursive_table;
+                            $$ LANGUAGE SQL;
+                                    """
+    get_all_parents_function_sql = """
+                        CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
+                            RETURNS TABLE(parent_process UUID) as $$
+                              WITH RECURSIVE recursive_table AS (
+                                SELECT parent_process_uuid FROM process_join_table
+                                WHERE child_process_uuid=$1
+                                UNION
+                                SELECT process_join_table.parent_process_uuid FROM process_join_table
+                                INNER JOIN recursive_table
+                                ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
+                            SELECT * from recursive_table;
+                            $$ LANGUAGE SQL;
+"""
+
+    def create_upsert_rules_in_db(cls):
+        config.db_session.execute(
+            cls.upsert_bundle_file_link_rule_sql + cls.upsert_bundle_rule_sql + cls.upsert_file_rule_sql
+        )
+        # TODO do I need to create an upsert rule for bundle_file_links or process_join_table?
+        config.db_session.execute(cls.upsert_process_file_link_rule_sql + cls.upsert_process_rule_sql)
+        config.db_session.commit()
+
+    def create_recursive_functions_in_db(cls):
+        config.db_session.execute(cls.get_all_children_function_sql + cls.get_all_parents_function_sql)
+        config.db_session.commit()
 
 
 def run_query(query, rows_per_page=100):
