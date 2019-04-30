@@ -13,7 +13,6 @@ addons:
     - postgresql-10
     - postgresql-client-10
     - moreutils
-    - strip-nondeterminism
 
 services:
   - postgresql
