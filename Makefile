@@ -54,7 +54,7 @@ package:
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
 	$(MAKE) build-chalice-config
 	chalice package --stage $(STAGE) dist
-	cd dist; mkdir d; cd d; unzip ../deployment.zip; zip -X -r ../dd.zip .
+	cd dist; mkdir d; cd d; unzip -q -o ../deployment.zip; zip -X -r ../dd.zip .
 	strip-nondeterminism dd.zip
 	md5sum dd.zip
 
