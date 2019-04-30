@@ -58,7 +58,6 @@ package:
 	find dist/deployment -exec touch -t 201901010000 {} \;
 	rm dist/deployment.zip
 	cd dist/deployment; zip -q -X -r ../deployment.zip .
-	strip-nondeterminism dist/deployment.zip
 	md5sum dist/deployment.zip
 
 prune:
