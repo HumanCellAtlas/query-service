@@ -31,7 +31,8 @@ class DCPQueryConfig:
     _webhook_keys = None
     _db_engine_params = {
         "echo": True,
-        "connect_args": {"options": ""}
+        "connect_args": {"options": ""},
+        "implicit_returning": False
     }
     _readonly_db = True
 
@@ -71,7 +72,7 @@ class DCPQueryConfig:
                 db_host = AwsSecret(db_host_secret_name).value.strip()
             db_name = self.app_name
             self._db = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}",
-                                                implicit_returning=False, **self._db_engine_params)
+                                                **self._db_engine_params)
 
         return self._db
 

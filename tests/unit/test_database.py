@@ -1,8 +1,9 @@
+import sqlalchemy
 import unittest, secrets
 from uuid import uuid4
 
 # from lib.etl.load import PostgresLoader
-from dcpquery.db import Process
+from dcpquery.db import Process, File, DCPQueryDBManager, Bundle, ProcessFileLink, BundleFileLink
 from dcpquery.etl import load_links
 from tests import vx_bundle, clear_views, truncate_tables, eventually, mock_links
 
@@ -184,6 +185,126 @@ class TestPostgresLoader(unittest.TestCase):
         expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                              'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_children, child_processes)
+
+
+# Note: these tests alters global state and so may not play well with other concurrent tests/operations
+class TestDBRules(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.uuid = "a309af02-0888-4184-bcf2-5971dec9e8ab"
+        cls.version = "2018-09-06T190237.485774Z"
+        config.db_session.add(File(uuid=cls.uuid, version=cls.version))
+        config.db_session.add(Bundle(uuid=cls.uuid, version=cls.version))
+        config.db_session.add(Process(process_uuid=cls.uuid))
+        config.db_session.add(ProcessFileLink(
+            process_uuid=cls.uuid, file_uuid=cls.uuid, process_file_connection_type="INPUT_ENTITY")
+        )
+        config.db_session.add(
+            BundleFileLink(bundle_fqid=cls.uuid + "." + cls.version, file_fqid=cls.uuid + "." + cls.version, name='boo')
+        )
+        config.db_session.commit()
+
+        # remove rules
+        config.db_session.execute("DROP RULE file_table_ignore_duplicate_inserts ON files;")
+        config.db_session.execute("DROP RULE bundle_table_ignore_duplicate_inserts ON bundles;")
+        config.db_session.execute("DROP RULE process_table_ignore_duplicate_inserts ON processes;")
+        config.db_session.execute(
+            "DROP RULE process_file_join_table_ignore_duplicate_inserts ON process_file_join_table;"
+        )
+        config.db_session.execute("DROP RULE bundle_file_join_table_ignore_duplicate_inserts ON bundle_file_links;")
+        config.db_session.commit()
+
+    #
+    @classmethod
+    def tearDownClass(cls):
+        config.db_session.rollback()
+        DCPQueryDBManager().create_upsert_rules_in_db()
+
+    def test_file_table_rule(self):
+        # Test db throws an error without rule
+        with self.assertRaises(sqlalchemy.exc.IntegrityError):
+            config.db_session.add(File(uuid=self.uuid, version=self.version))
+            config.db_session.commit()
+        config.db_session.rollback()
+
+        # add rule
+        config.db_session.execute(DCPQueryDBManager.file_ignore_duplicate_rule_sql)
+        config.db_session.commit()
+
+        # try to add duplicate file, check no error thrown
+        config.db_session.add(File(uuid=self.uuid, version=self.version))
+        config.db_session.commit()
+
+    def test_bundle_table_rule(self):
+        with self.assertRaises(sqlalchemy.exc.IntegrityError):
+            config.db_session.add(Bundle(uuid=self.uuid, version=self.version))
+            config.db_session.commit()
+        config.db_session.rollback()
+
+        # add rule
+        config.db_session.execute(DCPQueryDBManager.bundle_ignore_duplicate_rule_sql)
+        config.db_session.commit()
+
+        # try to add duplicate file, check no error thrown
+        config.db_session.add(Bundle(uuid=self.uuid, version=self.version))
+        config.db_session.commit()
+
+    def test_process_table_rule(self):
+        with self.assertRaises(sqlalchemy.exc.IntegrityError):
+            config.db_session.add(Process(process_uuid=self.uuid))
+            config.db_session.commit()
+        config.db_session.rollback()
+
+        # add rule
+        config.db_session.execute(DCPQueryDBManager.process_ignore_duplicate_rule_sql)
+        config.db_session.commit()
+
+        # try to add duplicate file, check no error thrown
+        config.db_session.add(Process(process_uuid=self.uuid))
+        config.db_session.commit()
+
+    def test_process_file_link_table_rule(self):
+        with self.assertRaises(sqlalchemy.exc.IntegrityError):
+            config.db_session.add(ProcessFileLink(
+                process_uuid=self.uuid, file_uuid=self.uuid, process_file_connection_type="INPUT_ENTITY")
+            )
+            config.db_session.commit()
+        config.db_session.rollback()
+
+        # add rule
+        config.db_session.execute(DCPQueryDBManager.process_file_link_ignore_duplicate_rule_sql)
+        config.db_session.commit()
+
+        # try to add duplicate file, check no error thrown
+        config.db_session.add(ProcessFileLink(
+            process_uuid=self.uuid, file_uuid=self.uuid, process_file_connection_type="INPUT_ENTITY")
+        )
+        config.db_session.commit()
+
+    def test_bundle_file_link_table_rule(self):
+        with self.assertRaises(sqlalchemy.exc.IntegrityError):
+            config.db_session.add(
+                BundleFileLink(
+                    bundle_fqid=self.uuid + "." + self.version,
+                    file_fqid=self.uuid + "." + self.version,
+                    name='boo'
+                )
+            )
+            config.db_session.commit()
+        config.db_session.rollback()
+
+        # add rule
+        config.db_session.execute(DCPQueryDBManager.bundle_file_link_ignore_duplicate_rule_sql)
+        config.db_session.commit()
+
+        # try to add duplicate file, check no error thrown
+        config.db_session.add(
+            BundleFileLink(
+                bundle_fqid=self.uuid + "." + self.version,
+                file_fqid=self.uuid + "." + self.version, name='boo'
+            )
+        )
+        config.db_session.commit()
 
 
 if __name__ == '__main__':

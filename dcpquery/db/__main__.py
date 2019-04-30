@@ -8,7 +8,7 @@ from dcplib.etl import DSSExtractor
 
 from .. import config
 from ..etl import transform_bundle, load_bundle
-from . import InitDB
+from . import DCPQueryDBManager
 
 logging.basicConfig(level=logging.INFO)
 parser = argparse.ArgumentParser(description=__doc__)
@@ -21,7 +21,7 @@ if args.db == "remote":
     config.local_mode = False
 
 if args.action == "init":
-    InitDB(dry_run=args.dry_run)
+    DCPQueryDBManager().init_db(dry_run=args.dry_run)
 elif args.action in {"load", "load-test"}:
     if args.action == "load":
         extractor_args = {}  # type: ignore
