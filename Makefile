@@ -54,6 +54,9 @@ package:
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
 	$(MAKE) build-chalice-config
 	chalice package --stage $(STAGE) dist
+	cd dist; mkdir d; cd d; unzip ../deployment.zip; zip -X -r ../dd.zip .
+	strip-nondeterminism dd.zip
+	md5sum dd.zip
 
 prune:
 	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*

@@ -13,6 +13,7 @@ addons:
     - postgresql-10
     - postgresql-client-10
     - moreutils
+    - strip-nondeterminism
 
 services:
   - postgresql
@@ -33,7 +34,8 @@ before_script:
   - make build-chalice-config init-db load-test-data
 
 script:
-  - make test
+  - make package
+#  - make test
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
