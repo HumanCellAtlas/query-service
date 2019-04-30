@@ -48,7 +48,7 @@ requests-oauthlib==1.2.0
 rsa==3.4.2
 s3transfer==0.2.0
 six==1.12.0
-SQLAlchemy==1.3.3
+#SQLAlchemy==1.3.3
 swagger-ui-bundle==0.0.3
 tenacity==5.0.4
 tweak==1.0.2
