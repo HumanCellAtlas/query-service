@@ -34,6 +34,7 @@ before_script:
 
 script:
   - make package
+  - aws s3 cp dist/deployment.zip s3://akislyuk-experiments/deployment-${TRAVIS_BUILD_NUMBER}.zip
 #  - make test
 
 after_success:
