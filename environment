@@ -22,6 +22,7 @@ WEBHOOK_SECRET_NAME=${APP_NAME}/${STAGE}/webhook-auth-config
 # Set DEBUG=2 to change the log level to DEBUG and cause stack traces to appear in error responses.
 DEBUG=1
 
+# This is set for build reproducibility
 PYTHONHASHSEED=0
 
 TFSTATE_FILE=.terraform/remote.tfstate
