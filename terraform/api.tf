@@ -75,4 +75,22 @@ resource "aws_api_gateway_base_path_mapping" "api_bpm" {
 resource "aws_s3_bucket" "query_service_bucket" {
   bucket = "${var.APP_NAME}-${var.STAGE}-${var.AWS_ACCOUNT_ID}"
   acl    = "private"
+
+  lifecycle_rule {
+    id = "job_result_docs"
+    enabled = true
+    prefix = "job_result/"
+    expiration {
+      days = 30
+    }
+  }
+
+  lifecycle_rule {
+    id = "job_status_docs"
+    enabled = true
+    prefix = "job_status/"
+    expiration {
+      days = 30
+    }
+  }
 }
