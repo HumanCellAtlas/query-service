@@ -51,6 +51,8 @@ package:
 	rm -rf vendor
 	mkdir vendor
 	cp -a $(APP_NAME) $(APP_NAME)-api.yml vendor
+	find vendor -name '*.pyc' -delete
+	find vendor -exec touch -t 201901010000 {} \;
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
 	$(MAKE) build-chalice-config
 	chalice package --stage $(STAGE) dist
