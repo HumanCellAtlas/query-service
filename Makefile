@@ -58,7 +58,9 @@ package:
 	find dist/deployment -exec touch -t 201901010000 {} \;
 	rm dist/deployment.zip
 	cd dist/deployment; zip -q -X -r ../deployment.zip .
+	/bin/ls -l dist/deployment.zip
 	md5sum dist/deployment.zip
+	aws s3 cp dist/deployment.zip s3://akislyuk-experiments
 
 prune:
 	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
