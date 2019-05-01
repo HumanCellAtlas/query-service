@@ -47,6 +47,8 @@ build-chalice-config:
 	cd .chalice; jq .stages.$(STAGE).tags.service=env.APP_NAME config.json | sponge config.json
 	cd .chalice; jq .stages.$(STAGE).tags.owner=env.OWNER config.json | sponge config.json
 
+# package prepares a Lambda zipfile with the help of the Chalice packager (which also emits a SAM template).
+# We also inject any wheels found in vendor.in, and rewrite the zipfile to make the build reproducible.
 package:
 	rm -rf vendor
 	mkdir vendor
@@ -60,8 +62,6 @@ package:
 	find dist/deployment -exec touch -t 201901010000 {} \;
 	rm dist/deployment.zip
 	cd dist/deployment; zip -q -X -r ../deployment.zip .
-	/bin/ls -l dist/deployment.zip
-	md5sum dist/deployment.zip
 
 prune:
 	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*

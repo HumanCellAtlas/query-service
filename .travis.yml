@@ -33,9 +33,7 @@ before_script:
   - make build-chalice-config init-db load-test-data
 
 script:
-  - make package
-  - aws s3 cp dist/deployment.zip s3://akislyuk-experiments/deployment-${TRAVIS_BUILD_NUMBER}.zip
-#  - make test
+  - make test
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
