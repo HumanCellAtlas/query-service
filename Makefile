@@ -60,7 +60,8 @@ package:
 	cd dist/deployment; zip -q -X -r ../deployment.zip .
 	/bin/ls -l dist/deployment.zip
 	md5sum dist/deployment.zip
-	aws s3 cp dist/deployment.zip s3://akislyuk-experiments
+	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
+	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip
 
 prune:
 	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
