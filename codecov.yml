@@ -4,4 +4,4 @@ coverage:
       default:
         threshold: 2.5%
 
-  comment: off
+comment: off
