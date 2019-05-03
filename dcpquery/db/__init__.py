@@ -5,7 +5,7 @@ import enum
 import os, sys, argparse, json, logging, typing
 
 from sqlalchemy import (Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions,
-                        UniqueConstraint)
+                        UniqueConstraint, BigInteger)
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableDict
@@ -40,11 +40,10 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
     files = relationship("File", secondary='bundle_file_links')
 
 
-class SchemaType(SQLAlchemyBase):
-    __tablename__ = 'schema_types'
-    id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True)
-    files = relationship("File", back_populates='schema_type')
+class DCPMetadataSchemaType(SQLAlchemyBase):
+    __tablename__ = 'dcp_metadata_schema_type'
+    name = Column(String, primary_key=True, nullable=False)
+    files = relationship("File", back_populates='dcp_schema_type')
 
 
 class File(DCPQueryModelHelper, SQLAlchemyBase):
@@ -52,11 +51,12 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     fqid = Column(String, primary_key=True, unique=True, nullable=False)
     uuid = Column(UUID, nullable=False)
     version = Column(DateTime, nullable=False)
-    schema_type_id = Column(Integer, ForeignKey("schema_types.id"))
-    schema_type = relationship("SchemaType", back_populates="files")
+    dcp_schema_type_name = Column(String, ForeignKey("dcp_metadata_schema_type.name"))
+    dcp_schema_type = relationship("DCPMetadataSchemaType", back_populates="files")
     body = Column(MutableDict.as_mutable(JSONB))
     content_type = Column(String)
-    size = Column(Integer)
+    size = Column(BigInteger)
+    extension = Column(String)
 
 
 class BundleFileLink(SQLAlchemyBase):

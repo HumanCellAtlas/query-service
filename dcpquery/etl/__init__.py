@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import os, sys, re, json, tempfile
 from collections import defaultdict
 from uuid import UUID
@@ -6,9 +7,13 @@ import psycopg2
 from sqlalchemy.exc import IntegrityError
 from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
+=======
+import os, re, json
+from collections import defaultdict
+>>>>>>> Add file extension field, ensure schema type transformation and load works, change size to bigint (bug) and create view tables
 
 from .. import config
-from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink
+from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType
 
 
 def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor=None):
@@ -41,9 +46,12 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
                                             content_type=fm["content-type"],
                                             name=fm["name"],
                                             size=fm["size"]))
+
+    combine_file_data(result)
     return result
 
 
+<<<<<<< HEAD
 def load_bundle(bundle, extractor=None, transformer=None):
     bf_links = []
     bundle_row = Bundle(uuid=bundle["uuid"],
@@ -59,6 +67,92 @@ def load_bundle(bundle, extractor=None, transformer=None):
     config.db_session.add_all(bf_links)
     config.db_session.commit()
     load_links(metadata_links)
+=======
+def combine_file_data(bundle):
+    """"
+    This function takes in a bundle and combines the data contained in bundle['manifest']['files'] with the
+    data contained in bundle['files'] into a combined_file_data dict based on the file_uuid.
+    """
+    file_data = {}
+    for f in bundle['manifest']['files']:
+        uuid = f['uuid']
+        file_data[uuid] = f
+
+    for f in bundle['files']:
+        uuid = f['uuid']
+        file_data[uuid] = {**f, **file_data[uuid]}
+    for uuid in file_data:
+        file_ = file_data[uuid]
+        filename = file_['name']
+        file_['file_extension'] = get_file_extension(filename)
+        if 'body' not in file_:
+            file_['body'] = {'schema_type': None}
+    bundle['combined_file_data'] = file_data
+
+
+def get_file_extension(filename):
+    try:
+        regex_search_result = re.search('^(?:(?:.){1,}?)((?:[.][a-z]{1,10}){1,2})$', filename)
+        file_extension = regex_search_result.group(1)
+    except AttributeError:
+        file_extension = None
+    return file_extension
+
+
+class BundleLoader:
+    def __init__(self):
+        schema_types = config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()
+        self.schema_types = [schema[0] for schema in schema_types]
+
+    def register_dcp_metadata_schema_type(self, schema_type):
+        if schema_type and schema_type not in self.schema_types:
+            schema = DCPMetadataSchemaType(name=schema_type)
+            config.db_session.add(schema)
+            config.db_session.commit()
+            self.schema_types.append(schema_type)
+
+    def load_bundle(self, bundle, extractor, transformer):
+        bf_links = []
+        bundle_row = Bundle(uuid=bundle["uuid"], version=bundle["version"], manifest=bundle["manifest"])
+
+        for uuid in bundle['combined_file_data']:
+            file_data = bundle['combined_file_data'][uuid]
+            filename = file_data.pop("name")
+            file_extension = file_data.pop("file_extension")
+
+            if filename == "links.json":
+                links = file_data['body']['links']
+                load_links(links)
+
+            self.register_dcp_metadata_schema_type(file_data['body']['schema_type'])
+            file_row = File(
+                uuid=file_data['uuid'],
+                version=file_data['version'],
+                content_type=file_data['content-type'],
+                size=file_data['size'],
+                extension=str(file_extension),
+                body=file_data['body'],
+                dcp_schema_type_name=file_data['body']['schema_type']
+            )
+
+            bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
+        config.db_session.add_all(bf_links)
+        config.db_session.commit()
+
+
+def create_view_tables(extractor):
+    schema_types = [schema[0] for schema in
+                    config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()]
+    for schema_type in schema_types:
+        config.db_session.execute(
+            f"""
+              CREATE OR REPLACE VIEW {schema_type} AS
+              SELECT f.* FROM files as f
+              JOIN dcp_metadata_schema_type as m on f.dcp_schema_type_name = '{schema_type}'
+            """
+        )
+    config.db_session.commit()
+>>>>>>> Add file extension field, ensure schema type transformation and load works, change size to bigint (bug) and create view tables
 
 
 def load_links(links):
