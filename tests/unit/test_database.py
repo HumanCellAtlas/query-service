@@ -214,7 +214,6 @@ class TestDBRules(unittest.TestCase):
         config.db_session.execute("DROP RULE bundle_file_join_table_ignore_duplicate_inserts ON bundle_file_links;")
         config.db_session.commit()
 
-    #
     @classmethod
     def tearDownClass(cls):
         config.db_session.rollback()
