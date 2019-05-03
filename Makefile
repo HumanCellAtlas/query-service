@@ -92,6 +92,9 @@ fetch:
 init-db:
 	python -m $(APP_NAME).db init
 
+drop-db:
+	python -m $(APP_NAME).db drop
+
 load: init-db
 	python -m $(APP_NAME).db load
 
