@@ -7,7 +7,7 @@ import os, sys, argparse, logging, json
 from dcplib.etl import DSSExtractor
 
 from .. import config
-from ..etl import transform_bundle, load_bundle
+from ..etl import transform_bundle, BundleLoader, create_view_tables
 from . import DCPQueryDBManager
 
 fmi_test_query = {
@@ -45,6 +45,10 @@ elif args.action in {"load", "load-test"}:
     else:
         extractor_args = {"query": args.test_query}
 
-    DSSExtractor(staging_directory=".").extract(transformer=transform_bundle, loader=load_bundle, **extractor_args)
+    DSSExtractor(staging_directory=".").extract(
+        transformer=transform_bundle,
+        loader=BundleLoader().load_bundle,
+        finalizer=create_view_tables,
+        **extractor_args)
 elif args.action == "connect":
     os.execvp("psql", ["psql", str(config.db.url).replace("postgresql+psycopg2://", "postgres://")])
