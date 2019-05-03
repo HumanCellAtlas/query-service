@@ -5,6 +5,8 @@ variables:
   AWS_DEFAULT_OUTPUT: json
   DEBIAN_FRONTEND: noninteractive
   TERRAFORM_VERSION: 0.11.13
+  LC_ALL: C.UTF-8
+  LANG: C.UTF-8
 
 stages:
   - test
