@@ -12,7 +12,7 @@ from . import DCPQueryDBManager
 
 logging.basicConfig(level=logging.INFO)
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("action", choices={"init", "load", "load-test", "connect"})
+parser.add_argument("action", choices={"init", "drop", "load", "load-test", "connect"})
 parser.add_argument("--db", choices={"local", "remote"}, default="local")
 parser.add_argument("--dry-run", action="store_true", help="Print commands that would be executed without running them")
 args = parser.parse_args(sys.argv[1:])
@@ -22,6 +22,8 @@ if args.db == "remote":
 
 if args.action == "init":
     DCPQueryDBManager().init_db(dry_run=args.dry_run)
+elif args.action == "drop":
+    DCPQueryDBManager().drop_db(dry_run=args.dry_run)
 elif args.action in {"load", "load-test"}:
     if args.action == "load":
         extractor_args = {}  # type: ignore

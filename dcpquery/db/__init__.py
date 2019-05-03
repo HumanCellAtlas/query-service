@@ -220,19 +220,27 @@ class DCPQueryDBManager:
             $$ LANGUAGE SQL;
     """
 
-    def create_upsert_rules_in_db(cls):
+    def create_upsert_rules_in_db(self):
         config.db_session.execute(
-            cls.bundle_file_link_ignore_duplicate_rule_sql + cls.bundle_ignore_duplicate_rule_sql
+            self.bundle_file_link_ignore_duplicate_rule_sql + self.bundle_ignore_duplicate_rule_sql
         )
         config.db_session.execute(
-            cls.process_file_link_ignore_duplicate_rule_sql + cls.process_ignore_duplicate_rule_sql
+            self.process_file_link_ignore_duplicate_rule_sql + self.process_ignore_duplicate_rule_sql
         )
-        config.db_session.execute(cls.file_ignore_duplicate_rule_sql)
+        config.db_session.execute(self.file_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
-    def create_recursive_functions_in_db(cls):
-        config.db_session.execute(cls.get_all_children_function_sql + cls.get_all_parents_function_sql)
+    def create_recursive_functions_in_db(self):
+        config.db_session.execute(self.get_all_children_function_sql + self.get_all_parents_function_sql)
         config.db_session.commit()
+
+    def drop_db(self, dry_run=True):
+        from sqlalchemy_utils import database_exists, drop_database
+        if database_exists(config.db.url):
+            if dry_run:
+                logger.critical("Would drop database %s", config.db.url)
+            else:
+                drop_database(config.db.url)
 
 
 def run_query(query, rows_per_page=100):
