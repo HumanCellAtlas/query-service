@@ -33,8 +33,8 @@ if [[ -z "$AWS_DEFAULT_REGION" ]]; then
     AWS_DEFAULT_REGION=$(aws configure get region)
 fi
 
-OWNER=$(aws sts get-caller-identity | jq -r .Arn)
-AWS_ACCOUNT_ID=$(echo "$OWNER" | cut -f 5 -d :)
+OWNER=query-service-team@data.humancellatlas.org
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity | jq -r .Account)
 TF_S3_BUCKET=tfstate-$AWS_ACCOUNT_ID
 SERVICE_S3_BUCKET="$APP_NAME-$STAGE-$AWS_ACCOUNT_ID"
 
