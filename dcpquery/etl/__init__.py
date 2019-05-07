@@ -41,7 +41,10 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
 
 def load_bundle(bundle, extractor, transformer):
     bf_links = []
-    bundle_row = Bundle(uuid=bundle["uuid"], version=bundle["version"], manifest=bundle["manifest"])
+    bundle_row = Bundle(uuid=bundle["uuid"],
+                        version=bundle["version"],
+                        manifest=bundle["manifest"],
+                        aggregate_metadata=bundle["aggregate_metadata"])
     for f in bundle["files"]:
         filename = f.pop("name")
         if filename == "links.json":
