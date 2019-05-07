@@ -10,6 +10,14 @@ from .. import config
 from ..etl import transform_bundle, load_bundle
 from . import DCPQueryDBManager
 
+fmi_test_query = {
+    "query": {
+        "match": {
+            "files.project_json.project_core.project_short_name": "Fetal/Maternal Interface"
+        }
+    }
+}
+
 default_test_query = {
     "query": {
         "match": {
