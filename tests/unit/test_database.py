@@ -20,6 +20,7 @@ class TestReadOnlyTransactions(unittest.TestCase):
         row = next(config.db.execute("SELECT * FROM FILES;"))
         expected_column_names = ['fqid', 'uuid', 'version', 'dcp_schema_type_name', 'body', 'content_type', 'size',
                                  'extension']
+
         self.assertEqual(list(dict(row).keys()), expected_column_names)
 
 
@@ -28,21 +29,20 @@ class TestPostgresLoader(unittest.TestCase):
     process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
 
     def test_insert_select_file(self):
-
         # insert files
-        config.db_session.add_all([self.project_file, self.process_file])
+        config.db_session.add_all([project_file, process_file])
         config.db_session.commit()
 
         # select files
-        res = config.db_session.query(File).filter(File.uuid == self.project_file.uuid,
-                                                   File.version == self.project_file.version)
+        res = config.db_session.query(File).filter(File.uuid==project_file.uuid,
+                                                   File.version==project_file.version)
         result = list(res)
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].uuid, self.project_file.uuid)
-        self.assertEqual(result[0].version, self.project_file.version)
-        expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[0].fqid, f"{self.project_file.uuid}.{expect_version}")
-        self.assertEqual(result[0].body, self.project_file.body)
+        self.assertEqual(result[0].uuid, project_file.uuid)
+        self.assertEqual(result[0].version, project_file.version)
+        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[0].fqid, f"{project_file.uuid}.{expect_version}")
+        self.assertEqual(result[0].body, project_file.body)
 
     def test_insert_select_bundle(self):
         # insert bundle
