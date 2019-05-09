@@ -31,7 +31,7 @@ def upgrade():
                     sa.Column('process_uuid', postgresql.UUID(), nullable=False),
                     sa.PrimaryKeyConstraint('process_uuid')
                     )
-    op.create_table('schema_types',
+    op.create_table('dcp_metadata_schema_types',
                     sa.Column('name', sa.String(), nullable=False),
                     sa.PrimaryKeyConstraint('name')
                     )
@@ -39,12 +39,12 @@ def upgrade():
                     sa.Column('fqid', sa.String(), nullable=False),
                     sa.Column('uuid', postgresql.UUID(), nullable=False),
                     sa.Column('version', sa.DateTime(), nullable=False),
-                    sa.Column('schema_type_name', sa.String(), nullable=True),
+                    sa.Column('dcp_schema_type_name', sa.String(), nullable=True),
                     sa.Column('body', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
                     sa.Column('content_type', sa.String(), nullable=True),
                     sa.Column('size', sa.BigInteger(), nullable=True),
                     sa.Column('extension', sa.String(), nullable=True),
-                    sa.ForeignKeyConstraint(['schema_type_name'], ['schema_types.name'], ),
+                    sa.ForeignKeyConstraint(['dcp_schema_type_name'], ['dcp_metadata_schema_types.name'], ),
                     sa.PrimaryKeyConstraint('fqid'),
                     sa.UniqueConstraint('fqid')
                     )

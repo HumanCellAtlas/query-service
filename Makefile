@@ -102,6 +102,7 @@ fetch:
 
 init-db:
 	python -m $(APP_NAME).db init
+	$(MAKE) apply-migrations
 
 drop-db:
 	python -m $(APP_NAME).db drop
@@ -143,9 +144,11 @@ requirements-dev.txt : requirements.txt.in
 docs:
 	$(MAKE) -C docs html
 
-migration:
+# create a migration file for changes made to db table definitions inheriting from the SQLAlchemyBase in dcpquery/db
+create-migration:
 	alembic revision --autogenerate
 
+# apply all migration files to the database
 apply-migrations:
 	alembic upgrade head
 

@@ -10,7 +10,7 @@ from dcplib.etl import DSSExtractor
 from .. import config
 from ..etl import transform_bundle, BundleLoader, create_view_tables
 
-from . import init_db, DCPQueryDBManager
+from . import init_db, drop_db
 
 fmi_test_query = {
     "query": {
@@ -44,10 +44,11 @@ if args.db == "remote":
 if args.action is None:
     parser.print_help()
     parser.exit()
-elif args.action == "init":
-    DCPQueryDBManager().init_db(dry_run=args.dry_run)
+
+if args.action == "init":
+    init_db(dry_run=args.dry_run)
 elif args.action == "drop":
-    DCPQueryDBManager().drop_db(dry_run=args.dry_run)
+    drop_db(dry_run=args.dry_run)
     init_db(dry_run=args.dry_run)
 elif args.action in {"load", "load-test"}:
     if args.action == "load":

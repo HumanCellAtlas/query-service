@@ -1,4 +1,5 @@
 # You should not edit this file directly.  Instead, you should edit requirements.txt.in.
+alembic==1.0.10
 argcomplete==1.10.0
 asn1crypto==0.24.0
 atomicwrites==1.3.0
@@ -30,6 +31,7 @@ Jinja2==2.10.1
 jmespath==0.9.4
 jsonpointer==1.14
 jsonschema==2.6.0
+Mako==1.0.9
 MarkupSafe==1.1.1
 oauthlib==3.0.1
 openapi-spec-validator==0.2.6
@@ -41,6 +43,7 @@ pyasn1-modules==0.2.5
 pycparser==2.19
 PyJWT==1.7.1
 python-dateutil==2.8.0
+python-editor==1.0.4
 PyYAML==5.1
 requests==2.21.0
 requests-http-signature==0.1.0
@@ -54,3 +57,4 @@ tenacity==5.0.4
 tweak==1.0.2
 urllib3==1.24.3
 Werkzeug==0.15.3
+
