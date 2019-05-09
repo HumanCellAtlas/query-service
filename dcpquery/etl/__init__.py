@@ -16,9 +16,9 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
         result = dict(uuid=bundle_uuid,
                       version=bundle_version,
                       manifest=json.load(fh),
-                      aggregate_metadata=defaultdict(list),
+                      aggregate_metadata={},
                       files=[])
-    bundle_fetched_files = os.listdir(bundle_path) if os.path.exists(bundle_path) else []
+    bundle_fetched_files = sorted(os.listdir(bundle_path)) if os.path.exists(bundle_path) else []
     for f in bundle_fetched_files:
         if re.match(r"(.+)_(\d+).json", f):
             metadata_key, index = re.match(r"(.+)_(\d+).json", f).groups()
@@ -31,6 +31,7 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
             if index is None:
                 result["aggregate_metadata"][metadata_key] = file_doc
             else:
+                result["aggregate_metadata"].setdefault(metadata_key, [])
                 result["aggregate_metadata"][metadata_key].append(file_doc)
         for fm in result["manifest"]["files"]:
             if f == fm["name"]:
