@@ -28,21 +28,22 @@ class TestPostgresLoader(unittest.TestCase):
     project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
     process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
 
+
     def test_insert_select_file(self):
         # insert files
-        config.db_session.add_all([project_file, process_file])
+        config.db_session.add_all([self.project_file, self.process_file])
         config.db_session.commit()
 
         # select files
-        res = config.db_session.query(File).filter(File.uuid==project_file.uuid,
-                                                   File.version==project_file.version)
+        res = config.db_session.query(File).filter(File.uuid == self.project_file.uuid,
+                                                   File.version == self.project_file.version)
         result = list(res)
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].uuid, project_file.uuid)
-        self.assertEqual(result[0].version, project_file.version)
-        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[0].fqid, f"{project_file.uuid}.{expect_version}")
-        self.assertEqual(result[0].body, project_file.body)
+        self.assertEqual(result[0].uuid, self.project_file.uuid)
+        self.assertEqual(result[0].version, self.project_file.version)
+        expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[0].fqid, f"{self.project_file.uuid}.{expect_version}")
+        self.assertEqual(result[0].body, self.project_file.body)
 
     def test_insert_select_bundle(self):
         # insert bundle
@@ -87,8 +88,60 @@ class TestPostgresLoader(unittest.TestCase):
         self.assertEqual(result[1].file_fqid, f"{self.process_file.uuid}.{expect_version}")
 
         self.assertEqual(result[6].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
+
         expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
         self.assertEqual(result[6].file_fqid, f"{self.project_file.uuid}.{expect_version}")
+
+
+    @unittest.skip("WIP")
+    def test_process_links(self):
+        '''
+            # insert process_links
+            process_uuid = 'a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            file_uuid = 'b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process_file_connection_type = 'INPUT_ENTITY'
+
+            row_count = tables.process_links.insert(
+                process_uuid, file_uuid, process_file_connection_type
+            )
+            assert row_count == 1
+            # select process_links
+            process = tables.process_links.select_by_process_uuid(process_uuid)
+
+            assert process['uuid'] == process_uuid
+            assert process['file_uuid'] == file_uuid
+            assert process['process_file_connection_type'] == process_file_connection_type
+
+            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid)
+            assert processes == [process_uuid]
+
+            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid, 'OUTPUT_ENTITY')
+            assert processes == []
+
+            # TODO @madison - refactor this into multiple tests
+            # insert - process_links_join_table
+            process1_uuid = 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            row_count = tables.process_links.insert_parent_child_link(process_uuid, process1_uuid)
+            assert row_count == 1
+
+            # select process_links_join_table_functions
+            process2_uuid = 'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process3_uuid = 'a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process4_uuid = 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process5_uuid = 'a0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+
+            tables.process_links.insert_parent_child_link(process_uuid, process2_uuid)
+            tables.process_links.insert_parent_child_link(process1_uuid, process3_uuid)
+            tables.process_links.insert_parent_child_link(process1_uuid, process4_uuid)
+            tables.process_links.insert_parent_child_link(process5_uuid, process4_uuid)
+
+            children = tables.process_links.list_direct_children_process_uuids(process_uuid)
+            assert children == [process1_uuid, process2_uuid]
+
+            parents = tables.process_links.list_direct_parent_process_uuids(process4_uuid)
+            assert parents == [process1_uuid, process5_uuid]
+        '''
+>>>>>>> WIP
 
     @unittest.skip("WIP")
     def test_table_create_list(self):
