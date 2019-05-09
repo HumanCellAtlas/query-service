@@ -30,6 +30,81 @@ class TestPostgresLoader(unittest.TestCase):
         config.db_session.add_all([project_file, process_file])
         config.db_session.commit()
 
+
+        # select files
+        res = config.db_session.query(File).filter(File.uuid==project_file.uuid,
+                                                   File.version==project_file.version)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].uuid, project_file.uuid)
+        self.assertEqual(result[0].version, project_file.version)
+        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[0].fqid, f"{project_file.uuid}.{expect_version}")
+        self.assertEqual(result[0].body, project_file.body)
+
+        # insert bundle
+        config.db_session.add(vx_bundle)
+        config.db_session.commit()
+        
+        # select bundle
+        res = config.db_session.query(Bundle).filter(Bundle.uuid==vx_bundle.uuid,
+                                                     Bundle.version==vx_bundle.version)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].uuid, vx_bundle.uuid)
+        self.assertEqual(result[0].version, vx_bundle.version)
+        expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[0].fqid, f"{vx_bundle.uuid}.{expect_version}")
+        self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
+        self.assertEqual(len(result[0].files), len(vx_bundle.files))
+        self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(f.fqid for f in result[0].files))
+
+        # insert bundle-file links
+        config.db_session.add_all(vx_bf_links)
+        config.db_session.commit()
+
+        # select bundle-file links
+        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid==vx_bundle.fqid,
+                                                             BundleFileLink.file_fqid==process_file.fqid)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].name, "process_0.json")
+        self.assertEqual(result[0].bundle_fqid, vx_bundle.fqid)
+        self.assertEqual(result[0].file_fqid, process_file.fqid)
+
+        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid==vx_bundle.fqid)
+        result = sorted(res, key=lambda x: x.file_fqid)
+        self.assertEqual(len(result), 14)
+
+        self.assertEqual(result[1].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
+        expect_version = process_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[1].file_fqid, f"{process_file.uuid}.{expect_version}")
+
+        self.assertEqual(result[6].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
+        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[6].file_fqid, f"{project_file.uuid}.{expect_version}")
+
+    @unittest.skip("WIP")
+    def test_process_links(self):
+            # insert process_links
+            process_uuid = 'a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            file_uuid = 'b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            process_file_connection_type = 'INPUT_ENTITY'
+
+            row_count = tables.process_links.insert(
+                process_uuid, file_uuid, process_file_connection_type
+            )
+            assert row_count == 1
+            # select process_links
+            process = tables.process_links.select_by_process_uuid(process_uuid)
+
+            assert process['uuid'] == process_uuid
+            assert process['file_uuid'] == file_uuid
+            assert process['process_file_connection_type'] == process_file_connection_type
+
+            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid)
+            assert processes == [process_uuid]
+
         # select files
         res = config.db_session.query(File).filter(File.uuid == project_file.uuid,
                                                    File.version == project_file.version)
