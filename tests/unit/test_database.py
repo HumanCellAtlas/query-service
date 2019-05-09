@@ -25,15 +25,14 @@ class TestPostgresLoader(unittest.TestCase):
     def test_insert_select(self):
         project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
         process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
-        #with self.db.transaction() as (cursor, tables):
 
         # insert files
         config.db_session.add_all([project_file, process_file])
         config.db_session.commit()
 
         # select files
-        res = config.db_session.query(File).filter(File.uuid==project_file.uuid,
-                                                   File.version==project_file.version)
+        res = config.db_session.query(File).filter(File.uuid == project_file.uuid,
+                                                   File.version == project_file.version)
         result = list(res)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].uuid, project_file.uuid)
@@ -45,10 +44,10 @@ class TestPostgresLoader(unittest.TestCase):
         # insert bundle
         config.db_session.add(vx_bundle)
         config.db_session.commit()
-        
+
         # select bundle
-        res = config.db_session.query(Bundle).filter(Bundle.uuid==vx_bundle.uuid,
-                                                     Bundle.version==vx_bundle.version)
+        res = config.db_session.query(Bundle).filter(Bundle.uuid == vx_bundle.uuid,
+                                                     Bundle.version == vx_bundle.version)
         result = list(res)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].uuid, vx_bundle.uuid)
@@ -64,15 +63,15 @@ class TestPostgresLoader(unittest.TestCase):
         config.db_session.commit()
 
         # select bundle-file links
-        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid==vx_bundle.fqid,
-                                                             BundleFileLink.file_fqid==process_file.fqid)
+        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid,
+                                                             BundleFileLink.file_fqid == process_file.fqid)
         result = list(res)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "process_0.json")
         self.assertEqual(result[0].bundle_fqid, vx_bundle.fqid)
         self.assertEqual(result[0].file_fqid, process_file.fqid)
 
-        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid==vx_bundle.fqid)
+        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid)
         result = sorted(res, key=lambda x: x.file_fqid)
         self.assertEqual(len(result), 14)
 
@@ -86,6 +85,7 @@ class TestPostgresLoader(unittest.TestCase):
 
     @unittest.skip("WIP")
     def test_process_links(self):
+        '''
             # insert process_links
             process_uuid = 'a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
             file_uuid = 'b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
@@ -130,6 +130,7 @@ class TestPostgresLoader(unittest.TestCase):
 
             parents = tables.process_links.list_direct_parent_process_uuids(process4_uuid)
             assert parents == [process1_uuid, process5_uuid]
+        '''
 
     @unittest.skip("WIP")
     def test_table_create_list(self):
