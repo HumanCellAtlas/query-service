@@ -5,98 +5,87 @@ from uuid import uuid4
 # from lib.etl.load import PostgresLoader
 from dcpquery.db import Process, File, DCPQueryDBManager, Bundle, ProcessFileLink, BundleFileLink
 from dcpquery.etl import load_links
-from tests import vx_bundle, clear_views, truncate_tables, eventually, mock_links
+from tests import vx_bundle, vx_bf_links, clear_views, truncate_tables, eventually, mock_links, vx_bundle_aggregate_md
 
 from dcpquery import config
 
 
-@unittest.skip("WIP")
 class TestReadOnlyTransactions(unittest.TestCase):
     def test_read_only_returns_column_names(self):
-        project_file = next(f for f in vx_bundle.files if f.metadata.name == 'project_0.json')
-        with config.db.transaction() as (cursor, tables):
-            # insert files
-            result = tables.files.insert(project_file)
-            self.assertEqual(result, 1)
+        project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
+        config.db_session.add(project_file)
+        config.db_session.commit()
 
-        query_results, column_names = self.db.run_read_only_query("SELECT * FROM FILES;")
-
-        self.assertEqual(column_names, ['file_uuid', 'file_version', 'fqid', 'name', 'schema_type_id', 'json'])
+        row = next(config.db.execute("SELECT * FROM FILES;"))
+        expected_column_names = ['fqid', 'uuid', 'version', 'schema_type_id', 'body', 'content_type', 'size']
+        self.assertEqual(list(dict(row).keys()), expected_column_names)
 
 
 class TestPostgresLoader(unittest.TestCase):
+    def test_insert_select(self):
+        project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
+        process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
+        #with self.db.transaction() as (cursor, tables):
+
+        # insert files
+        config.db_session.add_all([project_file, process_file])
+        config.db_session.commit()
+
+        # select files
+        res = config.db_session.query(File).filter(File.uuid==project_file.uuid,
+                                                   File.version==project_file.version)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].uuid, project_file.uuid)
+        self.assertEqual(result[0].version, project_file.version)
+        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[0].fqid, f"{project_file.uuid}.{expect_version}")
+        self.assertEqual(result[0].body, project_file.body)
+
+        # insert bundle
+        config.db_session.add(vx_bundle)
+        config.db_session.commit()
+        
+        # select bundle
+        res = config.db_session.query(Bundle).filter(Bundle.uuid==vx_bundle.uuid,
+                                                     Bundle.version==vx_bundle.version)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].uuid, vx_bundle.uuid)
+        self.assertEqual(result[0].version, vx_bundle.version)
+        expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[0].fqid, f"{vx_bundle.uuid}.{expect_version}")
+        self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
+        self.assertEqual(len(result[0].files), len(vx_bundle.files))
+        self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(f.fqid for f in result[0].files))
+
+        # insert bundle-file links
+        config.db_session.add_all(vx_bf_links)
+        config.db_session.commit()
+
+        # select bundle-file links
+        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid==vx_bundle.fqid,
+                                                             BundleFileLink.file_fqid==process_file.fqid)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].name, "process_0.json")
+        self.assertEqual(result[0].bundle_fqid, vx_bundle.fqid)
+        self.assertEqual(result[0].file_fqid, process_file.fqid)
+
+        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid==vx_bundle.fqid)
+        result = sorted(res, key=lambda x: x.file_fqid)
+        self.assertEqual(len(result), 14)
+
+        self.assertEqual(result[1].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
+        expect_version = process_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[1].file_fqid, f"{process_file.uuid}.{expect_version}")
+
+        self.assertEqual(result[6].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
+        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[6].file_fqid, f"{project_file.uuid}.{expect_version}")
 
     @unittest.skip("WIP")
-    def test_insert_select(self):
-        project_file = next(f for f in vx_bundle.files if f.metadata.name == 'project_0.json')
-        process_file = next(f for f in vx_bundle.files if f.metadata.name == 'process_0.json')
-        with self.db.transaction() as (cursor, tables):
-            # insert files
-
-            result = tables.files.insert(project_file)
-            self.assertEqual(result, 1)
-            # select files
-            result = tables.files.select(project_file.uuid, project_file.version)
-            self.assertDictEqual(
-                result,
-                dict(
-                    uuid=str(project_file.uuid),
-                    version=project_file.version,
-                    fqid=f"{project_file.uuid}.{project_file.version}",
-                    name="project_0.json",
-                    json=project_file
-                )
-            )
-
-            # insert bundle
-            result = tables.bundles.insert(vx_bundle, dict(a='b'))
-            self.assertEqual(result, 1)
-            # select bundle
-            result = tables.bundles.select(vx_bundle.uuid, vx_bundle.version)
-            file_fqids = result.pop('file_fqids')
-            self.assertDictEqual(
-                result,
-                dict(
-                    uuid=str(vx_bundle.uuid),
-                    version=vx_bundle.version,
-                    json=dict(a='b')
-                )
-            )
-            self.assertEqual(len(vx_bundle.files), len(file_fqids))
-            self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(file_fqids))
-
-            # insert bundles_files
-            result = tables.files.insert(process_file)
-            self.assertEqual(result, 1)
-            result = tables.bundles_files.insert(
-                vx_bundle.uuid, vx_bundle.version, project_file.uuid, project_file.version)
-            self.assertEqual(result, 1)
-            result = tables.bundles_files.insert(
-                vx_bundle.uuid, vx_bundle.version, process_file.uuid, process_file.version)
-            self.assertEqual(result, 1)
-            # select bundles_files
-            result = tables.bundles_files.select_bundle(vx_bundle.uuid, vx_bundle.version)
-            result = sorted(result, key=lambda x: x['file_uuid'])
-            self.assertEqual(len(result), 2)
-            self.assertDictEqual(
-                result[0],
-                dict(
-                    bundle_uuid=str(vx_bundle.uuid),
-                    bundle_version=vx_bundle.version,
-                    file_uuid=str(process_file.uuid),
-                    file_version=process_file.version
-                )
-            )
-            self.assertDictEqual(
-                result[1],
-                dict(
-                    bundle_uuid=str(vx_bundle.uuid),
-                    bundle_version=vx_bundle.version,
-                    file_uuid=str(project_file.uuid),
-                    file_version=project_file.version
-                )
-            )
-
+    def test_process_links(self):
             # insert process_links
             process_uuid = 'a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
             file_uuid = 'b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
@@ -187,7 +176,7 @@ class TestPostgresLoader(unittest.TestCase):
         self.assertCountEqual(expected_children, child_processes)
 
 
-# Note: these tests alters global state and so may not play well with other concurrent tests/operations
+# Note: these tests alter global state and so may not play well with other concurrent tests/operations
 class TestDBRules(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
