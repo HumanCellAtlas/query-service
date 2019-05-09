@@ -26,7 +26,7 @@ default_test_query = {
     }
 }
 
-logging.basicConfig(level=logging.INFO)
+config.configure_logging()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("action", choices={"init", "load", "load-test", "connect"})
 parser.add_argument("--db", choices={"local", "remote"}, default="local")

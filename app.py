@@ -14,6 +14,7 @@ from dcpquery.exceptions import DCPQueryError
 swagger_spec_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{os.environ["APP_NAME"]}-api.yml')
 app = api.DCPQueryServer(app_name=os.environ["APP_NAME"], swagger_spec_path=swagger_spec_path)
 config.app = app
+config.configure_logging()
 
 
 @app.route("/")
