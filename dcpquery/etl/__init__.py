@@ -39,7 +39,7 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
     return result
 
 
-def load_bundle(bundle, extractor, transformer):
+def load_bundle(bundle, extractor=None, transformer=None):
     bf_links = []
     bundle_row = Bundle(uuid=bundle["uuid"],
                         version=bundle["version"],
