@@ -11,12 +11,13 @@ from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink
 
 
-def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor):
-    result = dict(uuid=bundle_uuid,
-                  version=bundle_version,
-                  manifest=json.load(open(bundle_manifest_path)),
-                  aggregate_metadata=defaultdict(list),
-                  files=[])
+def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor=None):
+    with open(bundle_manifest_path) as fh:
+        result = dict(uuid=bundle_uuid,
+                      version=bundle_version,
+                      manifest=json.load(fh),
+                      aggregate_metadata=defaultdict(list),
+                      files=[])
     bundle_fetched_files = os.listdir(bundle_path) if os.path.exists(bundle_path) else []
     for f in bundle_fetched_files:
         if re.match(r"(.+)_(\d+).json", f):

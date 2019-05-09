@@ -23,7 +23,9 @@ def load_fixture(fixture_file):
     return txt
 
 
-vx_bundle_fqid = '0c8d7f15-47c2-42c2-83de-47ae48e1eae1.2018-09-06T190237.485774Z'
+vx_bundle_uuid = '0c8d7f15-47c2-42c2-83de-47ae48e1eae1'
+vx_bundle_version = '2018-09-06T190237.485774Z'
+vx_bundle_fqid = f'{vx_bundle_uuid}.{vx_bundle_version}'
 vx_bundle_manifest = load_fixture('vx_bundle.json')
 vx_bundle_aggregate_md = json.loads(load_fixture('vx_bundle_document.json'))
 fast_query_mock_result = json.loads(load_fixture('fast_query_mock_result.json'))
