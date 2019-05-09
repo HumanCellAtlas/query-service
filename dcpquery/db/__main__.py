@@ -9,7 +9,8 @@ from dcplib.etl import DSSExtractor
 
 from .. import config
 from ..etl import transform_bundle, BundleLoader, create_view_tables
-from . import DCPQueryDBManager
+
+from . import init_db, DCPQueryDBManager
 
 fmi_test_query = {
     "query": {
@@ -47,6 +48,7 @@ elif args.action == "init":
     DCPQueryDBManager().init_db(dry_run=args.dry_run)
 elif args.action == "drop":
     DCPQueryDBManager().drop_db(dry_run=args.dry_run)
+    init_db(dry_run=args.dry_run)
 elif args.action in {"load", "load-test"}:
     if args.action == "load":
         extractor_args = {}  # type: ignore

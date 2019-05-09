@@ -143,5 +143,11 @@ requirements-dev.txt : requirements.txt.in
 docs:
 	$(MAKE) -C docs html
 
+migration:
+	alembic revision --autogenerate
+
+apply-migrations:
+	alembic upgrade head
+
 .PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package init-tf init-db destroy
 .PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements docs

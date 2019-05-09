@@ -244,6 +244,19 @@ class DCPQueryDBManager:
         config.db_session.execute(self.get_all_children_function_sql + self.get_all_parents_function_sql)
         config.db_session.commit()
 
+    def init_db(self, dry_run=True):
+        from sqlalchemy_utils import database_exists, create_database
+
+        logger.info("Initializing database at %s", repr(config.db.url))
+        if not database_exists(config.db.url):
+            logger.info("Creating database")
+            create_database(config.db.url)
+        logger.info("Initializing database")
+
+        if dry_run:
+            config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
+        SQLAlchemyBase.metadata.create_all(config.db)
+
     def drop_db(self, dry_run=True):
         from sqlalchemy_utils import database_exists, drop_database
         if database_exists(config.db.url):

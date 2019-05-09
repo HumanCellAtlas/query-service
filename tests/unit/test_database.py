@@ -4,7 +4,7 @@ import unittest, secrets
 from uuid import uuid4
 
 # from lib.etl.load import PostgresLoader
-from dcpquery.db import Process, File, DCPQueryDBManager, Bundle, ProcessFileLink, BundleFileLink
+from dcpquery.db import Process, File, Bundle, ProcessFileLink, BundleFileLink, DCPQueryDBManager
 from dcpquery.etl import load_links
 from tests import vx_bundle, vx_bf_links, clear_views, truncate_tables, eventually, mock_links, vx_bundle_aggregate_md
 
@@ -216,7 +216,8 @@ class TestDBRules(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         config.db_session.rollback()
-        DCPQueryDBManager().create_upsert_rules_in_db()
+
+        TestDBManager().create_upsert_rules_in_db()
 
     def test_file_table_rule(self):
         # Test db throws an error without rule
@@ -226,7 +227,7 @@ class TestDBRules(unittest.TestCase):
         config.db_session.rollback()
 
         # add rule
-        config.db_session.execute(DCPQueryDBManager.file_ignore_duplicate_rule_sql)
+        config.db_session.execute(TestDBManager.file_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
         # try to add duplicate file, check no error thrown
@@ -240,7 +241,7 @@ class TestDBRules(unittest.TestCase):
         config.db_session.rollback()
 
         # add rule
-        config.db_session.execute(DCPQueryDBManager.bundle_ignore_duplicate_rule_sql)
+        config.db_session.execute(TestDBManager.bundle_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
         # try to add duplicate file, check no error thrown
@@ -254,7 +255,7 @@ class TestDBRules(unittest.TestCase):
         config.db_session.rollback()
 
         # add rule
-        config.db_session.execute(DCPQueryDBManager.process_ignore_duplicate_rule_sql)
+        config.db_session.execute(TestDBManager.process_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
         # try to add duplicate file, check no error thrown
@@ -270,7 +271,7 @@ class TestDBRules(unittest.TestCase):
         config.db_session.rollback()
 
         # add rule
-        config.db_session.execute(DCPQueryDBManager.process_file_link_ignore_duplicate_rule_sql)
+        config.db_session.execute(TestDBManager.process_file_link_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
         # try to add duplicate file, check no error thrown
@@ -292,7 +293,7 @@ class TestDBRules(unittest.TestCase):
         config.db_session.rollback()
 
         # add rule
-        config.db_session.execute(DCPQueryDBManager.bundle_file_link_ignore_duplicate_rule_sql)
+        config.db_session.execute(TestDBManager.bundle_file_link_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
         # try to add duplicate file, check no error thrown
@@ -322,6 +323,103 @@ class TestDatabaseUtils(unittest.TestCase):
     def test_drop_db(self):
         DCPQueryDBManager().drop_db(dry_run=True)
         DCPQueryDBManager().drop_db()  # dry_run is True by default
+
+
+class TestDBManager:
+    process_file_link_ignore_duplicate_rule_sql = """
+        CREATE OR REPLACE RULE process_file_join_table_ignore_duplicate_inserts AS
+            ON INSERT TO process_file_join_table
+                WHERE EXISTS (
+                  SELECT 1
+                FROM process_file_join_table
+                WHERE process_uuid = NEW.process_uuid
+                AND process_file_connection_type=NEW.process_file_connection_type
+                AND file_uuid=NEW.file_uuid
+            )
+            DO INSTEAD NOTHING;
+    """
+    file_ignore_duplicate_rule_sql = """
+        CREATE OR REPLACE RULE file_table_ignore_duplicate_inserts AS
+            ON INSERT TO files
+                WHERE EXISTS (
+                  SELECT 1
+                FROM files
+                WHERE fqid = NEW.fqid
+            )
+            DO INSTEAD NOTHING;
+    """
+    bundle_ignore_duplicate_rule_sql = """
+        CREATE OR REPLACE RULE bundle_table_ignore_duplicate_inserts AS
+            ON INSERT TO bundles
+                WHERE EXISTS (
+                  SELECT 1
+                FROM bundles
+                WHERE fqid = NEW.fqid
+            )
+            DO INSTEAD NOTHING;
+    """
+    bundle_file_link_ignore_duplicate_rule_sql = """
+        CREATE OR REPLACE RULE bundle_file_join_table_ignore_duplicate_inserts AS
+            ON INSERT TO bundle_file_links
+                WHERE EXISTS (
+                  SELECT 1
+                FROM bundle_file_links
+                WHERE bundle_fqid = NEW.bundle_fqid
+                AND file_fqid = NEW.file_fqid
+            )
+            DO INSTEAD NOTHING;
+    """
+    process_ignore_duplicate_rule_sql = """
+        CREATE OR REPLACE RULE process_table_ignore_duplicate_inserts AS
+            ON INSERT TO processes
+                WHERE EXISTS (
+                  SELECT 1
+                FROM processes
+                WHERE process_uuid = NEW.process_uuid
+            )
+            DO INSTEAD NOTHING;
+    """
+
+    get_all_children_function_sql = """
+        CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
+            RETURNS TABLE(child_process UUID) as $$
+              WITH RECURSIVE recursive_table AS (
+                SELECT child_process_uuid FROM process_join_table
+                WHERE parent_process_uuid=$1
+                UNION
+                SELECT process_join_table.child_process_uuid FROM process_join_table
+                INNER JOIN recursive_table
+                ON process_join_table.parent_process_uuid = recursive_table.child_process_uuid)
+            SELECT * from recursive_table;
+            $$ LANGUAGE SQL;
+    """
+    get_all_parents_function_sql = """
+        CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
+            RETURNS TABLE(parent_process UUID) as $$
+              WITH RECURSIVE recursive_table AS (
+                SELECT parent_process_uuid FROM process_join_table
+                WHERE child_process_uuid=$1
+                UNION
+                SELECT process_join_table.parent_process_uuid FROM process_join_table
+                INNER JOIN recursive_table
+                ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
+            SELECT * from recursive_table;
+            $$ LANGUAGE SQL;
+    """
+
+    def create_upsert_rules_in_db(cls):
+        config.db_session.execute(
+            cls.bundle_file_link_ignore_duplicate_rule_sql + cls.bundle_ignore_duplicate_rule_sql
+        )
+        config.db_session.execute(
+            cls.process_file_link_ignore_duplicate_rule_sql + cls.process_ignore_duplicate_rule_sql
+        )
+        config.db_session.execute(cls.file_ignore_duplicate_rule_sql)
+        config.db_session.commit()
+
+    def create_recursive_functions_in_db(cls):
+        config.db_session.execute(cls.get_all_children_function_sql + cls.get_all_parents_function_sql)
+        config.db_session.commit()
 
 
 if __name__ == '__main__':
