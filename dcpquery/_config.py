@@ -94,12 +94,12 @@ class DCPQueryConfig:
 
     def configure_logging(self):
         logging.basicConfig()
-        if int(os.environ.get(f"{self.app_name}_DEBUG".upper(), "0")) == 0:
+        if int(os.environ.get("DEBUG", "0")) == 0:
             self.debug = False
-        elif int(os.environ.get(f"{self.app_name}_DEBUG".upper(), "0")) == 1:
+        elif int(os.environ.get("DEBUG", "0")) == 1:
             self.debug = True
             logging.root.setLevel(logging.INFO)
-        elif int(os.environ.get(f"{self.app_name}_DEBUG".upper(), "0")) > 1:
+        elif int(os.environ.get("DEBUG", "0")) > 1:
             self.debug = True
             self.echo = True
             logging.root.setLevel(logging.DEBUG)
