@@ -141,7 +141,6 @@ class TestPostgresLoader(unittest.TestCase):
             parents = tables.process_links.list_direct_parent_process_uuids(process4_uuid)
             assert parents == [process1_uuid, process5_uuid]
         '''
->>>>>>> WIP
 
     @unittest.skip("WIP")
     def test_table_create_list(self):
