@@ -69,6 +69,35 @@ Errors while running `source environment` can be ignored if you are just experim
 After starting `chalice local`, you can open the Query Service in your browser at http://127.0.0.1:8000 to experiment
 with it.
 
+### App Configuration
+
+#### The `environment` file
+
+Global app configuration variables are stored in this file in the root of this repository. The file is a Bash script,
+intended to be sourced in the shell by running `source environment`. Some of these environment variables are made
+available to the deployed AWS Lambda functions and to the Terraform scripts via the `EXPORT_*` lists at the bottom of
+the file.
+
+#### `dcpquery/_config.py`
+
+Python runtime app configuration is centralized in this file. Some of the config values are imported from the
+environment. In Python, the instance of the `dcpquery._config.DCPQueryConfig` class is available as `dcpquery.config`.
+
+#### Configuring logging
+
+Python logging configuration is centralized in `dcpquery.config.configure_logging()`. Call this method from any entry
+point that loads `dcpquery`.
+
+Logging verbosity is controlled through the `DCPQUERY_DEBUG` environment variable, set in the `environment` file:
+- Set `DCPQUERY_DEBUG=0` to disable debugging and set the app log level to ERROR.
+- Set `DCPQUERY_DEBUG=1` to change the log level to INFO and cause stack traces to appear in error responses.
+- Set `DCPQUERY_DEBUG=2` to change the log level to DEBUG and cause stack traces to appear in error responses.
+
+#### AWS Secrets Manager
+
+Several configuration items, including database credentials, are saved by Terraform in the AWS Secrets Manager, and
+accessed by the Python app from there.
+
 ### Updating the requirements
 
 Runtime Python dependencies for the Query Service app are listed in `requirements.txt.in`. Test/development Python
