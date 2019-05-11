@@ -3,6 +3,7 @@ import json, unittest, secrets
 from unittest.mock import patch
 
 from dcpquery import config
+from dcpquery.db import Bundle
 from dcpquery.etl import (load_links, get_child_process_uuids, get_parent_process_uuids, create_process_file_links,
                           link_parent_and_child_processes, load_bundle)
 from tests import (vx_bundle, vx_bundle_uuid, vx_bundle_version, vx_bundle_manifest, vx_bundle_aggregate_md, mock_links,
@@ -38,6 +39,14 @@ class TestPostgresLoader(unittest.TestCase):
                          manifest=json.loads(vx_bundle_manifest),
                          aggregate_metadata=vx_bundle_aggregate_md,
                          files=files))
+        res = config.db_session.query(Bundle).filter(Bundle.uuid == vx_bundle_uuid,
+                                                     Bundle.version == vx_bundle_version)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].uuid, vx_bundle_uuid)
+        self.assertEqual(result[0].version.strftime("%Y-%m-%dT%H%M%S.%fZ"), vx_bundle_version)
+        self.assertDictEqual(result[0].manifest, json.loads(vx_bundle_manifest))
+        self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
 
     def test_get_child_process_uuids_returns_correct_ids(self):
         child_processes = get_child_process_uuids(['b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa'])
