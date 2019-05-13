@@ -11,13 +11,15 @@ from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink
 
 
-def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor):
-    result = dict(uuid=bundle_uuid,
-                  version=bundle_version,
-                  manifest=json.load(open(bundle_manifest_path)),
-                  aggregate_metadata=defaultdict(list),
-                  files=[])
-    for f in os.listdir(bundle_path):
+def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor=None):
+    with open(bundle_manifest_path) as fh:
+        result = dict(uuid=bundle_uuid,
+                      version=bundle_version,
+                      manifest=json.load(fh),
+                      aggregate_metadata={},
+                      files=[])
+    bundle_fetched_files = sorted(os.listdir(bundle_path)) if os.path.exists(bundle_path) else []
+    for f in bundle_fetched_files:
         if re.match(r"(.+)_(\d+).json", f):
             metadata_key, index = re.match(r"(.+)_(\d+).json", f).groups()
         elif re.match(r"(.+).json", f):
@@ -29,6 +31,7 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
             if index is None:
                 result["aggregate_metadata"][metadata_key] = file_doc
             else:
+                result["aggregate_metadata"].setdefault(metadata_key, [])
                 result["aggregate_metadata"][metadata_key].append(file_doc)
         for fm in result["manifest"]["files"]:
             if f == fm["name"]:
@@ -50,12 +53,12 @@ def load_bundle(bundle, extractor=None, transformer=None):
     for f in bundle["files"]:
         filename = f.pop("name")
         if filename == "links.json":
-            links = f['body']['links']
+            metadata_links = f['body']['links']
         file_row = File(**f)
         bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
     config.db_session.add_all(bf_links)
     config.db_session.commit()
-    load_links(links)
+    load_links(metadata_links)
 
 
 def load_links(links):
