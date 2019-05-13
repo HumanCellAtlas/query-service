@@ -48,6 +48,13 @@ containing the bundle id is sent to the Query API. The bundle_id is added to the
 
 ## Developing the Query Service
 
+| OS      | Command to install system package prerequisites                           |
+|---------|---------------------------------------------------------------------------|
+| Ubuntu  | ``apt-get install jq moreutils gettext make virtualenv postgresql unzip`` |
+|---------|---------------------------------------------------------------------------|
+| Mac OS  | [Install Homebrew](https://brew.sh/);                                     |
+|         | ``brew install jq moreutils gettext postgresql@10``                       |
+
 Most components of the Query Service are written in Python (Python version 3.6 or higher is required). After cloning
 this repository, you can run the Query Service in local mode to experiment with it. In this mode, a PostgreSQL server
 is expected to be running locally on the standard port (5432), and the current user is expected to have admin access to
