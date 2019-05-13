@@ -117,7 +117,7 @@ def create_view_tables(extractor):
             f"""
               CREATE OR REPLACE VIEW {schema_type} AS
               SELECT f.* FROM files as f
-              JOIN dcp_metadata_schema_type as m on f.dcp_schema_type_name = '{schema_type}'
+              WHERE f.dcp_schema_type_name = '{schema_type}'
             """
         )
     config.db_session.commit()

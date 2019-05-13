@@ -2,8 +2,9 @@ import unittest, secrets
 
 from unittest.mock import patch
 
+from dcpquery.db import DCPMetadataSchemaType
 from dcpquery.etl import load_links, get_child_process_uuids, get_parent_process_uuids, create_process_file_links, \
-    link_parent_and_child_processes
+    link_parent_and_child_processes, create_view_tables
 from tests import vx_bundle, mock_links
 
 
@@ -12,6 +13,36 @@ class TestPostgresLoader(unittest.TestCase):
 
     def setUp(self):
         load_links(mock_links['links'])
+
+    def test_db_views_exist_for_each_schema_type(self):
+        from dcpquery import config
+
+        views = [view[0] for view in config.db_session.execute(
+            """
+            SELECT table_name FROM INFORMATION_SCHEMA.views
+            WHERE table_schema = ANY (current_schemas(false))
+            """
+        ).fetchall()]
+
+        schema_types = [schema[0] for schema in
+                        config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()]
+        self.assertEqual(views, schema_types)
+
+    def test_biomaterial_view_table_contains_all_biomaterial_files(self):
+        from dcpquery import config
+        create_view_tables('mock_extractor')
+        biomaterial_view_table_count = config.db_session.execute(
+            """
+            SELECT count(*) from biomaterial;
+            """
+        ).fetchall()[0][0]
+
+        files_of_type_biomaterial_count = config.db_session.execute(
+            """
+            SELECT count(*) from files where dcp_schema_type_name='biomaterial';
+            """
+        ).fetchall()[0][0]
+        self.assertEqual(biomaterial_view_table_count, files_of_type_biomaterial_count)
 
     @unittest.skip("WIP")
     def test_prepare_database(self):

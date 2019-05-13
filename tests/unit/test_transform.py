@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from dcpquery.etl import format_process_info
+from dcpquery.etl import format_process_info, get_file_extension
 from tests import vx_bundle, load_fixture, mock_links
 
 
@@ -26,6 +26,19 @@ class TestTransform(unittest.TestCase):
                                                'c0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa']}
         process = format_process_info(mock_links['links'][0])
         self.assertDictEqual(process, expected_process)
+
+    def test_get_file_extension(self):
+        file0_name = 'anything.json'
+        file1_name = 'somethingelse.fastq.gz'
+        file2_name = 'no_extension'
+
+        file0_extension = get_file_extension(file0_name)
+        file1_extension = get_file_extension(file1_name)
+        file2_extension = get_file_extension(file2_name)
+
+        self.assertEqual(file0_extension, '.json')
+        self.assertEqual(file1_extension, '.fastq.gz')
+        self.assertEqual(file2_extension, None)
 
 
 if __name__ == '__main__':

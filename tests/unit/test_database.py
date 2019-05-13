@@ -17,30 +17,33 @@ class TestReadOnlyTransactions(unittest.TestCase):
         config.db_session.commit()
 
         row = next(config.db.execute("SELECT * FROM FILES;"))
-        expected_column_names = ['fqid', 'uuid', 'version', 'schema_type_id', 'body', 'content_type', 'size']
+        expected_column_names = ['fqid', 'uuid', 'version', 'dcp_schema_type_name', 'body', 'content_type', 'size',
+                                 'extension']
         self.assertEqual(list(dict(row).keys()), expected_column_names)
 
 
 class TestPostgresLoader(unittest.TestCase):
-    def test_insert_select(self):
-        project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
-        process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
+    project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
+    process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
+
+    def test_insert_select_file(self):
 
         # insert files
-        config.db_session.add_all([project_file, process_file])
+        config.db_session.add_all([self.project_file, self.process_file])
         config.db_session.commit()
 
         # select files
-        res = config.db_session.query(File).filter(File.uuid == project_file.uuid,
-                                                   File.version == project_file.version)
+        res = config.db_session.query(File).filter(File.uuid == self.project_file.uuid,
+                                                   File.version == self.project_file.version)
         result = list(res)
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].uuid, project_file.uuid)
-        self.assertEqual(result[0].version, project_file.version)
-        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[0].fqid, f"{project_file.uuid}.{expect_version}")
-        self.assertEqual(result[0].body, project_file.body)
+        self.assertEqual(result[0].uuid, self.project_file.uuid)
+        self.assertEqual(result[0].version, self.project_file.version)
+        expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[0].fqid, f"{self.project_file.uuid}.{expect_version}")
+        self.assertEqual(result[0].body, self.project_file.body)
 
+    def test_insert_select_bundle(self):
         # insert bundle
         config.db_session.add(vx_bundle)
         config.db_session.commit()
@@ -58,30 +61,32 @@ class TestPostgresLoader(unittest.TestCase):
         self.assertEqual(len(result[0].files), len(vx_bundle.files))
         self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(f.fqid for f in result[0].files))
 
+    def test_insert_select_bundle_file_link(self):
         # insert bundle-file links
         config.db_session.add_all(vx_bf_links)
         config.db_session.commit()
 
         # select bundle-file links
         res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid,
-                                                             BundleFileLink.file_fqid == process_file.fqid)
+                                                             BundleFileLink.file_fqid == self.process_file.fqid)
         result = list(res)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "process_0.json")
         self.assertEqual(result[0].bundle_fqid, vx_bundle.fqid)
-        self.assertEqual(result[0].file_fqid, process_file.fqid)
+        self.assertEqual(result[0].file_fqid, self.process_file.fqid)
 
         res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid)
         result = sorted(res, key=lambda x: x.file_fqid)
         self.assertEqual(len(result), 14)
+        expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
 
         self.assertEqual(result[1].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
-        expect_version = process_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[1].file_fqid, f"{process_file.uuid}.{expect_version}")
+        expect_version = self.process_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[1].file_fqid, f"{self.process_file.uuid}.{expect_version}")
 
         self.assertEqual(result[6].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
-        expect_version = project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[6].file_fqid, f"{project_file.uuid}.{expect_version}")
+        expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
+        self.assertEqual(result[6].file_fqid, f"{self.project_file.uuid}.{expect_version}")
 
     @unittest.skip("WIP")
     def test_table_create_list(self):
