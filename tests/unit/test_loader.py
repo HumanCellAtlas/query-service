@@ -7,9 +7,9 @@ from dcpquery.db import Bundle
 
 from tests import (vx_bundle, vx_bundle_uuid, vx_bundle_version, vx_bundle_manifest, vx_bundle_aggregate_md, mock_links,
                    load_fixture)
-from dcpquery.db import DCPMetadataSchemaType
 from dcpquery.etl import (load_links, get_child_process_uuids, get_parent_process_uuids, create_process_file_links,
                           link_parent_and_child_processes, create_view_tables, BundleLoader)
+from dcpquery.db import DCPMetadataSchemaType
 
 
 class TestPostgresLoader(unittest.TestCase):
