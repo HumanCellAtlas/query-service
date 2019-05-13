@@ -41,7 +41,7 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
 
 
 class DCPMetadataSchemaType(SQLAlchemyBase):
-    __tablename__ = 'dcp_metadata_schema_type'
+    __tablename__ = 'dcp_metadata_schema_types'
     name = Column(String, primary_key=True, nullable=False)
     files = relationship("File", back_populates='dcp_schema_type')
 
@@ -51,7 +51,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     fqid = Column(String, primary_key=True, unique=True, nullable=False)
     uuid = Column(UUID, nullable=False)
     version = Column(DateTime, nullable=False)
-    dcp_schema_type_name = Column(String, ForeignKey("dcp_metadata_schema_type.name"))
+    dcp_schema_type_name = Column(String, ForeignKey("dcp_metadata_schema_types.name"))
     dcp_schema_type = relationship("DCPMetadataSchemaType", back_populates="files")
     body = Column(MutableDict.as_mutable(JSONB))
     content_type = Column(String)

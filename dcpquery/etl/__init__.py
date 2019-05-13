@@ -1,28 +1,27 @@
-<<<<<<< HEAD
-import os, sys, re, json, tempfile
-from collections import defaultdict
-from uuid import UUID
+import os, re, json, tempfile
+from collections import OrderedDict
 
-import psycopg2
-from sqlalchemy.exc import IntegrityError
-from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
-=======
-import os, re, json
-from collections import defaultdict
->>>>>>> Add file extension field, ensure schema type transformation and load works, change size to bigint (bug) and create view tables
+from hca.dss import DSSClient
 
 from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType
 
 
 def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor=None):
-    with open(bundle_manifest_path) as fh:
-        result = dict(uuid=bundle_uuid,
-                      version=bundle_version,
-                      manifest=json.load(fh),
-                      aggregate_metadata={},
-                      files=[])
+    """
+    This function is used with the ETL interface in dcplib.etl.DSSExtractor.extract.
+    Given a bundle ID and directory containing its medatata JSON files, it produces an intermediate representation
+    of the bundle and its files ready to be inserted into the database by BundleLoader.
+    """
+    result = dict(uuid=bundle_uuid,
+                  version=bundle_version,
+                  manifest=json.load(open(bundle_manifest_path)),
+                  aggregate_metadata={},
+                  files=OrderedDict())
+    # Load and process all the metadata files; construct the "aggregate_metadata" doc:
+    # - Singleton metadata files get inserted under their name minus the extension (project.json => {"project": {...}})
+    # - Numbered metadata files are put in an array (assay_0.json, assay_1.json => {"assay": [{...0...}, {...1...}]})
     bundle_fetched_files = sorted(os.listdir(bundle_path)) if os.path.exists(bundle_path) else []
     for f in bundle_fetched_files:
         if re.match(r"(.+)_(\d+).json", f):
@@ -40,54 +39,20 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
                 result["aggregate_metadata"][metadata_key].append(file_doc)
         for fm in result["manifest"]["files"]:
             if f == fm["name"]:
-                result["files"].append(dict(uuid=fm["uuid"],
-                                            version=fm["version"],
-                                            body=file_doc,
-                                            content_type=fm["content-type"],
-                                            name=fm["name"],
-                                            size=fm["size"]))
+                result["files"][fm["name"]] = dict(fm,
+                                                   body=file_doc,
+                                                   schema_type=file_doc['schema_type'])
+    # For all other (non-metadata) files from the bundle manifest, insert them with a default body
+    # indicating an empty schema type.
+    for fm in result["manifest"]["files"]:
+        if fm["name"] not in result["files"]:
+            result["files"][fm["name"]] = dict(fm,
+                                               body=None,
+                                               schema_type=None)
 
-    combine_file_data(result)
+    # Flatten the file list while preserving order.
+    result["files"] = list(result["files"].values())
     return result
-
-
-<<<<<<< HEAD
-def load_bundle(bundle, extractor=None, transformer=None):
-    bf_links = []
-    bundle_row = Bundle(uuid=bundle["uuid"],
-                        version=bundle["version"],
-                        manifest=bundle["manifest"],
-                        aggregate_metadata=bundle["aggregate_metadata"])
-    for f in bundle["files"]:
-        filename = f.pop("name")
-        if filename == "links.json":
-            metadata_links = f['body']['links']
-        file_row = File(**f)
-        bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
-    config.db_session.add_all(bf_links)
-    config.db_session.commit()
-    load_links(metadata_links)
-=======
-def combine_file_data(bundle):
-    """"
-    This function takes in a bundle and combines the data contained in bundle['manifest']['files'] with the
-    data contained in bundle['files'] into a combined_file_data dict based on the file_uuid.
-    """
-    file_data = {}
-    for f in bundle['manifest']['files']:
-        uuid = f['uuid']
-        file_data[uuid] = f
-
-    for f in bundle['files']:
-        uuid = f['uuid']
-        file_data[uuid] = {**f, **file_data[uuid]}
-    for uuid in file_data:
-        file_ = file_data[uuid]
-        filename = file_['name']
-        file_['file_extension'] = get_file_extension(filename)
-        if 'body' not in file_:
-            file_['body'] = {'schema_type': None}
-    bundle['combined_file_data'] = file_data
 
 
 def get_file_extension(filename):
@@ -111,20 +76,18 @@ class BundleLoader:
             config.db_session.commit()
             self.schema_types.append(schema_type)
 
-    def load_bundle(self, bundle, extractor, transformer):
+    def load_bundle(self, bundle, extractor=None, transformer=None):
         bf_links = []
         bundle_row = Bundle(uuid=bundle["uuid"], version=bundle["version"], manifest=bundle["manifest"])
-
-        for uuid in bundle['combined_file_data']:
-            file_data = bundle['combined_file_data'][uuid]
+        for file_data in bundle["files"]:
             filename = file_data.pop("name")
-            file_extension = file_data.pop("file_extension")
+            file_extension = get_file_extension(filename)
 
             if filename == "links.json":
                 links = file_data['body']['links']
                 load_links(links)
 
-            self.register_dcp_metadata_schema_type(file_data['body']['schema_type'])
+            self.register_dcp_metadata_schema_type(file_data['schema_type'])
             file_row = File(
                 uuid=file_data['uuid'],
                 version=file_data['version'],
@@ -132,7 +95,7 @@ class BundleLoader:
                 size=file_data['size'],
                 extension=str(file_extension),
                 body=file_data['body'],
-                dcp_schema_type_name=file_data['body']['schema_type']
+                dcp_schema_type_name=file_data['schema_type']
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
@@ -148,11 +111,10 @@ def create_view_tables(extractor):
             f"""
               CREATE OR REPLACE VIEW {schema_type} AS
               SELECT f.* FROM files as f
-              JOIN dcp_metadata_schema_type as m on f.dcp_schema_type_name = '{schema_type}'
+              WHERE f.dcp_schema_type_name = '{schema_type}'
             """
         )
     config.db_session.commit()
->>>>>>> Add file extension field, ensure schema type transformation and load works, change size to bigint (bug) and create view tables
 
 
 def load_links(links):
