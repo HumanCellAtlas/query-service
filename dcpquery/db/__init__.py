@@ -124,21 +124,6 @@ class ProcessProcessLink(SQLAlchemyBase):
 
 
 class DCPQueryDBManager:
-    def init_db(self, dry_run=True):
-        from sqlalchemy_utils import database_exists, create_database
-
-        logger.info("Initializing database at %s", repr(config.db.url))
-        if not database_exists(config.db.url):
-            logger.info("Creating database")
-            create_database(config.db.url)
-        logger.info("Initializing database")
-
-        if dry_run:
-            config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
-        SQLAlchemyBase.metadata.create_all(config.db)
-        self.create_recursive_functions_in_db()
-        self.create_upsert_rules_in_db()
-
     process_file_link_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE process_file_join_table_ignore_duplicate_inserts AS
             ON INSERT TO process_file_join_table
@@ -151,6 +136,7 @@ class DCPQueryDBManager:
             )
             DO INSTEAD NOTHING;
     """
+
     file_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE file_table_ignore_duplicate_inserts AS
             ON INSERT TO files
@@ -161,6 +147,7 @@ class DCPQueryDBManager:
             )
             DO INSTEAD NOTHING;
     """
+
     bundle_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE bundle_table_ignore_duplicate_inserts AS
             ON INSERT TO bundles
@@ -171,6 +158,7 @@ class DCPQueryDBManager:
             )
             DO INSTEAD NOTHING;
     """
+
     bundle_file_link_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE bundle_file_join_table_ignore_duplicate_inserts AS
             ON INSERT TO bundle_file_links
@@ -182,6 +170,7 @@ class DCPQueryDBManager:
             )
             DO INSTEAD NOTHING;
     """
+
     process_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE process_table_ignore_duplicate_inserts AS
             ON INSERT TO processes
@@ -206,6 +195,7 @@ class DCPQueryDBManager:
             SELECT * from recursive_table;
             $$ LANGUAGE SQL;
     """
+
     get_all_parents_function_sql = """
         CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
             RETURNS TABLE(parent_process UUID) as $$
@@ -220,19 +210,47 @@ class DCPQueryDBManager:
             $$ LANGUAGE SQL;
     """
 
-    def create_upsert_rules_in_db(cls):
+    def init_db(self, dry_run=True):
+        from sqlalchemy_utils import database_exists, create_database
+
+        logger.info("Initializing database at %s", repr(config.db.url))
+        if not database_exists(config.db.url):
+            logger.info("Creating database")
+            create_database(config.db.url)
+        logger.info("Initializing database")
+
+        if dry_run:
+            orig_db_engine_params = dict(config._db_engine_params)
+            config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
+
+        SQLAlchemyBase.metadata.create_all(config.db)
+        self.create_recursive_functions_in_db()
+        self.create_upsert_rules_in_db()
+
+        if dry_run:
+            config._db_engine_params = orig_db_engine_params
+
+    def create_upsert_rules_in_db(self):
         config.db_session.execute(
-            cls.bundle_file_link_ignore_duplicate_rule_sql + cls.bundle_ignore_duplicate_rule_sql
+            self.bundle_file_link_ignore_duplicate_rule_sql + self.bundle_ignore_duplicate_rule_sql
         )
         config.db_session.execute(
-            cls.process_file_link_ignore_duplicate_rule_sql + cls.process_ignore_duplicate_rule_sql
+            self.process_file_link_ignore_duplicate_rule_sql + self.process_ignore_duplicate_rule_sql
         )
-        config.db_session.execute(cls.file_ignore_duplicate_rule_sql)
+        config.db_session.execute(self.file_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
-    def create_recursive_functions_in_db(cls):
-        config.db_session.execute(cls.get_all_children_function_sql + cls.get_all_parents_function_sql)
+    def create_recursive_functions_in_db(self):
+        config.db_session.execute(self.get_all_children_function_sql + self.get_all_parents_function_sql)
         config.db_session.commit()
+
+    def drop_db(self, dry_run=True):
+        from sqlalchemy_utils import database_exists, drop_database
+        if database_exists(config.db.url):
+            if dry_run:
+                logger.critical("Would drop database %s", config.db.url)
+            else:
+                drop_database(config.db.url)
 
 
 def run_query(query, rows_per_page=100):
