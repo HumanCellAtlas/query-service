@@ -14,6 +14,7 @@ from dcplib.etl import DSSExtractor
 from dcpquery.db import Bundle, File, BundleFileLink
 from dcpquery import config
 
+config.configure_logging()
 logger = logging.getLogger(__name__)
 
 

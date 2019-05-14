@@ -17,10 +17,10 @@ BUNDLE_EVENTS_QUEUE_NAME=${APP_NAME}-${STAGE}-bundle-events
 ASYNC_QUERIES_QUEUE_NAME=${APP_NAME}-${STAGE}-async-queries
 WEBHOOK_SECRET_NAME=${APP_NAME}/${STAGE}/webhook-auth-config
 
-# Set DEBUG=0 to disable debugging and set the app log level to ERROR.
-# Set DEBUG=1 to change the log level to INFO and cause stack traces to appear in error responses.
-# Set DEBUG=2 to change the log level to DEBUG and cause stack traces to appear in error responses.
-DEBUG=1
+# Set DCPQUERY_DEBUG=0 to disable debugging and set the app log level to ERROR.
+# Set DCPQUERY_DEBUG=1 to change the log level to INFO and cause stack traces to appear in error responses.
+# Set DCPQUERY_DEBUG=2 to change the log level to DEBUG and cause stack traces to appear in error responses.
+DCPQUERY_DEBUG=1
 
 TFSTATE_FILE=.terraform/remote.tfstate
 TF_CLI_ARGS_output="--state ${TFSTATE_FILE}"

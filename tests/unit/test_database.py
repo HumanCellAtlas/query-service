@@ -306,5 +306,15 @@ class TestDBRules(unittest.TestCase):
         config.db_session.commit()
 
 
+class TestDatabaseUtils(unittest.TestCase):
+    def test_init_db(self):
+        DCPQueryDBManager().init_db(dry_run=True)
+        DCPQueryDBManager().init_db()  # dry_run is True by default
+
+    def test_drop_db(self):
+        DCPQueryDBManager().drop_db(dry_run=True)
+        DCPQueryDBManager().drop_db()  # dry_run is True by default
+
+
 if __name__ == '__main__':
     unittest.main()

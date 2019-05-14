@@ -3,10 +3,12 @@ This module serves as a script to install and manage DSS subscriptions for the s
 """
 
 import os, sys, argparse, json, logging
+
 import boto3
 from hca.dss import DSSClient
-
 from dcplib.aws import clients
+
+from . import config
 
 
 def update_webhooks(action, replica, callback_url):
@@ -44,7 +46,7 @@ def update_webhooks(action, replica, callback_url):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    config.configure_logging()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices={"install", "remove"})
     parser.add_argument("--replica", choices={"aws", "gcp"}, default="aws")

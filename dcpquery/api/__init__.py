@@ -87,26 +87,5 @@ class ChaliceWithConnexion(chalice.Chalice):
         return chalice.Response(status_code=flask_res._status_code, headers=res_headers, body=res_body)
 
 
-class ChaliceWithLoggingConfig(chalice.Chalice):
-    """
-    Subclasses Chalice to configure all Python loggers to our liking.
-    """
-    silence_debug_loggers = ["botocore"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        logging.basicConfig()
-        if int(os.environ.get("DEBUG", "0")) == 0:
-            self.debug = False
-        elif int(os.environ.get("DEBUG", "0")) == 1:
-            self.debug = True
-            logging.root.setLevel(logging.INFO)
-        elif int(os.environ.get("DEBUG", "0")) > 1:
-            self.debug = True
-            logging.root.setLevel(logging.DEBUG)
-            for logger_name in self.silence_debug_loggers:
-                logging.getLogger(logger_name).setLevel(logging.INFO)
-
-
-class DCPQueryServer(ChaliceWithConnexion, ChaliceWithLoggingConfig):
+class DCPQueryServer(ChaliceWithConnexion):
     pass

@@ -18,6 +18,10 @@ class DCPQueryConfig:
     s3_bucket_name = os.environ["SERVICE_S3_BUCKET"]
     webhook_secret_name = os.environ["WEBHOOK_SECRET_NAME"]
 
+    debug = False
+    echo = False
+    silence_debug_loggers = ["botocore"]
+
     try:
         import chalice.local
         local_mode = True
@@ -30,7 +34,6 @@ class DCPQueryConfig:
     _db_sessions: typing.Dict[int, typing.Any] = {}
     _webhook_keys = None
     _db_engine_params = {
-        "echo": True,
         "connect_args": {"options": ""},
         "implicit_returning": False
     }
@@ -58,6 +61,7 @@ class DCPQueryConfig:
         if self._db is None:
             connect_opts = " -c statement_timeout={}s".format(self.db_statement_timeout_seconds)
             self._db_engine_params["connect_args"]["options"] += connect_opts
+            self._db_engine_params["echo"] = self.echo
             if self.local_mode:
                 db_user = getpass.getuser()
                 db_password = ""
@@ -85,3 +89,20 @@ class DCPQueryConfig:
             self._db_sessions.clear()
             self._db_sessions[session_id] = self._db_session_factory()
         return self._db_sessions[session_id]
+
+    def configure_logging(self):
+        logging.basicConfig()
+        if int(os.environ.get(f"{self.app_name}_DEBUG".upper(), "0")) == 0:
+            self.debug = False
+        elif int(os.environ.get(f"{self.app_name}_DEBUG".upper(), "0")) == 1:
+            self.debug = True
+            logging.root.setLevel(logging.INFO)
+        elif int(os.environ.get(f"{self.app_name}_DEBUG".upper(), "0")) > 1:
+            self.debug = True
+            self.echo = True
+            logging.root.setLevel(logging.DEBUG)
+            for logger_name in self.silence_debug_loggers:
+                logging.getLogger(logger_name).setLevel(logging.INFO)
+
+        if self.app is not None:
+            self.app.debug = self.debug
