@@ -6,7 +6,7 @@ info:
   version: "0.1.0"
 
 servers:
-  - url: https://{{API_HOST}}/v1
+  - url: https://{{API_DOMAIN_NAME}}/v1
 
 paths:
   /query:
