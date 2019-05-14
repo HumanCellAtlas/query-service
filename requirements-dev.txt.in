@@ -8,4 +8,6 @@ flake8
 mypy
 coverage
 sqlalchemy-utils
+sphinx
+recommonmark
 -r requirements.txt.in
