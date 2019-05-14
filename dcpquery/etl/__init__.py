@@ -1,16 +1,25 @@
 import os, re, json
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType
 
 
 def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor):
+    """
+    This function is used with the ETL interface in dcplib.etl.DSSExtractor.extract.
+
+    Given a bundle ID and directory containing its medatata JSON files, it produces an intermediate representation
+    of the bundle and its files ready to be inserted into the database by BundleLoader.
+    """
     result = dict(uuid=bundle_uuid,
                   version=bundle_version,
                   manifest=json.load(open(bundle_manifest_path)),
                   aggregate_metadata=defaultdict(list),
-                  files=[])
+                  files=OrderedDict())
+    # Load and process all the metadata files; construct the "aggregate_metadata" doc:
+    # - Singleton metadata files get inserted under their name minus the extension (project.json => {"project": {...}})
+    # - Numbered metadata files are put in an array (assay_0.json, assay_1.json => {"assay": [{...0...}, {...1...}]})
     for f in os.listdir(bundle_path):
         if re.match(r"(.+)_(\d+).json", f):
             metadata_key, index = re.match(r"(.+)_(\d+).json", f).groups()
@@ -26,37 +35,19 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
                 result["aggregate_metadata"][metadata_key].append(file_doc)
         for fm in result["manifest"]["files"]:
             if f == fm["name"]:
-                result["files"].append(dict(uuid=fm["uuid"],
-                                            version=fm["version"],
-                                            body=file_doc,
-                                            content_type=fm["content-type"],
-                                            name=fm["name"],
-                                            size=fm["size"]))
-
-    combine_file_data(result)
+                result["files"][fm["name"]] = dict(fm,
+                                                   body=file_doc,
+                                                   extension=get_file_extension(fm["name"]))
+    # For all other (non-metadata) files from the bundle manifest, insert them with a default body
+    # indicating an empty schema type.
+    for fm in result["manifest"]["files"]:
+        if fm["name"] not in result["files"]:
+            result["files"][fm["name"]] = dict(fm,
+                                               body={"schema_type": None},
+                                               extension=get_file_extension(fm["name"]))
+    # Flatten the file list while preserving order.
+    result["files"] = list(result["files"].values())
     return result
-
-
-def combine_file_data(bundle):
-    """"
-    This function takes in a bundle and combines the data contained in bundle['manifest']['files'] with the
-    data contained in bundle['files'] into a combined_file_data dict based on the file_uuid.
-    """
-    file_data = {}
-    for f in bundle['manifest']['files']:
-        uuid = f['uuid']
-        file_data[uuid] = f
-
-    for f in bundle['files']:
-        uuid = f['uuid']
-        file_data[uuid] = {**f, **file_data[uuid]}
-    for uuid in file_data:
-        file_ = file_data[uuid]
-        filename = file_['name']
-        file_['file_extension'] = get_file_extension(filename)
-        if 'body' not in file_:
-            file_['body'] = {'schema_type': None}
-    bundle['combined_file_data'] = file_data
 
 
 def get_file_extension(filename):
@@ -84,10 +75,9 @@ class BundleLoader:
         bf_links = []
         bundle_row = Bundle(uuid=bundle["uuid"], version=bundle["version"], manifest=bundle["manifest"])
 
-        for uuid in bundle['combined_file_data']:
-            file_data = bundle['combined_file_data'][uuid]
+        for file_data in bundle["files"]:
             filename = file_data.pop("name")
-            file_extension = file_data.pop("file_extension")
+            file_extension = file_data.pop("extension")
 
             if filename == "links.json":
                 links = file_data['body']['links']
