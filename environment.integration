@@ -1,0 +1,7 @@
+# Resolve the location of this file and set APP_HOME to the root
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+export APP_HOME="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+export DEPLOYMENT_STAGE=integration
+source "${APP_HOME}/environment"
