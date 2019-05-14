@@ -1,10 +1,13 @@
-import unittest, secrets
+import json, unittest, secrets
 
 from unittest.mock import patch
 
-from dcpquery.etl import load_links, get_child_process_uuids, get_parent_process_uuids, create_process_file_links, \
-    link_parent_and_child_processes
-from tests import vx_bundle, mock_links
+from dcpquery import config
+from dcpquery.db import Bundle
+from dcpquery.etl import (load_links, get_child_process_uuids, get_parent_process_uuids, create_process_file_links,
+                          link_parent_and_child_processes, load_bundle)
+from tests import (vx_bundle, vx_bundle_uuid, vx_bundle_version, vx_bundle_manifest, vx_bundle_aggregate_md, mock_links,
+                   load_fixture)
 
 
 class TestPostgresLoader(unittest.TestCase):
@@ -20,23 +23,30 @@ class TestPostgresLoader(unittest.TestCase):
             implied_views = set(f.schema_type_plural for f in vx_bundle.files if f.normalizable)
             self.assertEqual(result & implied_views, implied_views)
 
-    @unittest.skip("WIP")
     def test_insert_into_database(self):
-        self.loader.load(vx_bundle, dict(a='b'))
-
-        with self.db.transaction() as (cursor, tables):
-            # bundle insertion
-            result = tables.bundles.select(vx_bundle.uuid, vx_bundle.version)
-            self.assertIsNotNone(result)
-
-            # join table
-            result = tables.bundles_files.select_bundle(vx_bundle.uuid, vx_bundle.version)
-            self.assertTrue(len(result) > 0)
-
-            # files and view tables
-            for file in vx_bundle.files:
-                result = tables.files.select(file.uuid, file.version)
-                self.assertIsNotNone(result)
+        config.reset_db_session()
+        files = []
+        for f in json.loads(vx_bundle_manifest)['files']:
+            if f["content-type"] == "application/json":
+                files.append(dict(name=f["name"],
+                                  uuid=f["uuid"],
+                                  version=f["version"],
+                                  body=json.loads(load_fixture(f["name"])),
+                                  content_type=f["content-type"],
+                                  size=f["size"]))
+        load_bundle(dict(uuid=vx_bundle_uuid,
+                         version=vx_bundle_version,
+                         manifest=json.loads(vx_bundle_manifest),
+                         aggregate_metadata=vx_bundle_aggregate_md,
+                         files=files))
+        res = config.db_session.query(Bundle).filter(Bundle.uuid == vx_bundle_uuid,
+                                                     Bundle.version == vx_bundle_version)
+        result = list(res)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].uuid, vx_bundle_uuid)
+        self.assertEqual(result[0].version.strftime("%Y-%m-%dT%H%M%S.%fZ"), vx_bundle_version)
+        self.assertDictEqual(result[0].manifest, json.loads(vx_bundle_manifest))
+        self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
 
     def test_get_child_process_uuids_returns_correct_ids(self):
         child_processes = get_child_process_uuids(['b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa'])
