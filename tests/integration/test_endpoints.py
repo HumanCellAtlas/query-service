@@ -1,32 +1,25 @@
-import json
-import os
-import unittest
+import os, json, unittest
 
 import requests
 
 from dcpquery import config
 
 
-@unittest.skip("WIP")
 class TestQueryService(unittest.TestCase):
-
     def setUp(self):
-
-        _api_host = os.getenv("API_HOST")
-        self.api_url = f"https://{_api_host}/v1"
+        self.api_url = f"https://{os.environ['API_DOMAIN_NAME']}/v1"
         print(f"\n\nTESTING ENVIRONMENT {config.stage} at URL {self.api_url}. \n")
 
     def test_health_check(self):
-        self._make_request(
-            description='CHECK SERVICE HEALTH',
-            verb='GET',
-            url=f"{self.api_url}/health",
-            expected_status=200)
+        self._make_request(description='CHECK SERVICE HEALTH',
+                           verb='GET',
+                           url=f"{self.api_url}/health",
+                           expected_status=200)
 
     def test_query(self):
         query = "SELECT count(*) FROM FILES;"
         self.request = self._make_request(description='CHECK QUERY ENDPOINT', verb='POST',
-                                          url=f"{self.api_url}/query", data=json.dumps(query), expected_status=200)
+                                          url=f"{self.api_url}/v1/query", data=json.dumps(query), expected_status=200)
         response = self.request
         self.assertEqual(json.loads(response)['query'], query)
         self.assertGreaterEqual(json.loads(response)['results'][0]['count'], 0)
