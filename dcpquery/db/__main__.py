@@ -28,8 +28,9 @@ default_test_query = {
 }
 
 config.configure_logging()
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("action", choices={"init", "drop", "load", "load-test", "connect"})
+parser = argparse.ArgumentParser(description=__doc__, prog="db_ctl")
+parser.add_argument("action", choices={"init", "drop", "load", "load-test", "connect", "describe", "run"}, nargs="?")
+parser.add_argument("commands", nargs="*")
 parser.add_argument("--db", choices={"local", "remote"}, default="local")
 parser.add_argument("--dss-swagger-url", default=f"https://{config.dss_host}/v1/swagger.json")
 parser.add_argument("--dry-run", action="store_true", help="Print commands that would be executed without running them")
@@ -39,7 +40,10 @@ args = parser.parse_args(sys.argv[1:])
 if args.db == "remote":
     config.local_mode = False
 
-if args.action == "init":
+if args.action is None:
+    parser.print_help()
+    parser.exit()
+elif args.action == "init":
     DCPQueryDBManager().init_db(dry_run=args.dry_run)
 elif args.action == "drop":
     DCPQueryDBManager().drop_db(dry_run=args.dry_run)
@@ -57,5 +61,11 @@ elif args.action in {"load", "load-test"}:
         finalizer=create_view_tables,
         **extractor_args
     )
-elif args.action == "connect":
-    os.execvp("psql", ["psql", str(config.db.url).replace("postgresql+psycopg2://", "postgres://")])
+elif args.action in {"connect", "run", "describe"}:
+    db_url = str(config.db.url).replace("postgresql+psycopg2://", "postgres://")
+    psql_args = ["psql", db_url]
+    for command in args.commands:
+        psql_args.extend(["--command", command])
+    if args.action == "describe":
+        psql_args.extend(["--command", r"\d+"])
+    os.execvp("psql", psql_args)
