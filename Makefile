@@ -50,7 +50,7 @@ build-chalice-config:
 # package prepares a Lambda zipfile with the help of the Chalice packager (which also emits a SAM template).
 # We also inject any wheels found in vendor.in, and rewrite the zipfile to make the build reproducible.
 package:
-	rm -rf vendor
+	rm -rf vendor dist/deployment
 	mkdir vendor
 	cp -a $(APP_NAME) $(APP_NAME)-api.yml vendor
 	find vendor -name '*.pyc' -delete
