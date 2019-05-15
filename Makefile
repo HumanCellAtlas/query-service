@@ -88,7 +88,7 @@ lint:
 	source environment
 	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
-test: lint
+test: lint docs
 	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests --top-level-directory . --verbose
 
 integration-test:
