@@ -55,6 +55,7 @@ elif args.action in {"load", "load-test"}:
         transformer=transform_bundle,
         loader=BundleLoader().load_bundle,
         finalizer=create_view_tables,
-        **extractor_args)
+        **extractor_args
+    )
 elif args.action == "connect":
     os.execvp("psql", ["psql", str(config.db.url).replace("postgresql+psycopg2://", "postgres://")])
