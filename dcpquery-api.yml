@@ -146,6 +146,8 @@ components:
         query:
           type: string
           description: Query to run, given as a SQL string.
+      required:
+        - query
   
     QueryJobDescription:
       type: object
@@ -158,6 +160,10 @@ components:
           enum: [new, running, done, failed]
         results:
           type: array
+      required:
+        - job_id
+        - status
+        - results
   
     QueryResult:
       type: object
@@ -168,6 +174,9 @@ components:
           description: Submitted query
         results:
           type: array
+      required:
+        - query
+        - results
 
     Error:
       type: object
