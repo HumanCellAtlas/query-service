@@ -49,7 +49,7 @@ containing the bundle id is sent to the Query API. The bundle_id is added to the
 ## Developing the Query Service
 
 #### Prerequisites: Ubuntu
-Run `apt-get install jq moreutils gettext make virtualenv postgresql unzip`.
+Run `apt-get install jq moreutils gettext make virtualenv postgresql zip unzip`.
 
 #### Prerequisites: Mac OS
 Run:

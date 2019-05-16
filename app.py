@@ -50,7 +50,7 @@ def handle_bundle_event():
 def bundle_event_handler(event):
     for record in event:
         print("Processing:", record.body)
-        if record["event_type"] != "CREATE":
+        if record.body["event_type"] != "CREATE":
             continue
         etl_one_bundle(**record.body["match"])
 

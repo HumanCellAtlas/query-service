@@ -98,3 +98,11 @@ resource "aws_s3_bucket" "query_service_bucket" {
 resource "aws_secretsmanager_secret" "webhook_auth_config" {
   name = "${var.APP_NAME}/${var.STAGE}/webhook-auth-config"
 }
+
+resource "aws_secretsmanager_secret" "gitlab_api" {
+  name = "${var.APP_NAME}/gitlab-api"
+}
+
+resource "aws_secretsmanager_secret" "gitlab_token" {
+  name = "${var.APP_NAME}/gitlab-token"
+}
