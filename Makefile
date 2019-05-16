@@ -80,7 +80,7 @@ destroy: init-tf
 	terraform destroy
 
 clean:
-	git clean -Xdf dist .terraform .chalice
+	git clean -Xdf dist .terraform .chalice docs/_build
 
 lint:
 	flake8 *.py $(APP_NAME) tests
@@ -88,7 +88,7 @@ lint:
 	source environment
 	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
-test: lint
+test: lint docs
 	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests --top-level-directory . --verbose
 
 integration-test:
@@ -137,5 +137,8 @@ requirements.txt requirements-dev.txt : %.txt : %.txt.in
 
 requirements-dev.txt : requirements.txt.in
 
+docs:
+	$(MAKE) -C docs html
+
 .PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package get-tf-output init-tf init-db destroy
-.PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements
+.PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements docs
