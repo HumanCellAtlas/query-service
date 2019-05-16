@@ -25,5 +25,5 @@ def post(body):
                 raise QuerySizeError()
     except (QuerySizeError, QueryTimeoutError):
         job_id = create_async_query_job(query)
-        return redirect(f"query_jobs/{job_id}")
+        return redirect(f"query_jobs/{job_id}?redirect_when_waiting=true&redirect_when_done=true")
     return {"query": query, "results": results}, requests.codes.ok

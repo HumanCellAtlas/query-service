@@ -148,7 +148,7 @@ components:
           description: Query to run, given as a SQL string.
       required:
         - query
-  
+
     QueryJobDescription:
       type: object
       properties:
@@ -163,8 +163,7 @@ components:
       required:
         - job_id
         - status
-        - results
-  
+
     QueryResult:
       type: object
       description: Result of query
