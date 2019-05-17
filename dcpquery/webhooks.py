@@ -12,7 +12,7 @@ from . import config
 
 
 def update_webhooks(action, replica, callback_url):
-    dss = DSSClient()
+    dss = config.dss_client
     if action == "install":
         for subscription in dss.get_subscriptions(replica=replica, subscription_type="jmespath")["subscriptions"]:
             if callback_url != subscription["callback_url"]:

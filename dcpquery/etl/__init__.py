@@ -2,7 +2,6 @@ import os, re, json, tempfile
 from collections import OrderedDict
 
 from dcplib.etl import DSSExtractor
-from hca.dss import DSSClient
 
 from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType
@@ -224,7 +223,6 @@ def link_parent_and_child_processes(process):
 
 
 def etl_one_bundle(bundle_uuid, bundle_version):
-    dss_client = DSSClient(swagger_url=f"https://{os.environ['DSS_HOST']}/v1/swagger.json")
-    extractor = DSSExtractor(staging_directory=tempfile.gettempdir(), dss_client=dss_client)
+    extractor = DSSExtractor(staging_directory=tempfile.gettempdir(), dss_client=config.dss_client)
     print(extractor.get_files_to_fetch_for_bundle(bundle_uuid=bundle_uuid, bundle_version=bundle_version))
     # TODO: (akislyuk): implement etl_one_bundle

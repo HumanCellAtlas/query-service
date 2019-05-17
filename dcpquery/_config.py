@@ -11,7 +11,7 @@ class DCPQueryConfig:
     app_name = os.environ["APP_NAME"]
     app = None
     stage = os.environ["STAGE"]
-    dss_host = os.environ["DSS_HOST"]
+    dss_host, _dss_client = os.environ["DSS_HOST"], None
     bundle_events_queue_name = os.environ["BUNDLE_EVENTS_QUEUE_NAME"]
     async_queries_queue_name = os.environ["ASYNC_QUERIES_QUEUE_NAME"]
     s3_bucket_name = os.environ["SERVICE_S3_BUCKET"]
@@ -108,3 +108,10 @@ class DCPQueryConfig:
 
         if self.app is not None:
             self.app.debug = self.debug
+
+    @property
+    def dss_client(self):
+        if self._dss_client is None:
+            from hca.dss import DSSClient
+            self._dss_client = DSSClient(swagger_url=f"https://{self.dss_host}/v1/swagger.json")
+        return self._dss_client
