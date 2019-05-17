@@ -1,3 +1,4 @@
+import os, sys
 import sqlalchemy
 import unittest, secrets
 from uuid import uuid4
@@ -254,6 +255,15 @@ class TestDBRules(unittest.TestCase):
 
 
 class TestDatabaseUtils(unittest.TestCase):
+    def test_db_cli(self):
+        orig_argv = sys.argv
+        sys.argv = ["prog", "--help"]
+        try:
+            import dcpquery.db.__main__
+        except SystemExit as e:
+            self.assertEqual(e.args[0], os.EX_OK)
+        sys.argv = orig_argv
+
     def test_init_db(self):
         DCPQueryDBManager().init_db(dry_run=True)
         DCPQueryDBManager().init_db()  # dry_run is True by default
