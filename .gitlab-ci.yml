@@ -25,7 +25,7 @@ before_script:
   - virtualenv --python=python3.6 .venv
   - source .venv/bin/activate
   - pip install --quiet -r requirements-dev.txt
-  - if [[ $CI_COMMIT_REF_NAME =~ (staging|integration|prod) ]]; then export DEPLOYMENT_STAGE=$CI_COMMIT_REF_NAME; fi
+  - if [[ $CI_COMMIT_REF_NAME =~ ^(staging|integration|prod)$ ]]; then export DEPLOYMENT_STAGE=$CI_COMMIT_REF_NAME; fi
   - source environment
   - make build-chalice-config init-db load-test-data init-tf
   - aws secretsmanager get-secret-value --secret-id ${APP_NAME}/${STAGE}/gcp-credentials.json | jq -r .SecretString > gcp-credentials.json
