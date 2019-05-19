@@ -13,6 +13,7 @@ stages:
   - test
   - deploy
   - integration_test
+  - release
 
 before_script:
   - source /etc/profile
