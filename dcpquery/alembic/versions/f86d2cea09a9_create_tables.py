@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'f86d2cea09a9'
-down_revision = '0000000'
+down_revision = '000000000000'
 branch_labels = None
 depends_on = None
 
@@ -85,7 +85,7 @@ def downgrade():
     op.drop_table('process_join_table')
     op.drop_table('process_file_join_table')
     op.execute('DROP TABLE files CASCADE;')
-    op.drop_table('schema_types')
+    op.drop_table('dcp_metadata_schema_types')
     op.drop_table('processes')
     op.drop_table('bundles')
     op.execute("DROP TYPE connectiontypeenum CASCADE;")

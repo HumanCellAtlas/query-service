@@ -83,8 +83,8 @@ def upgrade():
 
 
 def downgrade():
-    op.execute("DROP RULE process_table_ignore_duplicate_inserts ON processes;")
-    op.execute("DROP RULE file_table_ignore_duplicate_inserts ON files;")
-    op.execute("DROP RULE bundle_table_ignore_duplicate_inserts ON bundles;")
-    op.execute("DROP RULE bundle_file_join_table_ignore_duplicate_inserts ON bundle_file_links;")
-    op.execute("DROP RULE process_file_join_table_ignore_duplicate_inserts ON process_file_join_table;")
+    op.execute("DROP RULE IF EXISTS process_table_ignore_duplicate_inserts ON processes;")
+    op.execute("DROP RULE IF EXISTS file_table_ignore_duplicate_inserts ON files;")
+    op.execute("DROP RULE IF EXISTS bundle_table_ignore_duplicate_inserts ON bundles;")
+    op.execute("DROP RULE IF EXISTS bundle_file_join_table_ignore_duplicate_inserts ON bundle_file_links;")
+    op.execute("DROP RULE IF EXISTS process_file_join_table_ignore_duplicate_inserts ON process_file_join_table;")

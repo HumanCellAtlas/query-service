@@ -4,7 +4,7 @@ import unittest, secrets
 from uuid import uuid4
 
 # from lib.etl.load import PostgresLoader
-from dcpquery.db import Process, File, Bundle, ProcessFileLink, BundleFileLink, DCPQueryDBManager
+from dcpquery.db import Process, File, Bundle, ProcessFileLink, BundleFileLink, drop_db, init_db
 from dcpquery.etl import load_links
 from tests import vx_bundle, vx_bf_links, clear_views, truncate_tables, eventually, mock_links, vx_bundle_aggregate_md
 
@@ -90,56 +90,6 @@ class TestPostgresLoader(unittest.TestCase):
 
         expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
         self.assertEqual(result[6].file_fqid, f"{self.project_file.uuid}.{expect_version}")
-
-
-    @unittest.skip("WIP")
-    def test_process_links(self):
-        '''
-            # insert process_links
-            process_uuid = 'a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-            file_uuid = 'b0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-            process_file_connection_type = 'INPUT_ENTITY'
-
-            row_count = tables.process_links.insert(
-                process_uuid, file_uuid, process_file_connection_type
-            )
-            assert row_count == 1
-            # select process_links
-            process = tables.process_links.select_by_process_uuid(process_uuid)
-
-            assert process['uuid'] == process_uuid
-            assert process['file_uuid'] == file_uuid
-            assert process['process_file_connection_type'] == process_file_connection_type
-
-            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid)
-            assert processes == [process_uuid]
-
-            processes = tables.process_links.list_process_uuids_for_file_uuid(file_uuid, 'OUTPUT_ENTITY')
-            assert processes == []
-
-            # TODO @madison - refactor this into multiple tests
-            # insert - process_links_join_table
-            process1_uuid = 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-            row_count = tables.process_links.insert_parent_child_link(process_uuid, process1_uuid)
-            assert row_count == 1
-
-            # select process_links_join_table_functions
-            process2_uuid = 'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-            process3_uuid = 'a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-            process4_uuid = 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-            process5_uuid = 'a0000005-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-
-            tables.process_links.insert_parent_child_link(process_uuid, process2_uuid)
-            tables.process_links.insert_parent_child_link(process1_uuid, process3_uuid)
-            tables.process_links.insert_parent_child_link(process1_uuid, process4_uuid)
-            tables.process_links.insert_parent_child_link(process5_uuid, process4_uuid)
-
-            children = tables.process_links.list_direct_children_process_uuids(process_uuid)
-            assert children == [process1_uuid, process2_uuid]
-
-            parents = tables.process_links.list_direct_parent_process_uuids(process4_uuid)
-            assert parents == [process1_uuid, process5_uuid]
-        '''
 
     @unittest.skip("WIP")
     def test_table_create_list(self):
@@ -317,12 +267,12 @@ class TestDatabaseUtils(unittest.TestCase):
         sys.argv = orig_argv
 
     def test_init_db(self):
-        DCPQueryDBManager().init_db(dry_run=True)
-        DCPQueryDBManager().init_db()  # dry_run is True by default
+        init_db(dry_run=True)
+        init_db()  # dry_run is True by default
 
     def test_drop_db(self):
-        DCPQueryDBManager().drop_db(dry_run=True)
-        DCPQueryDBManager().drop_db()  # dry_run is True by default
+        drop_db(dry_run=True)
+        drop_db()  # dry_run is True by default
 
 
 class TestDBManager:

@@ -205,3 +205,37 @@ Contributions are welcome; please read [CONTRIBUTING.md](CONTRIBUTING.md).
 [![Test Coverage](https://codecov.io/gh/HumanCellAtlas/query-service/branch/master/graph/badge.svg)](https://codecov.io/gh/HumanCellAtlas/query-service)
 [![Production Health Check](https://status.data.humancellatlas.org/service/query-service-prod.svg)]()
 [![Master Build Status](https://status.dev.data.humancellatlas.org/build/HumanCellAtlas/metrics/master.svg)](https://allspark.dev.data.humancellatlas.org/HumanCellAtlas/query-service/commits/master)
+
+
+## Migrations
+### When to Create a Migration
+- Anytime you make changes to the database schema (adding a table, changing a field name, creating or updating an enum etc)
+
+### Creating Migration Files
+ - Autogenerate a migration file based on changes made to the ORM. On the command line run
+ `make create-migration`
+     - This will create a migration in `dcpquery/alembic/versions`. Take a look at the generated SQL to ensure it represents the changes you wish to make to the database. Potential issues with migration autogeneration are [listed below](#Autogenerate can't detect) 
+     - If you get this error you need to apply the migrations you've already created to the db  (or delete them) before you can create a new migration
+     ```
+     ERROR [alembic.util.messaging] Target database is not up to date.
+      FAILED: Target database is not up to date.
+     ```
+     - Note that this will create a migration even if you have not made any changes to the db (in that case it will just be an empty migration file which you should delete)
+       
+ - To create a blank migration file run 
+ `alembic revision -m "description of changes"`
+    - The description of changes will be appended to the migration files name so you'll want to keep it short (less than 40 chars) spaces will be replaced with underscores
+    - You can then edit the newly created migration file (in `dcpquery/alembic/versions`)
+
+### Applying new migrations to the database
+- Ensure you are connected to the correct database (run `python -m dcpquery.db connect` to see the database url)
+- From the command line run `make apply-migrations`
+- To unapply a migration run `alembic downgrade migration_id` (the migration_id is the string in front of the underscore in the migration name, for file 000000000000_init_db.py the migration id is 000000000000
+### Autogenerate can't detect
+- Changes of table name. These will come out as an add/drop of two different tables, and should be hand-edited into a name change instead.
+
+- Changes of column name. Like table name changes, these are detected as a column add/drop pair, which is not at all the same as a name change.
+- Anonymously named constraints. Give your constraints a name, e.g. UniqueConstraint('col1', 'col2', name="my_name"). 
+
+- Special SQLAlchemy types such as Enum when generated on a backend which doesn’t support ENUM directly - this because the representation of such a type in the non-supporting database, i.e. a CHAR+ CHECK constraint, could be any kind of CHAR+CHECK. For SQLAlchemy to determine that this is actually an ENUM would only be a guess, something that’s generally a bad idea.
+

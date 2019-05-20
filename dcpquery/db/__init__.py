@@ -140,9 +140,12 @@ def init_db(dry_run=True):
         logger.info("Creating database")
         create_database(config.db.url)
     logger.info("Initializing database")
+    if dry_run:
+        orig_db_engine_params = dict(config._db_engine_params)
+        config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
 
     if dry_run:
-        config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
+        config._db_engine_params = orig_db_engine_params
 
 
 def run_query(query, rows_per_page=100):
