@@ -60,7 +60,7 @@ def process_async_query(job_id, query):
     except DCPQueryError as e:
         job_status_doc = {"job_id": job_id, "status": "done", "error": e.to_problem().body, "result_location": None}
     except Exception as e:
-        problem = DCPQueryError(status=500, title="Async query internal error").to_problem().body
+        problem = DCPQueryError(status=500, title="Async query internal error", detail=str(e)).to_problem().body
         job_status_doc = {"job_id": job_id, "status": "done", "error": problem, "result_location": None}
 
     job_status_object.put(Body=json.dumps(job_status_doc).encode())
