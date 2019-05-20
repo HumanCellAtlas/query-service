@@ -262,8 +262,8 @@ def run_query(query, rows_per_page=100):
                 yield row
             if not rows:
                 break
-
-    except sqlalchemy_exceptions.ProgrammingError as e:
+    except (sqlalchemy_exceptions.InternalError, sqlalchemy_exceptions.ProgrammingError) as e:
+        config.db_session.rollback()
         raise DCPQueryError(title=e.orig.pgerror, detail={"pgcode": e.orig.pgcode})
     except sqlalchemy_exceptions.OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):

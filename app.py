@@ -25,7 +25,9 @@ def root():
 
 @app.route("/internal/health")
 def health_check():
-    return json.dumps({"app": str(app), "db": str(config.db)})
+    config.db_session.execute("SELECT 1")
+    list(aws.resources.s3.Bucket(config.s3_bucket_name).objects.limit(1))
+    return {"status": "OK"}
 
 
 @app.route("/bundles/event", methods=["POST"])
@@ -50,9 +52,10 @@ def handle_bundle_event():
 def bundle_event_handler(event):
     for record in event:
         print("Processing:", record.body)
-        if record.body["event_type"] != "CREATE":
+        dss_event = json.loads(record.body)
+        if dss_event["event_type"] != "CREATE":
             continue
-        etl_one_bundle(**record.body["match"])
+        etl_one_bundle(**dss_event["match"])
 
 
 @app.on_sqs_message(queue=config.async_queries_queue_name)
