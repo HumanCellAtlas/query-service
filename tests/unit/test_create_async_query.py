@@ -1,4 +1,4 @@
-import os, sys, unittest
+import os, sys, json, unittest
 
 from unittest.mock import patch
 
@@ -12,7 +12,7 @@ class TestCreateAsyncQuery(unittest.TestCase):
     query = "SELECT * FROM files limit 10;"
     mock_event_record = {'messageId': job_id,
                          'receiptHandle': 'AAAAA',
-                         'body': '"SELECT * FROM files limit 10;"',
+                         'body': json.dumps(query),
                          'attributes': {'ApproximateReceiveCount': '1',
                                         'SentTimestamp': '1547593710857',
                                         'SenderId': 'AROAIW2TZ546I:query-api-dev',
@@ -32,6 +32,14 @@ class TestCreateAsyncQuery(unittest.TestCase):
             result_location={'Bucket': config.s3_bucket_name, 'Key': f'job_result/{self.job_id}'},
             status="done"
         )
+
+    @patch("dcpquery.api.query_jobs.set_job_status")
+    def test_process_async_query_with_invalid_query(self, set_job_status):
+        config.db_statement_timeout_seconds = 880
+        process_async_query(dict(self.mock_event_record, body=json.dumps("SELECT * FROM NONEXISTENT_TABLE")))
+        set_job_status_args = set_job_status.call_args
+        self.assertEqual(set_job_status_args[0][0], self.job_id)
+        self.assertEqual(set_job_status_args[1]["status"], "failed")
 
     @patch("dcpquery.api.query_job.set_job_status")
     @patch("dcpquery.api.query_job.aws.resources.sqs.Queue")
