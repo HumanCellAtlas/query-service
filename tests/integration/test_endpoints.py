@@ -13,7 +13,7 @@ class TestQueryService(unittest.TestCase):
     def test_health_check(self):
         self._make_request(description='CHECK SERVICE HEALTH',
                            verb='GET',
-                           url=f"{self.api_url}/health",
+                           url=f"{self.api_url}/internal/health",
                            expected_status=200)
 
     def test_query(self):
