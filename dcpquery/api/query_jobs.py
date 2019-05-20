@@ -45,7 +45,7 @@ def set_job_status(job_id, status, error=None, result_location=None):
     job_status_object = bucket.Object(f"job_status/{job_id}")
     job_status_doc = {"job_id": job_id, "status": status, "error": error, "result_location": result_location}
     job_status_object.put(Body=json.dumps(job_status_doc, cls=JSONEncoder).encode())
-    return {"Bucket": bucket.name, "Key": job_status_object.name}
+    return {"Bucket": bucket.name, "Key": job_status_object.key}
 
 
 def set_job_result(job_id, result, error=None):
@@ -53,7 +53,7 @@ def set_job_result(job_id, result, error=None):
     job_result_object = bucket.Object(f"job_result/{job_id}")
     job_result_doc = {"job_id": job_id, "status": "done", "result": result, "error": error}
     job_result_object.put(Body=json.dumps(job_result_doc, cls=JSONEncoder).encode())
-    return {"Bucket": bucket.name, "Key": job_result_object.name}
+    return {"Bucket": bucket.name, "Key": job_result_object.key}
 
 
 def process_async_query(job_id, query):
