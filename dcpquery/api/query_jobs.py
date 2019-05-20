@@ -28,7 +28,7 @@ def get(job_id, redirect_when_waiting=False, redirect_when_done=False):
                                  "Retry-After": "60",
                                  "Content-Type": "application/json"},
                         response=json.dumps(job_status).encode())
-    if "result_location" in job_status:
+    if job_status.get("result_location") is not None:
         result_url = clients.s3.generate_presigned_url(ClientMethod="get_object",
                                                        Params=dict(**job_status["result_location"]),
                                                        ExpiresIn=60 * 60 * 24 * 7)
