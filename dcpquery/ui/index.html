@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/codemirror.min.css" integrity="sha256-I8NyGs4wjbMuBSUE40o55W6k6P7tu/7G28/JGUUYCIs=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/css/dataTables.bootstrap4.min.css" integrity="sha256-F+DaKAClQut87heMIC6oThARMuWne8+WzxIDT7jXuPA=" crossorigin="anonymous" />
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/codemirror.min.js" integrity="sha256-OMbqhJ5GYA+UQ2a9UE9iXHA1kn3hlZCFL5aZmpSp/+M=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/mode/sql/sql.min.js" integrity="sha256-RwVNSHygrfS4dnVU+7yEla2Ql7jpfL/f7+acXtxuVC8=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/addon/hint/sql-hint.min.js" integrity="sha256-+lZ34RlzAR6AHKaFLiwYZFM+yJwSzADpjwC40QoIfds=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.47.0/addon/display/autorefresh.min.js" integrity="sha256-QuGJoD9Zg8DnF/sCAziOU04TfXIXRMpeI7EjlQB5saU=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/jquery.dataTables.min.js" integrity="sha256-t5ZQTZsbQi8NxszC10CseKjJ5QeMw5NINtOXQrESGSU=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/dataTables.bootstrap4.min.js" integrity="sha256-hJ44ymhBmRPJKIaKRf3DSX5uiFEZ9xB/qx8cNbJvIMU=" crossorigin="anonymous"></script>
+
+  <style>
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .jumbotron {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+      margin-bottom: 0;
+      background-color: #fff;
+    }
+
+    footer {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+
+    footer p {
+      margin-bottom: .25rem;
+    }
+  </style>
+
+  <title>Human Cell Atlas DCP Query Service</title>
+</head>
+<body>
+<script>
+  $(document).ready(function() {
+    $('[id^=cm-viewer-]').each(function() {
+      CodeMirror.fromTextArea(this, {mode: 'sql', readOnly: 'nocursor'});
+    });
+    document.editor = CodeMirror.fromTextArea($('#cm-editor').first()[0], {mode: 'sql', autoRefresh: true});
+  });
+
+  function JSONRequest(route, body) {
+    return new Request(route, {method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body)});
+  }
+  function dispatchQuery(query, params) {
+    $('#query-result').DataTable().clear().destroy();
+    $('#query-error').hide();
+    $('#query-result').text("Query running...");
+    if (!query) {
+      query = document.editor.getValue();
+    }
+    fetch(JSONRequest("/v1/query", {query}))
+            .then(function(res) {
+              return res.json();
+            }).then(function(results) {
+      console.log(">>>");
+      console.dir(query);
+      console.log("<<<");
+      console.dir(results);
+      if (results.status >= 400) {
+        $('#query-result').hide();
+        $('#query-error-text').text(results.title);
+        $('#query-error').show();
+      } else {
+        $('#query-error').hide();
+        if (results["results"].length > 0) {
+          var columns = Object.keys(results["results"][0]).map(i => ({title: i, data: i}));
+          $('#query-result').empty();
+          $('#query-result').DataTable({data: results["results"], columns: columns});
+        } else {
+          $('#query-result').text("No results");
+        }
+        $('#query-result').show();
+        return results["results"];
+      }
+    }).catch(function(error) {
+      alert(error);
+    });
+  }
+  function getSnippetSQL(cm_selector) {
+    return $(cm_selector).find('.CodeMirror')[0].CodeMirror.getDoc().getValue();
+  }
+  function copyToClipboard(cm_selector, text_xform_cb) {
+    // CodeMirror.execCommand('selectAll');
+    var text = getSnippetSQL(cm_selector);
+    if (text_xform_cb) {
+      text = text_xform_cb(text);
+    }
+    navigator.clipboard.writeText(text);
+    $('#copy-ack-text').text(text);
+  }
+  function prepareCLISnippet(text) {
+    return "hca query post-query --query=$'" + text.replace("'", "\\'") + "'";
+  }
+  function prepareAPISnippet(text) {
+    return "http https://{{env["API_DOMAIN_NAME"]}}/v1/query query=$'" + text.replace("'", "\\'") + "'";
+  }
+  function configureModalEditor(text) {
+    document.editor.setValue(text);
+    setTimeout(function() { document.editor.refresh() }, 200);
+  }
+</script>
+
+<header>
+  <div class="collapse bg-dark" id="navbarHeader">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-8 col-md-7 py-4">
+          <h4 class="text-white">About</h4>
+          <p class="text-muted">The HCA DCP Query Service provides an interface for scientists and developers to query metadata associated with experimental and analysis data stored in the <a href="https://humancellatlas.org/">Human Cell Atlas</a> <a href="https://www.humancellatlas.org/data-sharing">Data Coordination Platform</a> (DCP). Metadata from the <a href="https://github.com/HumanCellAtlas/data-store">DCP Data Store</a> are indexed and stored in an <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a> <a href="https://www.postgresql.org/">PostgreSQL</a> database.</p>
+        </div>
+        <div class="col-sm-4 offset-md-1 py-4">
+          <h4 class="text-white">Contact</h4>
+          <ul class="list-unstyled">
+            <li><a href="https://join-hca-slack.herokuapp.com/" class="text-white">HCA Slack</a></li>
+            <li><a href="mailto:query-service-team@data.humancellatlas.org" class="text-white">Email team</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="navbar navbar-dark bg-dark shadow-sm">
+    <div class="container d-flex justify-content-between">
+      <a href="#" class="navbar-brand d-flex align-items-center">
+        <strong>{{env["APP_NAME"]}}</strong>
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarHeader" aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main role="main">
+
+  <section class="jumbotron text-center">
+    <div class="container">
+      <h1 class="jumbotron-heading">Sample Queries</h1>
+      <p class="lead text-muted">
+        The DCP Query service allows relational querying of HCA metadata over a RESTful HTTP API.
+        The examples below are starting points for data exploration and programmatic access.
+        Each example can be opened, edited, run in the browser to display the results in a table view, or copied as an HCA CLI command or API request.
+      </p>
+      <p>
+        <a href="#" class="btn btn-primary my-2" data-toggle="modal" data-target="#queryEditorModal">Open query editor</a>
+        <a href="v1/ui" class="btn btn-secondary my-2">Open API documentation & Swagger UI</a>
+      </p>
+    </div>
+  </section>
+
+  <div class="album py-5 bg-light">
+    <div class="container">
+      <div class="row">
+        {% for query in queries %}
+        <div class="col-md-4">
+          <div class="card mb-4 shadow-sm">
+            <div class="card-body" id="cm-container-{{loop.index}}">
+              <textarea width="100%" height="100%" id="cm-viewer-{{loop.index}}">{{ query }}</textarea>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#copyAckModal" onclick="copyToClipboard('#cm-container-{{loop.index}}')">
+                    Copy SQL
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#copyAckModal" onclick="copyToClipboard('#cm-container-{{loop.index}}', prepareCLISnippet)">
+                    CLI
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#copyAckModal" onclick="copyToClipboard('#cm-container-{{loop.index}}', prepareAPISnippet)">
+                    API
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#queryEditorModal" onclick="configureModalEditor(getSnippetSQL('#cm-container-{{loop.index}}'))">
+                    Edit
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="dispatchQuery(getSnippetSQL('#cm-container-{{loop.index}}'))" data-toggle="modal" data-target="#queryResultModal">
+                    ▶️Run
+                  </button>
+                </div>
+                <small class="text-muted">2 sec</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="queryEditorModal" tabindex="-1" role="dialog" aria-labelledby="queryEditorModalLabel" aria-hidden="true">
+    <div class="modal-dialog mw-100 w-75" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Query Editor</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+        <textarea id="cm-editor">
+          /* Type your query here. */
+        </textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="dispatchQuery()" data-toggle="modal" data-target="#queryResultModal">▶️Run</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="queryResultModal" tabindex="-1" role="dialog" aria-labelledby="queryResultModalLabel" aria-hidden="true">
+    <div class="modal-dialog mw-100 w-75" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Query Result</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body table-responsive wrap">
+          <div id="query-error" class="alert alert-danger" role="alert">
+            <pre id="query-error-text"></pre>
+          </div>
+          <table id="query-result" class="table table-striped table-bordered" style="width:100%">
+            <thead><tr><td></td></tr></thead>
+            <tbody><tr><td></td></tr></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="copyAckModal" tabindex="-1" role="dialog" aria-labelledby="copyAckModalLabel" aria-hidden="true">
+    <div class="modal-dialog mw-100 w-75" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Text Copied!</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="copy-ack" class="alert alert-primary" role="alert">
+            <pre id="copy-ack-text"></pre>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-muted">
+  <div class="container">
+    <p class="float-right">
+      <a href="#">Back to top</a>
+    </p>
+    <p>Human Cell Atlas DCP Query Service {{env["VERSION"]}}</p>
+  </div>
+</footer>
+</html>
