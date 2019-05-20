@@ -57,14 +57,17 @@ def set_job_result(job_id, result, error=None):
 
 
 def process_async_query(event_record):
+    print("0")
     job_id = event_record["messageId"]
     set_job_status(job_id, status="running")
     query = json.loads(event_record["body"])
+    print("1")
     try:
         results = []
         total_result_size = 0
         config.reset_db_timeout_seconds(880)
         for result in run_query(query):
+            print(result)
             total_result_size += len(json.dumps(result, cls=JSONEncoder))
             results.append(result)
             if total_result_size > config.S3_SINGLE_UPLOAD_MAX_SIZE:

@@ -8,9 +8,9 @@ from dcpquery.api.query_jobs import process_async_query
 
 
 class TestCreateAsyncQuery(unittest.TestCase):
-    uuid = '26f0424a-fdce-455f-ac2e-f8f5619c6eda'
+    job_id = '26f0424a-fdce-455f-ac2e-f8f5619c6eda'
     query = "SELECT * FROM files limit 10;"
-    mock_event_record = {'messageId': '26f0424a-fdce-455f-ac2e-f8f5619c6eda',
+    mock_event_record = {'messageId': job_id,
                          'receiptHandle': 'AAAAA',
                          'body': '"SELECT * FROM files limit 10;"',
                          'attributes': {'ApproximateReceiveCount': '1',
@@ -25,11 +25,10 @@ class TestCreateAsyncQuery(unittest.TestCase):
 
     @patch("dcpquery.api.query_jobs.set_job_status")
     def test_process_async_query_keeps_job_status_updated(self, set_job_status):
-        job_id = self.mock_event_record["messageId"]
         process_async_query(self.mock_event_record)
         set_job_status.assert_called_with(
-            job_id,
-            result_location={'Bucket': config.s3_bucket_name, 'Key': f'job_result/{job_id}'},
+            self.job_id,
+            result_location={'Bucket': config.s3_bucket_name, 'Key': f'job_result/{self.job_id}'},
             status="done"
         )
 
