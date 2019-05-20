@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/codemirror.min.css" integrity="sha256-I8NyGs4wjbMuBSUE40o55W6k6P7tu/7G28/JGUUYCIs=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/codemirror.min.js" integrity="sha256-OMbqhJ5GYA+UQ2a9UE9iXHA1kn3hlZCFL5aZmpSp/+M=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/mode/sql/sql.min.js" integrity="sha256-RwVNSHygrfS4dnVU+7yEla2Ql7jpfL/f7+acXtxuVC8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.46.0/addon/hint/sql-hint.min.js" integrity="sha256-+lZ34RlzAR6AHKaFLiwYZFM+yJwSzADpjwC40QoIfds=" crossorigin="anonymous"></script>
+    <script>
+      window.onload = function() {
+        var myCodeMirror = CodeMirror(document.body, {mode: "sql"});
+      };
+    </script>
+  </head>
+  <body>
+    Hello from {{env["APP_NAME"]}}! Swagger UI is <a href="v1/ui">here</a>.</body></html>
+  </body>
+</html>

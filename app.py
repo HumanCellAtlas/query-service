@@ -1,11 +1,12 @@
 import os, sys, json
 
-import boto3, requests, sqlalchemy
+import boto3, requests, sqlalchemy, jinja2
 from requests_http_signature import HTTPSignatureAuth
 from chalice import Chalice, Response
 from dcplib import aws
 
-from dcpquery import api, config
+import dcpquery
+from dcpquery import api, ui, config
 from dcpquery.api.query_jobs import process_async_query, set_job_status
 from dcpquery.etl import process_bundle_event
 
@@ -17,7 +18,8 @@ config.configure_logging()
 
 @app.route("/")
 def root():
-    body = f'<html><body>Hello from {os.environ["APP_NAME"]}! Swagger UI is <a href="v1/ui">here</a>.</body></html>'
+    with open(os.path.join(os.path.abspath(os.path.dirname(dcpquery.__file__)), "ui", "index.html")) as fh:
+        body = jinja2.Template(fh.read()).render(env=os.environ)
     return Response(status_code=requests.codes.ok, headers={"Content-Type": "text/html"}, body=body)
 
 
