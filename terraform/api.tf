@@ -73,7 +73,7 @@ resource "aws_api_gateway_base_path_mapping" "api_bpm" {
 }
 
 resource "aws_s3_bucket" "query_service_bucket" {
-  bucket = "org-humancellatlas-${var.APP_NAME}-${var.STAGE}"
+  bucket = "${var.SERVICE_S3_BUCKET}"
   acl    = "private"
 
   lifecycle_rule {
