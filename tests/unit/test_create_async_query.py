@@ -25,6 +25,7 @@ class TestCreateAsyncQuery(unittest.TestCase):
 
     @patch("dcpquery.api.query_jobs.set_job_status")
     def test_process_async_query_keeps_job_status_updated(self, set_job_status):
+        config.db_statement_timeout_seconds = 880
         process_async_query(self.mock_event_record)
         set_job_status.assert_called_with(
             self.job_id,
