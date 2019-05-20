@@ -2,6 +2,7 @@ import os, json, unittest, logging
 
 import requests
 
+from dcplib.networking import http
 from dcplib.test_helpers import DCPAssertMixin
 
 from dcpquery import config
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 class TestQueryService(unittest.TestCase, DCPAssertMixin):
     def setUp(self):
         self.api_url = f"https://{os.environ['API_DOMAIN_NAME']}"
-        self.app = requests
+        self.app = http
         logger.warning(f"\n\nTESTING ENVIRONMENT {config.stage} at URL {self.api_url}. \n")
 
     def test_health_check(self):
