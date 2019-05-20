@@ -31,3 +31,7 @@ class TestCreateAsyncQuery(unittest.TestCase):
     def test_create_async_query_calls_process_async_func_with_correct_args(self, mock_process):
         # handler(self.mock_event, 'context')
         assert mock_process.called_once_with(TestCreateAsyncQuery.uuid, TestCreateAsyncQuery.query)
+
+
+if __name__ == '__main__':
+    unittest.main()
