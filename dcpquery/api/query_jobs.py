@@ -56,8 +56,10 @@ def set_job_result(job_id, result, error=None):
     return {"Bucket": bucket.name, "Key": job_result_object.key}
 
 
-def process_async_query(job_id, query):
+def process_async_query(event_record):
+    job_id = event_record["messageId"]
     set_job_status(job_id, status="running")
+    query = json.loads(event_record["body"])
     try:
         results = []
         total_result_size = 0

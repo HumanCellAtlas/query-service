@@ -6,10 +6,8 @@ from chalice import Chalice, Response
 from dcplib import aws
 
 from dcpquery import api, config
-from dcpquery.api.query_jobs import process_async_query
-from dcpquery.db import run_query
+from dcpquery.api.query_jobs import process_async_query, set_job_status
 from dcpquery.etl import etl_one_bundle
-from dcpquery.exceptions import DCPQueryError
 
 swagger_spec_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{os.environ["APP_NAME"]}-api.yml')
 app = api.DCPQueryServer(app_name=os.environ["APP_NAME"], swagger_spec_path=swagger_spec_path)
@@ -61,11 +59,4 @@ def bundle_event_handler(event):
 @app.on_sqs_message(queue=config.async_queries_queue_name)
 def async_query_handler(event):
     for record in event:
-        job_id = record.to_dict()["messageId"]
-
-        bucket = aws.resources.s3.Bucket(config.s3_bucket_name)
-        job_status_object = bucket.Object(f"job_status/{job_id}")
-        job_status_doc = {"job_id": job_id, "status": "running"}
-        job_status_object.put(Body=json.dumps(job_status_doc).encode())
-        query = json.loads(record.body)
-        process_async_query(job_id, query)
+        process_async_query(record.to_dict())
