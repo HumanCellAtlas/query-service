@@ -41,6 +41,14 @@
   <body>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+      $(document).ready(function() {
+        $('[id^=cm-viewer-]').each(function() {
+          CodeMirror.fromTextArea(this, {mode: 'sql', readOnly: 'nocursor'});
+        });
+        CodeMirror.fromTextArea($('#cm-editor')[0], {mode: 'sql'});
+      });
+    </script>
 
     <header>
   <div class="collapse bg-dark" id="navbarHeader">
@@ -79,7 +87,7 @@
       <h1 class="jumbotron-heading">Sample Queries</h1>
       <p class="lead text-muted">TODO: describe sample queries here</p>
       <p>
-        <a href="#" onclick="CodeMirror(document.body, {mode: 'sql'});" class="btn btn-primary my-2">Open query editor</a>
+        <a href="#" class="btn btn-primary my-2" data-toggle="modal" data-target="#queryEditorModal">Open query editor</a>
         <a href="v1/ui" class="btn btn-secondary my-2">Open API documentation & Swagger UI</a>
       </p>
     </div>
@@ -91,17 +99,17 @@
         {% for query in queries %}
         <div class="col-md-4">
           <div class="card mb-4 shadow-sm">
-            <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Thumbnail"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><text x="50%" y="50%" fill="#eceeef" dy=".3em">Thumbnail</text></svg>
             <div class="card-body">
-              <p class="card-text">
+              <textarea width="100%" height="100%" id="cm-viewer-{{loop.index}}" onload="console.dir('x');">
                 {{ query }}
-              </p>
+              </textarea>
+
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#queryEditorModal">Edit</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary">▶️Run</button>
                 </div>
-                <small class="text-muted">9 mins</small>
+                <small class="text-muted">2 seconds</small>
               </div>
             </div>
           </div>
@@ -110,6 +118,28 @@
       </div>
     </div>
   </div>
+
+<div class="modal fade" id="queryEditorModal" tabindex="-1" role="dialog" aria-labelledby="queryEditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Query Editor</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <textarea id="cm-editor">
+          /* Type your query here. */
+        </textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">▶️Run</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </main>
 
