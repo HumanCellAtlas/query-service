@@ -5,7 +5,7 @@ module "query_db" {
   vpc_id = "${aws_default_vpc.query_db_vpc.id}"
   subnets = ["${data.aws_subnet_ids.query_db_subnets.ids}"]
   engine = "aurora-postgresql"
-  engine_version = "10.6"
+  engine_version = "10.7"
   instance_type = "db.r4.large"
   db_parameter_group_name = "default.aurora-postgresql10"
   db_cluster_parameter_group_name = "default.aurora-postgresql10"
