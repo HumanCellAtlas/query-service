@@ -46,7 +46,7 @@
         $('[id^=cm-viewer-]').each(function() {
           CodeMirror.fromTextArea(this, {mode: 'sql', readOnly: 'nocursor'});
         });
-        CodeMirror.fromTextArea($('#cm-editor')[0], {mode: 'sql'});
+        document.editor = CodeMirror.fromTextArea($('#cm-editor').first(), {mode: 'sql'});
       });
     </script>
 
@@ -103,14 +103,14 @@
         {% for query in queries %}
         <div class="col-md-4">
           <div class="card mb-4 shadow-sm">
-            <div class="card-body">
+            <div class="card-body" id="cm-viewer-{{loop.index}}-container">
               <textarea width="100%" height="100%" id="cm-viewer-{{loop.index}}" onload="console.dir('x');">{{ query }}</textarea>
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
                   <button type="button" class="btn btn-sm btn-outline-secondary">Copy SQL</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary">CLI</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary">API</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#queryEditorModal">Edit</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#queryEditorModal" onclick="document.editor.setValue($('#cm-viewer-{{loop.index}}-container').next('.CodeMirror').text)">Edit</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary">▶️Run</button>
                 </div>
                 <small class="text-muted">2 sec</small>
