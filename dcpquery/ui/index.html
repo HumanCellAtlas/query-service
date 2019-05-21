@@ -85,7 +85,11 @@
   <section class="jumbotron text-center">
     <div class="container">
       <h1 class="jumbotron-heading">Sample Queries</h1>
-      <p class="lead text-muted">TODO: describe sample queries here</p>
+      <p class="lead text-muted">
+        The DCP Query service allows relational querying of HCA metadata over a RESTful HTTP API.
+        The examples below are starting points for data exploration and programmatic access.
+        Each example can be opened, edited, run in the browser to display the results in a table view, or copied as an HCA CLI command or API request.
+      </p>
       <p>
         <a href="#" class="btn btn-primary my-2" data-toggle="modal" data-target="#queryEditorModal">Open query editor</a>
         <a href="v1/ui" class="btn btn-secondary my-2">Open API documentation & Swagger UI</a>
@@ -103,11 +107,13 @@
               <textarea width="100%" height="100%" id="cm-viewer-{{loop.index}}" onload="console.dir('x');">{{ query }}</textarea>
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary">Copy</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary">Copy SQL</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary">CLI</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary">API</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#queryEditorModal">Edit</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary">▶️Run</button>
                 </div>
-                <small class="text-muted">2 seconds</small>
+                <small class="text-muted">2 sec</small>
               </div>
             </div>
           </div>
