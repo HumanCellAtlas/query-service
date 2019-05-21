@@ -39,7 +39,7 @@ install-webhooks:
 
 install-secrets:
 	aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string $$(python -c 'import secrets; print(secrets.token_urlsafe(32))')
-	aws rds modify-db-cluster --db-cluster-identifier dcpquery-dev --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
+	aws rds modify-db-cluster --db-cluster-identifier dcpquery-$(STAGE) --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
 
 build-chalice-config:
 	envsubst < iam/policy-templates/$(APP_NAME)-lambda.json > .chalice/policy-$(STAGE).json
