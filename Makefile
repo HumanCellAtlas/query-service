@@ -26,7 +26,7 @@ deploy: init-tf package
 	$(MAKE) get-status
 
 get-status:
-	http --check-status https://$(API_DOMAIN_NAME)/internal/health
+	http --check-status GET https://$(API_DOMAIN_NAME)/internal/health
 
 $(TFSTATE_FILE):
 	terraform state pull > $(TFSTATE_FILE)
