@@ -23,6 +23,10 @@ deploy: init-tf package
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
 	$(MAKE) get-tf-output
+	$(MAKE) get-status
+
+get-status:
+	http --check-status https://$(API_DOMAIN_NAME)/internal/health
 
 $(TFSTATE_FILE):
 	terraform state pull > $(TFSTATE_FILE)
@@ -115,7 +119,7 @@ update-lambda: $(TFSTATE_FILE)
 	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --zip-file fileb://dist/deployment.zip
 
 get-logs:
-	aws logs describe-log-groups --log-group-name-prefix /aws/lambda/$(APP_NAME)- | \
+	aws logs describe-log-groups --log-group-name-prefix /aws/lambda/$(APP_NAME)-$(STAGE)- | \
 	 jq -r .logGroups[].logGroupName | \
 	 xargs -n 1 aegea logs --start-time=-5m
 

@@ -13,6 +13,8 @@ if [[ $STAGE == "prod" ]]; then
 else
     API_DOMAIN_NAME=query.${STAGE}.data.humancellatlas.org
     API_DNS_ZONE=${STAGE}.data.humancellatlas.org.
+    # Because dev and integration contain more volatile, less meaningful data, by default we point our test environments
+    # at the staging DSS deployment.
     DSS_HOST=dss.staging.data.humancellatlas.org
 fi
 BUNDLE_EVENTS_QUEUE_NAME=${APP_NAME}-${STAGE}-bundle-events
