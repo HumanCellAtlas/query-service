@@ -1,4 +1,4 @@
-import os, sys, json
+import os, sys, json, glob
 
 import boto3, requests, sqlalchemy, jinja2
 from requests_http_signature import HTTPSignatureAuth
@@ -18,8 +18,10 @@ config.configure_logging()
 
 @app.route("/")
 def root():
-    with open(os.path.join(os.path.abspath(os.path.dirname(dcpquery.__file__)), "ui", "index.html")) as fh:
-        body = jinja2.Template(fh.read()).render(env=os.environ)
+    ui_assets_dir = os.path.join(os.path.abspath(os.path.dirname(dcpquery.__file__)), "ui")
+    queries = [open(f).read() for f in glob.glob(os.path.join(ui_assets_dir, "queries/*"))]
+    with open(os.path.join(ui_assets_dir, "index.html")) as fh:
+        body = jinja2.Template(fh.read()).render(env=os.environ, queries=queries)
     return Response(status_code=requests.codes.ok, headers={"Content-Type": "text/html"}, body=body)
 
 
