@@ -224,18 +224,16 @@ Contributions are welcome; please read [CONTRIBUTING.md](CONTRIBUTING.md).
        
  - To create a blank migration file run 
  `alembic revision -m "description of changes"`
-    - The description of changes will be appended to the migration files name so you'll want to keep it short (less than 40 chars) spaces will be replaced with underscores
+    - The description of changes will be appended to the migration file's name so you'll want to keep it short (less than 40 chars); spaces will be replaced with underscores
     - You can then edit the newly created migration file (in `dcpquery/alembic/versions`)
 
 ### Applying new migrations to the database
 - Ensure you are connected to the correct database (run `python -m dcpquery.db connect` to see the database url)
 - From the command line run `make apply-migrations`
-- To unapply a migration run `alembic downgrade migration_id` (the migration_id is the string in front of the underscore in the migration name, for file 000000000000_init_db.py the migration id is 000000000000
+- To unapply a migration run `alembic downgrade migration_id` (the migration_id is the string in front of the underscore in the migration name, for file 000000000000_init_db.py the migration id is 000000000000)
 ### Autogenerate can't detect
 - Changes of table name. These will come out as an add/drop of two different tables, and should be hand-edited into a name change instead.
-
 - Changes of column name. Like table name changes, these are detected as a column add/drop pair, which is not at all the same as a name change.
 - Anonymously named constraints. Give your constraints a name, e.g. UniqueConstraint('col1', 'col2', name="my_name"). 
-
 - Special SQLAlchemy types such as Enum when generated on a backend which doesn’t support ENUM directly - this because the representation of such a type in the non-supporting database, i.e. a CHAR+ CHECK constraint, could be any kind of CHAR+CHECK. For SQLAlchemy to determine that this is actually an ENUM would only be a guess, something that’s generally a bad idea.
 
