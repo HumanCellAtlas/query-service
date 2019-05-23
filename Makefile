@@ -22,7 +22,7 @@ deploy: init-tf package
 	terraform apply
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
-	terraform output --module $(APP_NAME)
+	terraform output $(APP_NAME)
 	$(MAKE) get-status
 
 get-status:
@@ -35,11 +35,11 @@ install-webhooks:
 	LC_ALL=C WHS=$$(tr -dc A-Za-z0-9 < /dev/urandom | head -c32) \
 	 jq -n '.active_hmac_key=env.STAGE|.hmac_keys[env.STAGE]=env.WHS' | \
 	 aws secretsmanager put-secret-value --secret-id $(WEBHOOK_SECRET_NAME) --secret-string file:///dev/stdin
-	python -m $(APP_NAME).webhooks install --callback-url=$$(terraform output --module=$(APP_NAME) --json | jq -r .api_endpoint_url.value)bundles/event
+	python -m $(APP_NAME).webhooks install --callback-url=$$(terraform output --json $(APP_NAME) | jq -r .api_endpoint_url)bundles/event
 
 install-secrets:
 	aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string $$(python -c 'import secrets; print(secrets.token_urlsafe(32))')
-	aws rds modify-db-cluster --db-cluster-identifier $$(terraform output --module=$(APP_NAME) --json | jq -r .rds_cluster_id.value) --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
+	aws rds modify-db-cluster --db-cluster-identifier $$(terraform output --json $(APP_NAME) | jq -r .rds_cluster_id) --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
 
 build-chalice-config:
 	envsubst < iam/policy-templates/$(APP_NAME)-lambda.json > .chalice/policy-$(STAGE).json
@@ -81,7 +81,7 @@ destroy: init-tf
 	terraform destroy
 
 clean:
-	git clean -Xdf dist .terraform .chalice docs/_build
+	git clean -Xdf dist .terraform .chalice docs/_build tests/terraform/.terraform
 
 lint:
 	flake8 *.py $(APP_NAME) tests
@@ -114,7 +114,7 @@ load-test-data: init-db
 
 update-lambda: $(TFSTATE_FILE)
 	zip -r dist/deployment.zip app.py $(APP_NAME) $(APP_NAME)-api.yml
-	terraform output --module=$(APP_NAME) --json | jq -r '.|values[].value' | egrep "^$(APP_NAME)-.+Handler-" | \
+	terraform output --json $(APP_NAME) | jq -r '.|values[]' | egrep "^$(APP_NAME)-.+Handler-" | \
 	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --zip-file fileb://dist/deployment.zip
 
 get-logs:
