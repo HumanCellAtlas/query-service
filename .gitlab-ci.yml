@@ -17,7 +17,7 @@ stages:
 before_script:
   - source /etc/profile
   - apt-get update > /dev/null
-  - apt-get install --yes sudo jq moreutils gettext make virtualenv postgresql zip unzip httpie > /dev/null
+  - apt-get install --yes sudo jq moreutils gettext make virtualenv postgresql zip unzip httpie git > /dev/null
   - service postgresql start
   - sudo -u postgres createuser --superuser $(whoami)
   - curl -Os https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
