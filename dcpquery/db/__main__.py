@@ -66,7 +66,7 @@ elif args.action in {"load", "load-test"}:
     )
 elif args.action in {"connect", "run", "describe"}:
     db_url = str(config.db.url).replace("postgresql+psycopg2://", "postgres://")
-    print(db_url)
+    print(f"Connecting to {db_url}")
     psql_args = ["psql", db_url]
     for command in args.commands:
         psql_args.extend(["--command", command])
