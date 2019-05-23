@@ -45,6 +45,7 @@ deploy:
       - staging
   script:
     - make deploy
+    - make apply-migrations
 
 integration_test:
   stage: integration_test

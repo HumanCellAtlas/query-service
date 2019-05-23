@@ -157,4 +157,4 @@ apply-migrations:
 
 .PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package init-tf init-db destroy
 .PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements docs
-.PHONY: apply-migrations create-migration
+.PHONY: apply-migrations create-migration migration-test
