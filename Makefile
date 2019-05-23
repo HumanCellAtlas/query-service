@@ -89,19 +89,23 @@ lint:
 	source environment
 	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
-test: lint docs unit-test
+test: lint docs unit-test migration-test
 
-unit-test:
+unit-test: load-test-data
 	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests/unit --top-level-directory . --verbose
 
 integration-test:
 	python -m unittest discover --start-directory tests/integration --top-level-directory . --verbose
+
+migration-test:
+	python -m unittest discover --start-directory tests/migration --top-level-directory . --verbose
 
 fetch:
 	scripts/fetch.py
 
 init-db:
 	python -m $(APP_NAME).db init
+	$(MAKE) apply-migrations
 
 drop-db:
 	python -m $(APP_NAME).db drop
@@ -143,5 +147,14 @@ requirements-dev.txt : requirements.txt.in
 docs:
 	$(MAKE) -C docs html
 
+# create a migration file for changes made to db table definitions inheriting from the SQLAlchemyBase in dcpquery/db
+create-migration:
+	alembic revision --autogenerate
+
+# apply all migration files to the database
+apply-migrations:
+	alembic upgrade head
+
 .PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package init-tf init-db destroy
 .PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements docs
+.PHONY: apply-migrations create-migration migration-test

@@ -64,23 +64,26 @@ class DCPQueryConfig:
             connect_opts = " -c statement_timeout={}s".format(self.db_statement_timeout_seconds)
             self._db_engine_params["connect_args"]["options"] += connect_opts
             self._db_engine_params["echo"] = self.echo
-            if self.local_mode:
-                db_user = getpass.getuser()
-                db_password = ""
-                db_host = ""
-            else:
-                db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
-                db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
-                if self._readonly_db:
-                    db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/readonly_hostname"
-                else:
-                    db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/hostname"
-                db_host = AwsSecret(db_host_secret_name).value.strip()
-            db_name = self.app_name
-            self._db = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}",
-                                                **self._db_engine_params)
-
+            self._db = sqlalchemy.create_engine(self.db_url, **self._db_engine_params)
         return self._db
+
+    @property
+    def db_url(self):
+        if self.local_mode:
+            db_user = getpass.getuser()
+            db_password = ""
+            db_host = ""
+        else:
+            db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
+            db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
+            if self._readonly_db:
+                db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/readonly_hostname"
+            else:
+                db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/hostname"
+            db_host = AwsSecret(db_host_secret_name).value.strip()
+        db_name = self.app_name
+
+        return f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
 
     @property
     def db_session(self):

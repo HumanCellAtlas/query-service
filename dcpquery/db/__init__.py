@@ -123,134 +123,29 @@ class ProcessProcessLink(SQLAlchemyBase):
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
 
 
-class DCPQueryDBManager:
-    process_file_link_ignore_duplicate_rule_sql = """
-        CREATE OR REPLACE RULE process_file_join_table_ignore_duplicate_inserts AS
-            ON INSERT TO process_file_join_table
-                WHERE EXISTS (
-                  SELECT 1
-                FROM process_file_join_table
-                WHERE process_uuid = NEW.process_uuid
-                AND process_file_connection_type=NEW.process_file_connection_type
-                AND file_uuid=NEW.file_uuid
-            )
-            DO INSTEAD NOTHING;
-    """
-
-    file_ignore_duplicate_rule_sql = """
-        CREATE OR REPLACE RULE file_table_ignore_duplicate_inserts AS
-            ON INSERT TO files
-                WHERE EXISTS (
-                  SELECT 1
-                FROM files
-                WHERE fqid = NEW.fqid
-            )
-            DO INSTEAD NOTHING;
-    """
-
-    bundle_ignore_duplicate_rule_sql = """
-        CREATE OR REPLACE RULE bundle_table_ignore_duplicate_inserts AS
-            ON INSERT TO bundles
-                WHERE EXISTS (
-                  SELECT 1
-                FROM bundles
-                WHERE fqid = NEW.fqid
-            )
-            DO INSTEAD NOTHING;
-    """
-
-    bundle_file_link_ignore_duplicate_rule_sql = """
-        CREATE OR REPLACE RULE bundle_file_join_table_ignore_duplicate_inserts AS
-            ON INSERT TO bundle_file_links
-                WHERE EXISTS (
-                  SELECT 1
-                FROM bundle_file_links
-                WHERE bundle_fqid = NEW.bundle_fqid
-                AND file_fqid = NEW.file_fqid
-            )
-            DO INSTEAD NOTHING;
-    """
-
-    process_ignore_duplicate_rule_sql = """
-        CREATE OR REPLACE RULE process_table_ignore_duplicate_inserts AS
-            ON INSERT TO processes
-                WHERE EXISTS (
-                  SELECT 1
-                FROM processes
-                WHERE process_uuid = NEW.process_uuid
-            )
-            DO INSTEAD NOTHING;
-    """
-
-    get_all_children_function_sql = """
-        CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
-            RETURNS TABLE(child_process UUID) as $$
-              WITH RECURSIVE recursive_table AS (
-                SELECT child_process_uuid FROM process_join_table
-                WHERE parent_process_uuid=$1
-                UNION
-                SELECT process_join_table.child_process_uuid FROM process_join_table
-                INNER JOIN recursive_table
-                ON process_join_table.parent_process_uuid = recursive_table.child_process_uuid)
-            SELECT * from recursive_table;
-            $$ LANGUAGE SQL;
-    """
-
-    get_all_parents_function_sql = """
-        CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
-            RETURNS TABLE(parent_process UUID) as $$
-              WITH RECURSIVE recursive_table AS (
-                SELECT parent_process_uuid FROM process_join_table
-                WHERE child_process_uuid=$1
-                UNION
-                SELECT process_join_table.parent_process_uuid FROM process_join_table
-                INNER JOIN recursive_table
-                ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
-            SELECT * from recursive_table;
-            $$ LANGUAGE SQL;
-    """
-
-    def init_db(self, dry_run=True):
-        from sqlalchemy_utils import database_exists, create_database
-
-        logger.info("Initializing database at %s", repr(config.db.url))
-        if not database_exists(config.db.url):
-            logger.info("Creating database")
-            create_database(config.db.url)
-        logger.info("Initializing database")
-
+def drop_db(dry_run=True):
+    from sqlalchemy_utils import database_exists, drop_database
+    if database_exists(config.db.url):
         if dry_run:
-            orig_db_engine_params = dict(config._db_engine_params)
-            config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
+            logger.critical("Would drop database %s", config.db.url)
+        else:
+            drop_database(config.db.url)
 
-        SQLAlchemyBase.metadata.create_all(config.db)
-        self.create_recursive_functions_in_db()
-        self.create_upsert_rules_in_db()
 
-        if dry_run:
-            config._db_engine_params = orig_db_engine_params
+def init_db(dry_run=True):
+    from sqlalchemy_utils import database_exists, create_database
 
-    def create_upsert_rules_in_db(self):
-        config.db_session.execute(
-            self.bundle_file_link_ignore_duplicate_rule_sql + self.bundle_ignore_duplicate_rule_sql
-        )
-        config.db_session.execute(
-            self.process_file_link_ignore_duplicate_rule_sql + self.process_ignore_duplicate_rule_sql
-        )
-        config.db_session.execute(self.file_ignore_duplicate_rule_sql)
-        config.db_session.commit()
+    logger.info("Initializing database at %s", repr(config.db.url))
+    if not database_exists(config.db.url):
+        logger.info("Creating database")
+        create_database(config.db.url)
+    logger.info("Initializing database")
+    if dry_run:
+        orig_db_engine_params = dict(config._db_engine_params)
+        config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
 
-    def create_recursive_functions_in_db(self):
-        config.db_session.execute(self.get_all_children_function_sql + self.get_all_parents_function_sql)
-        config.db_session.commit()
-
-    def drop_db(self, dry_run=True):
-        from sqlalchemy_utils import database_exists, drop_database
-        if database_exists(config.db.url):
-            if dry_run:
-                logger.critical("Would drop database %s", config.db.url)
-            else:
-                drop_database(config.db.url)
+    if dry_run:
+        config._db_engine_params = orig_db_engine_params
 
 
 def run_query(query, rows_per_page=100):
