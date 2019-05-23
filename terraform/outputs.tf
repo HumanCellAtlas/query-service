@@ -14,6 +14,10 @@ output "api_endpoint_url" {
   value = "${aws_cloudformation_stack.lambda.outputs["EndpointURL"]}"
 }
 
+output "rds_cluster_id" {
+  value = "${module.query_db.this_rds_cluster_id}"
+}
+
 output "rds_cluster_endpoint" {
   value = "${module.query_db.this_rds_cluster_endpoint}"
 }

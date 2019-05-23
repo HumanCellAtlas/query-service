@@ -22,7 +22,7 @@ deploy: init-tf package
 	terraform apply
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
-	$(MAKE) get-tf-output
+	terraform output --module $(APP_NAME)
 	$(MAKE) get-status
 
 get-status:
@@ -39,7 +39,7 @@ install-webhooks:
 
 install-secrets:
 	aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string $$(python -c 'import secrets; print(secrets.token_urlsafe(32))')
-	aws rds modify-db-cluster --db-cluster-identifier dcpquery-$(STAGE) --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
+	aws rds modify-db-cluster --db-cluster-identifier $$(terraform output --module=$(APP_NAME) --json | jq -r .rds_cluster_id.value) --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
 
 build-chalice-config:
 	envsubst < iam/policy-templates/$(APP_NAME)-lambda.json > .chalice/policy-$(STAGE).json
@@ -69,9 +69,6 @@ package:
 
 prune:
 	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
-
-get-tf-output:
-	@terraform output -module=$(APP_NAME) -json
 
 # init-tf prepares the repo for Terraform commands. It assembles the partial S3 backend config as a JSON file, `aws_config.json`.
 # This file is referenced by the TF_CLI_ARGS_init environment variable, which is set by running `source environment`.
@@ -146,5 +143,5 @@ requirements-dev.txt : requirements.txt.in
 docs:
 	$(MAKE) -C docs html
 
-.PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package get-tf-output init-tf init-db destroy
+.PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package init-tf init-db destroy
 .PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements docs
