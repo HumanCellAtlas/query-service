@@ -1,9 +1,8 @@
 module "query_db" {
-  source  = "terraform-aws-modules/rds-aurora/aws"
-  version = "1.10.0"
+  source = "github.com/chanzuckerberg/terraform-aws-rds-aurora"
   name = "${var.APP_NAME}-${var.STAGE}"
   vpc_id = "${aws_default_vpc.query_db_vpc.id}"
-  subnets = ["${data.aws_subnet_ids.query_db_subnets.ids}"]
+  subnets = data.aws_subnet_ids.query_db_subnets.ids
   engine = "aurora-postgresql"
   engine_version = "10.7"
   instance_type = "db.r4.large"

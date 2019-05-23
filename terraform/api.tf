@@ -35,9 +35,7 @@ resource "aws_sqs_queue_policy" "async_queries_policy" {
 resource "aws_cloudformation_stack" "lambda" {
   name = "${var.APP_NAME}-${var.STAGE}"
   capabilities = ["CAPABILITY_IAM"]
-  parameters {
-  }
-
+  parameters = {}
   template_body = "${file("dist/cloudformation.json")}"
 }
 
