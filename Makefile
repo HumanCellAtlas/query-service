@@ -92,11 +92,13 @@ lint:
 	source environment
 	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
-test: lint docs
-	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests --top-level-directory . --verbose
+test: lint docs unit-test
+
+unit-test:
+	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests/unit --top-level-directory . --verbose
 
 integration-test:
-	echo TODO
+	python -m unittest discover --start-directory tests/integration --top-level-directory . --verbose
 
 fetch:
 	scripts/fetch.py

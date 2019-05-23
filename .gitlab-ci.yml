@@ -50,3 +50,7 @@ integration_test:
   stage: integration_test
   script:
     - make integration-test
+  only:
+    - master
+    - integration
+    - staging
