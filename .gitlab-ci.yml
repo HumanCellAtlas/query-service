@@ -4,7 +4,7 @@ variables:
   AWS_DEFAULT_REGION: us-east-1
   AWS_DEFAULT_OUTPUT: json
   DEBIAN_FRONTEND: noninteractive
-  TERRAFORM_VERSION: 0.11.13
+  TERRAFORM_VERSION: 0.12.0
   LC_ALL: C.UTF-8
   LANG: C.UTF-8
   TF_CLI_ARGS_apply: --auto-approve
