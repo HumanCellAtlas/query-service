@@ -1,10 +1,11 @@
 terraform {
+  required_version = ">= 0.12.0"
   backend "s3" {
   }
 }
 
 provider "aws" {
-  version = "~> 2.4"
+  version = "~> 2.11"
 }
 
 provider "external" {
@@ -17,4 +18,8 @@ provider "template" {
 
 module "dcpquery" {
   source = "./terraform"
+}
+
+output "dcpquery" {
+  value = module.dcpquery
 }
