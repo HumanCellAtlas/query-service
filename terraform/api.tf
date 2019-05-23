@@ -2,26 +2,22 @@ resource "aws_sqs_queue" "bundle_events" {
   name = "${var.BUNDLE_EVENTS_QUEUE_NAME}"
   visibility_timeout_seconds = 900
   redrive_policy = jsonencode({
-    "deadLetterTargetArn" = "${aws_sqs_queue.bundle_events_dlq.arn}",
+    "deadLetterTargetArn" = "${aws_sqs_queue.dlq.arn}",
     "maxReceiveCount" = 5
   })
-}
-
-resource "aws_sqs_queue" "bundle_events_dlq" {
-  name = "${var.BUNDLE_EVENTS_QUEUE_NAME}-dlq"
 }
 
 resource "aws_sqs_queue" "async_queries" {
   name = "${var.ASYNC_QUERIES_QUEUE_NAME}"
   visibility_timeout_seconds = 900
   redrive_policy = jsonencode({
-    "deadLetterTargetArn" = "${aws_sqs_queue.bundle_events_dlq.arn}",
+    "deadLetterTargetArn" = "${aws_sqs_queue.dlq.arn}",
     "maxReceiveCount" = 5
   })
 }
 
-resource "aws_sqs_queue" "async_queries_dlq" {
-  name = "${var.ASYNC_QUERIES_QUEUE_NAME}-dlq"
+resource "aws_sqs_queue" "dlq" {
+  name = "${var.APP_NAME}-${var.STAGE}-dlq"
 }
 
 data "template_file" "bundle_events_queue_policy_doc" {
