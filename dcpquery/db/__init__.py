@@ -129,7 +129,9 @@ def drop_db(dry_run=True):
         if dry_run:
             logger.critical("Would drop database %s", config.db.url)
         else:
+            logger.critical("About to drop database %s", config.db.url)
             drop_database(config.db.url)
+            logger.critical("Dropped database %s", config.db.url)
 
 
 def init_db(dry_run=True):
