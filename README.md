@@ -228,9 +228,10 @@ Contributions are welcome; please read [CONTRIBUTING.md](CONTRIBUTING.md).
     - You can then edit the newly created migration file (in `dcpquery/alembic/versions`)
 
 ### Applying new migrations to the database
-- Ensure you are connected to the correct database (run `python -m dcpquery.db connect` to see the database url)
-- From the command line run `make apply-migrations`
-- To unapply a migration run `alembic downgrade migration_id` (the migration_id is the string in front of the underscore in the migration name, for file 000000000000_init_db.py the migration id is 000000000000)
+- Ensure you are connected to the correct database (run `python -m dcpquery.db connect` to see the database url, use the `--db remote` flag if necessary)
+- From the command line run `python -m dcpquery.db migrate` use the `--db remote` flag if necessary
+- To unapply a migration run (locally) `alembic downgrade migration_id` (the migration_id is the string in front of the underscore in the migration name, for file 000000000000_init_db.py the migration id is 000000000000)
+- To unapply a migration in a remote db it is simplest to hardcode the `db_url` in `alembic/env.py` and then run `alembic dowgrade migration_id`
 ### Autogenerate can't detect
 - Changes of table name. These will come out as an add/drop of two different tables, and should be hand-edited into a name change instead.
 - Changes of column name. Like table name changes, these are detected as a column add/drop pair, which is not at all the same as a name change.

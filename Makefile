@@ -105,7 +105,10 @@ fetch:
 
 init-db:
 	python -m $(APP_NAME).db init
-	$(MAKE) apply-migrations
+
+# apply all migration files to the database
+migrate-db:
+	python -m $(APP_NAME).db migrate
 
 drop-db:
 	python -m $(APP_NAME).db drop
@@ -151,10 +154,6 @@ docs:
 create-migration:
 	alembic revision --autogenerate
 
-# apply all migration files to the database
-apply-migrations:
-	alembic upgrade head
-
 .PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package init-tf init-db destroy
 .PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements docs
-.PHONY: apply-migrations create-migration migration-test
+.PHONY: create-migration migration-test
