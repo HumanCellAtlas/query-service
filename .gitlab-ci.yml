@@ -13,6 +13,7 @@ stages:
   - test
   - deploy
   - integration_test
+  - release
 
 before_script:
   - source /etc/profile
@@ -33,6 +34,8 @@ before_script:
 
 test:
   stage: test
+  except:
+    - tags
   script:
     - make test
 
@@ -43,15 +46,77 @@ deploy:
       - master
       - integration
       - staging
+  except:
+    - tags
+    - schedules
   script:
     - make deploy
     - make apply-migrations
 
 integration_test:
   stage: integration_test
+  except:
+    - tags
   script:
     - make integration-test
   only:
     - master
     - integration
+    - staging
+
+.release:
+  stage: release
+  script:
+    - git remote set-url origin https://$GITHUB_TOKEN@github.com/HumanCellAtlas/query-service
+    - export status=$(scripts/status.py HumanCellAtlas dcp $(echo $RELEASE_COMMAND | cut -d ' ' -f 2))
+    - if [[ ${RELEASE_COMMAND} != *"--force"* && ${status} != "success" ]]; then
+    -   echo "DCP Integration test returned status ${status}";
+    -   exit 1
+    - fi
+    - ${RELEASE_COMMAND}
+  except:
+    - schedules
+  when: manual
+  allow_failure: true
+
+release_integration:
+  extends: .release
+  variables:
+    RELEASE_COMMAND: scripts/release.sh master integration --no-deploy --skip-account-verification
+  only:
+    - master
+
+force_release_integration:
+  extends: .release
+  variables:
+    RELEASE_COMMAND: scripts/release.sh master integration --force --no-deploy --skip-account-verification
+  only:
+    - master
+
+release_staging:
+  extends: .release
+  variables:
+    RELEASE_COMMAND: scripts/release.sh integration staging --no-deploy --skip-account-verification
+  only:
+    - integration
+
+force_release_staging:
+  extends: .release
+  variables:
+    RELEASE_COMMAND: scripts/release.sh integration staging --force --no-deploy --skip-account-verification
+  only:
+    - integration
+
+release_prod:
+  extends: .release
+  variables:
+    RELEASE_COMMAND: scripts/release.sh staging prod --no-deploy --skip-account-verification
+  only:
+    - staging
+
+force_release_prod:
+  extends: .release
+  variables:
+    RELEASE_COMMAND: scripts/release.sh staging prod --force --no-deploy --skip-account-verification
+  only:
     - staging
