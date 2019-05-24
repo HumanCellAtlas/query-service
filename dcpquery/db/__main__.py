@@ -49,7 +49,6 @@ if args.action == "init":
     init_db(dry_run=args.dry_run)
 elif args.action == "drop":
     drop_db(dry_run=args.dry_run)
-    init_db(dry_run=args.dry_run)
 elif args.action in {"load", "load-test"}:
     if args.action == "load":
         extractor_args = {}  # type: ignore
