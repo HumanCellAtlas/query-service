@@ -5,7 +5,7 @@ export APP_HOME="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
 set -a
 APP_NAME=dcpquery
-STAGE="${DEPLOYMENT_STAGE:-dev}"
+STAGE="${DEPLOYMENT_STAGE:-${STAGE:-dev}}"
 if [[ $STAGE == "prod" ]]; then
     API_DOMAIN_NAME=query.data.humancellatlas.org
     API_DNS_ZONE=data.humancellatlas.org.
