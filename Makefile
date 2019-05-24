@@ -89,7 +89,7 @@ lint:
 	source environment
 	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
-test: lint docs unit-test migration-test
+test: lint docs build-chalice-config unit-test migration-test
 
 unit-test: load-test-data
 	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests/unit --top-level-directory . --verbose
