@@ -58,7 +58,7 @@ elif args.action in {"load", "load-test"}:
 
     dss_client = DSSClient(swagger_url=args.dss_swagger_url)
 
-    DSSExtractor(staging_directory=".").extract(
+    DSSExtractor(staging_directory=".", dss_client=dss_client).extract(
         transformer=transform_bundle,
         loader=BundleLoader().load_bundle,
         finalizer=create_view_tables,
