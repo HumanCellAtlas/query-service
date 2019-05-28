@@ -12,6 +12,7 @@ module "query_db" {
   apply_immediately = true
   skip_final_snapshot = true
   username = "${aws_secretsmanager_secret_version.query_db_username.secret_string}"
+  password = "${random_string.placeholder_db_password.result}"
   tags = {
     managedBy = "terraform"
     project = "dcp"
@@ -70,3 +71,8 @@ resource "aws_secretsmanager_secret" "query_db_password" {
 # The database password is managed out of band.
 # Run "make install-secrets" to set the password.
 # Run "aws secretsmanager get-secret-value --secret-id dcpquery/dev/postgresql/password" to retrieve it.
+# The value below is used only as a placeholder when first setting up the database.
+
+resource "random_string" "placeholder_db_password" {
+  length = 32
+}
