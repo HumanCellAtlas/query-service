@@ -113,10 +113,10 @@ migrate-db:
 drop-db:
 	python -m $(APP_NAME).db drop
 
-load: init-db
+load: init-db migrate-db
 	python -m $(APP_NAME).db load
 
-load-test-data: init-db
+load-test-data: init-db migrate-db
 	python -m $(APP_NAME).db load-test
 
 update-lambda: $(TFSTATE_FILE)
