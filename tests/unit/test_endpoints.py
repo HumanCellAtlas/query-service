@@ -10,14 +10,13 @@ import requests
 from requests_http_signature import HTTPSignatureAuth
 
 from dcpquery import config
-from tests import fast_query_mock_result, fast_query_expected_results, write_fixtures_to_db
-from tests.unit import TestChaliceApp, DCPAssertMixin
+from tests import fast_query_mock_result, fast_query_expected_results
+from tests.unit import TestChaliceApp, DCPAssertMixin, DCPQueryUnitTest
 
 
-class TestEndpoints(TestChaliceApp):
+class TestEndpoints(TestChaliceApp, DCPQueryUnitTest):
     def setUp(self):
         super().setUp()
-        # write_fixtures_to_db()
         self.uuid = "3d8608c3-0ca6-430a-9f90-2117be6af160"
 
     def test_healthcheck_endpoint(self):

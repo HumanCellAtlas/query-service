@@ -49,28 +49,6 @@ def write_fixtures_to_db():
     config.db_session.commit()
 
 
-write_fixtures_to_db()
-
-'''
-class FixtureExtractor(Extractor):
-    _key_to_fixture_map = dict([
-        (d.uuid, load_fixture(d.name))
-        for d in BundleManifest(**json.loads(vx_bundle_str)).file_metadata
-    ])
-    _key_to_fixture_map[vx_bundle.uuid] = vx_bundle_str
-
-    def _extract(self, key: str):
-        data = self._key_to_fixture_map[key]
-        return self._deserialize(data)
-
-    def _get_bundle_data(self, uuid: UUID, version: str) -> dict:
-        return self._extract(uuid)
-
-    def _get_file_data(self, file_metadata: FileMetadata) -> dict:
-        return self._extract(file_metadata.uuid)
-'''
-
-
 def eventually(timeout: float, interval: float, errors: set = {AssertionError}):
     """
     @eventually runs a test until all assertions are satisfied or a timeout is reached.

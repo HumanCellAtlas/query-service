@@ -7,6 +7,14 @@ from furl import furl
 from flask import wrappers
 from dcplib.test_helpers import DCPAssertMixin
 
+from tests import write_fixtures_to_db
+
+
+class DCPQueryUnitTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        write_fixtures_to_db()
+
 
 class ChaliceTestHarness:
     def __init__(self):
