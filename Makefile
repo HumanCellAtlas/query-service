@@ -47,20 +47,20 @@ build-chalice-config:
 	cd .chalice; for var in $$EXPORT_ENV_VARS_TO_LAMBDA; do \
             jq .stages.$(STAGE).environment_variables.$$var=env.$$var config.json | sponge config.json; \
         done
+	cd .chalice; V=$$(git describe --tags --always) jq .stages.$(STAGE).environment_variables.VERSION=env.V config.json | sponge config.json
 	cd .chalice; jq .stages.$(STAGE).tags.env=env.STAGE config.json | sponge config.json
 	cd .chalice; jq .stages.$(STAGE).tags.service=env.APP_NAME config.json | sponge config.json
 	cd .chalice; jq .stages.$(STAGE).tags.owner=env.OWNER config.json | sponge config.json
 
 # package prepares a Lambda zipfile with the help of the Chalice packager (which also emits a SAM template).
 # We also inject any wheels found in vendor.in, and rewrite the zipfile to make the build reproducible.
-package:
+package: build-chalice-config
 	rm -rf vendor dist/deployment
 	mkdir vendor
 	cp -a $(APP_NAME) $(APP_NAME)-api.yml vendor
 	find vendor -name '*.pyc' -delete
 	find vendor -exec touch -t 201901010000 {} \; # Reset mtimes on all vendor files to make zipfile contents reproducible
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
-	$(MAKE) build-chalice-config
 	chalice package --stage $(STAGE) dist
 	cd dist; mkdir deployment; cd deployment; unzip -q -o ../deployment.zip
 	find dist/deployment -exec touch -t 201901010000 {} \; # Reset mtimes on all dep files to make zipfile contents reproducible
