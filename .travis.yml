@@ -30,7 +30,7 @@ install:
 
 before_script:
   - source environment
-  - make build-chalice-config init-db apply-migrations load-test-data
+  - make build-chalice-config init-db migrate-db load-test-data
 
 script:
   - make test

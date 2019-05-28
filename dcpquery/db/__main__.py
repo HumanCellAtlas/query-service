@@ -10,7 +10,7 @@ from dcplib.etl import DSSExtractor
 from .. import config
 from ..etl import transform_bundle, BundleLoader, create_view_tables
 
-from . import init_db, drop_db
+from . import init_db, drop_db, migrate_db
 
 fmi_test_query = {
     "query": {
@@ -30,7 +30,10 @@ default_test_query = {
 
 config.configure_logging()
 parser = argparse.ArgumentParser(description=__doc__, prog="db_ctl")
-parser.add_argument("action", choices={"init", "drop", "load", "load-test", "connect", "describe", "run"}, nargs="?")
+parser.add_argument(
+    "action", choices={"init", "drop", "load", "load-test", "connect", "describe", "run", "migrate"},
+    nargs="?"
+)
 parser.add_argument("commands", nargs="*")
 parser.add_argument("--db", choices={"local", "remote"}, default="local")
 parser.add_argument("--dss-swagger-url", default=f"https://{config.dss_host}/v1/swagger.json")
@@ -49,7 +52,8 @@ if args.action == "init":
     init_db(dry_run=args.dry_run)
 elif args.action == "drop":
     drop_db(dry_run=args.dry_run)
-    init_db(dry_run=args.dry_run)
+elif args.action == "migrate":
+    migrate_db()
 elif args.action in {"load", "load-test"}:
     if args.action == "load":
         extractor_args = {}  # type: ignore
