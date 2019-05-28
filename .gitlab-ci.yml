@@ -1,5 +1,9 @@
 image: ubuntu:bionic
 
+cache:
+  paths:
+    - .cache
+
 variables:
   AWS_DEFAULT_REGION: us-east-1
   AWS_DEFAULT_OUTPUT: json
@@ -28,7 +32,6 @@ before_script:
   - pip install --quiet -r requirements-dev.txt
   - if [[ $CI_COMMIT_REF_NAME =~ ^(staging|integration|prod)$ ]]; then export DEPLOYMENT_STAGE=$CI_COMMIT_REF_NAME; fi
   - source environment
-  - make build-chalice-config init-db migrate-db load-test-data init-tf
   - aws secretsmanager get-secret-value --secret-id ${APP_NAME}/${STAGE}/gcp-credentials.json | jq -r .SecretString > gcp-credentials.json
   - export GOOGLE_APPLICATION_CREDENTIALS=$(pwd -P)/gcp-credentials.json
 
@@ -37,6 +40,7 @@ test:
   except:
     - tags
   script:
+    - make init-db migrate-db load-test-data init-tf
     - make test
 
 deploy:
@@ -67,7 +71,7 @@ integration_test:
   stage: release
   script:
     - git remote set-url origin https://$GITHUB_TOKEN@github.com/HumanCellAtlas/query-service
-    - export status=$(scripts/status.py HumanCellAtlas dcp $(echo $RELEASE_COMMAND | cut -d ' ' -f 2))
+    - export status=$(scripts/status.py $(echo $RELEASE_COMMAND | cut -d ' ' -f 2) --owner HumanCellAtlas --repo dcp)
     - if [[ ${RELEASE_COMMAND} != *"--force"* && ${status} != "success" ]]; then
     -   echo "DCP Integration test returned status ${status}";
     -   exit 1
