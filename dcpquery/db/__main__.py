@@ -4,7 +4,6 @@ This module provides access to administrative commands for the DCP Query Service
 
 import os, sys, argparse, logging, json
 
-import alembic
 from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
 
