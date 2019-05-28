@@ -25,7 +25,12 @@ def root():
 def health_check():
     config.db_session.execute("SELECT 1")
     list(aws.resources.s3.Bucket(config.s3_bucket_name).objects.limit(1))
-    return {"status": "OK"}
+    return {"status": "OK", "version_info": {"version": os.environ.get("VERSION")}}
+
+
+@app.route("/version")
+def version():
+    return {"version_info": {"version": os.environ.get("VERSION")}}
 
 
 @app.route("/bundles/event", methods=["POST"])
