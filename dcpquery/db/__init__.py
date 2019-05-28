@@ -5,7 +5,7 @@ import enum
 import os, sys, argparse, json, logging, typing
 
 import alembic
-from alembic.config import Config
+from alembic.config import Config as AlembicConfig
 
 from sqlalchemy import (Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions,
                         UniqueConstraint, BigInteger)
@@ -156,7 +156,7 @@ def init_db(dry_run=True):
 def migrate_db():
     logger.info("Migrating database at %s", repr(config.db.url))
 
-    alembic_cfg = Config("alembic.ini")
+    alembic_cfg = AlembicConfig("alembic.ini")
     alembic_cfg.set_main_option("sqlalchemy.url", config.db_url)
     alembic.command.upgrade(alembic_cfg, "head")
 
