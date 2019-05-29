@@ -75,4 +75,5 @@ resource "aws_secretsmanager_secret" "query_db_password" {
 
 resource "random_string" "placeholder_db_password" {
   length = 32
+  special = false
 }
