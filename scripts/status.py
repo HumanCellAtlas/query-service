@@ -18,7 +18,7 @@ sm = boto3.client("secretsmanager")
 
 if args.owner is None:
     git_origin = subprocess.check_output(["git", "remote", "get-url", "origin"]).decode()
-    args.owner, args.repo, _ = re.search(r"([^\/\:]+)\/(.+?)(\.git)?$", git_origin).groups()
+    args.owner, args.repo, _ = re.search(r"([^\/\:]+)\/([^\/\:]+?)(\.git)?$", git_origin).groups()
 
 gitlab_api = sm.get_secret_value(SecretId=f"{args.app_name}/gitlab-api")['SecretString']
 gitlab_token = sm.get_secret_value(SecretId=f"{args.app_name}/gitlab-token")['SecretString']
