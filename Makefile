@@ -6,6 +6,7 @@ endif
 
 SAM_TX="import sys, json, boto3, samtranslator.translator.transform as t, samtranslator.public.translator as pt; \
         print(json.dumps(t.transform(json.load(sys.stdin), {}, pt.ManagedPolicyLoader(boto3.client('iam')))))"
+CFN_TX='.Resources += (.Resources|with_entries(if .value.Type=="AWS::Lambda::Function" then .value.Properties.FunctionName=env.APP_NAME+"-"+env.STAGE+"-"+.key else . end))'
 GET_CREDS="import json, boto3.session as s; c = s.Session().get_credentials(); \
            print(json.dumps(c.get_frozen_credentials()._asdict())) if c else exit('Please set your AWS credentials')"
 
@@ -18,7 +19,7 @@ deploy: init-tf package
          jq '.Resources.APIHandler.Properties.CodeUri="s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip"' | \
          jq '.Resources.BundleEventHandler.Properties.CodeUri="s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip"' | \
          jq '.Resources.AsyncQueryHandler.Properties.CodeUri="s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip"' | \
-         python -c $(SAM_TX) > dist/cloudformation.json
+         python -c $(SAM_TX) | jq $(CFN_TX) > dist/cloudformation.json
 	terraform apply
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
@@ -121,7 +122,7 @@ load-test-data: init-db migrate-db
 
 update-lambda: $(TFSTATE_FILE)
 	zip -r dist/deployment.zip app.py $(APP_NAME) $(APP_NAME)-api.yml
-	terraform output --json $(APP_NAME) | jq -r '.|values[]' | egrep "^$(APP_NAME)-.+Handler-" | \
+	terraform output --json $(APP_NAME) | jq -r '.|values[]' | egrep "^$(APP_NAME)-.+Handler" | \
 	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --zip-file fileb://dist/deployment.zip
 
 get-logs:
