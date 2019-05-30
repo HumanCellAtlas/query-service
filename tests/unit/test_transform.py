@@ -27,7 +27,7 @@ class TestTransform(unittest.TestCase):
         expected = json.loads(load_fixture('vx_bundle_document.json'))
         with TemporaryDirectory() as td:
             for f in os.listdir(fixtures_path):
-                if f.endswith(".json") and "query" not in f and not f.startswith("vx_"):
+                if f.endswith(".json") and "query" not in f and not f.startswith("vx_") and not f.startswith("mock_"):
                     shutil.copy(os.path.join(fixtures_path, f), td)
             bundle_dict = transform_bundle(bundle_uuid=vx_bundle_uuid,
                                            bundle_version=vx_bundle_version,
