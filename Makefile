@@ -120,6 +120,7 @@ load: init-db migrate-db
 load-test-data: init-db migrate-db
 	python -m $(APP_NAME).db load-test
 
+# Update just the Lambda application code, but not the dependencies, routes, or other infra. Use xargs to parallelize the process.
 update-lambda: $(TFSTATE_FILE)
 	zip -r dist/deployment.zip app.py $(APP_NAME) $(APP_NAME)-api.yml
 	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
