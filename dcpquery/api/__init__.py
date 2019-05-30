@@ -87,5 +87,21 @@ class ChaliceWithConnexion(chalice.Chalice):
         return chalice.Response(status_code=flask_res._status_code, headers=res_headers, body=res_body)
 
 
-class DCPQueryServer(ChaliceWithConnexion):
+class ChaliceWithRequestLogging(chalice.Chalice):
+    def _get_view_function_response(self, view_function, function_args):
+        uri_params = self.current_request.uri_params or {}
+        path_pattern = self.current_request.context["resourcePath"]
+        path = path_pattern.format(**uri_params)
+        method = self.current_request.method
+        query_params = self.current_request.query_params
+        source_ip = self.current_request.context['identity']['sourceIp']
+        content_length = self.current_request.headers.get('content-length', '-')
+        user_agent = self.current_request.headers.get('user-agent')
+        self.log.info('[req] "%s %s" %s %s "%s" %s', method, path, source_ip, content_length, user_agent, query_params)
+        res = super()._get_view_function_response(view_function, function_args)
+        self.log.info('[res] %s', res.status_code)
+        return res
+
+
+class DCPQueryServer(ChaliceWithConnexion, ChaliceWithRequestLogging):
     pass

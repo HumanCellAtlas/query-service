@@ -120,10 +120,13 @@ load: init-db migrate-db
 load-test-data: init-db migrate-db
 	python -m $(APP_NAME).db load-test
 
+# Update just the Lambda application code, but not the dependencies, routes, or other infra. Use xargs to parallelize the process.
 update-lambda: $(TFSTATE_FILE)
 	zip -r dist/deployment.zip app.py $(APP_NAME) $(APP_NAME)-api.yml
+	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
+	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip
 	terraform output --json $(APP_NAME) | jq -r '.|values[]' | egrep "^$(APP_NAME)-.+Handler" | \
-	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --zip-file fileb://dist/deployment.zip
+	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --s3-bucket $(TF_S3_BUCKET) --s3-key $(LAMBDA_MD5).zip
 
 get-logs:
 	aws logs describe-log-groups --log-group-name-prefix /aws/lambda/$(APP_NAME)-$(STAGE)- | \
