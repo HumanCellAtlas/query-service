@@ -4,6 +4,9 @@
   "autogen_policy": false,
   "lambda_memory_size": 256,
   "lambda_timeout": 900,
+  "environment_variables": {
+    "XDG_CONFIG_HOME": "/tmp"
+  },
   "stages": {
     "dev": {
       "api_gateway_stage": "api",
