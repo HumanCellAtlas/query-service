@@ -97,6 +97,7 @@ unit-test: load-test-data
 
 integration-test:
 	python -m unittest discover --start-directory tests/integration --top-level-directory . --verbose
+	scripts/invoke-lambda BundleEventHandler tests/fixtures/mock_sqs_bundle_event.json
 
 migration-test:
 	python -m unittest discover --start-directory tests/migration --top-level-directory . --verbose
