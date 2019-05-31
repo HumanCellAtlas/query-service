@@ -1,10 +1,12 @@
-import os, re, json, tempfile
+import os, re, json, tempfile, logging
 from collections import OrderedDict
 
 from dcplib.etl import DSSExtractor
 
 from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType
+
+logger = logging.getLogger(__name__)
 
 
 def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor=None):
@@ -239,3 +241,12 @@ def etl_one_bundle(bundle_uuid, bundle_version):
 
 def drop_one_bundle(bundle_uuid, bundle_version):
     pass
+
+
+def process_bundle_event(dss_event):
+    if dss_event["event_type"] == "CREATE":
+        etl_one_bundle(**dss_event["match"])
+    elif dss_event["event_type"] in {"TOMBSTONE", "DELETE"}:
+        drop_one_bundle(**dss_event["match"])
+    else:
+        logger.error("Ignoring unknown event type %s", dss_event["event_type"])
