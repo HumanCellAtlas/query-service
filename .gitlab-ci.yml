@@ -1,4 +1,4 @@
-image: ubuntu:bionic
+image: ubuntu:19.04
 
 cache:
   paths:
@@ -27,7 +27,7 @@ before_script:
   - sudo -u postgres createuser --superuser $(whoami)
   - curl -Os https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
   - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
-  - virtualenv --python=python3.6 .venv
+  - virtualenv --python=python3.7 .venv
   - source .venv/bin/activate
   - pip install --quiet -r requirements-dev.txt
   - if [[ $CI_COMMIT_REF_NAME =~ ^(staging|integration|prod)$ ]]; then export DEPLOYMENT_STAGE=$CI_COMMIT_REF_NAME; fi
