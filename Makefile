@@ -64,12 +64,14 @@ package: build-chalice-config
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do unzip -q -o -d vendor $$wheel; done
 	chalice package --stage $(STAGE) dist
 	cd dist; mkdir deployment; cd deployment; unzip -q -o ../deployment.zip
+	$(MAKE) prune
 	find dist/deployment -exec touch -t 201901010000 {} \; # Reset mtimes on all dep files to make zipfile contents reproducible
 	rm dist/deployment.zip
 	cd dist/deployment; zip -q -X -r ../deployment.zip .
 
+# Remove unused dependencies that consume a lot of space in the package.
 prune:
-	zip -dr dist/deployment.zip botocore/data/ec2* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
+	cd dist/deployment; rm -rf botocore/data/{ec2,cloudfront} cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
 
 # init-tf prepares the repo for Terraform commands. It assembles the partial S3 backend config as a JSON file, `aws_config.json`.
 # This file is referenced by the TF_CLI_ARGS_init environment variable, which is set by running `source environment`.
