@@ -35,19 +35,22 @@ def version():
 
 @app.route("/bundles/event", methods=["POST"])
 def handle_bundle_event():
-    print("Received bundle event:")
-    print(app.current_request.json_body)
+    app.log.info("Received bundle event: {}".format(app.current_request.json_body))
     try:
         # The hostname component is ignored in signature calculation
         HTTPSignatureAuth.verify(requests.Request(url="http://host/bundles/event",
                                                   method=app.current_request.method,
                                                   headers=app.current_request.headers),
                                  key_resolver=lambda key_id, algorithm: config.webhook_keys[key_id].encode())
+        app.log.info("Authenticated bundle event payload successfully")
+        queue_url = aws.clients.sqs.get_queue_url(QueueName=config.bundle_events_queue_name)["QueueUrl"]
+        q = aws.resources.sqs.Queue(queue_url)
+        res = q.send_message(MessageBody=json.dumps(app.current_request.json_body))
+        app.log.info("Forwarded bundle event to %s", queue_url)
     except Exception as e:
-        return Response(status_code=requests.codes.forbidden, body=str(e))
+        app.log.error("Discarding unauthenticated webhook payload: {}".format(str(e)))
+        res = None
 
-    q = aws.resources.sqs.Queue(aws.clients.sqs.get_queue_url(QueueName=config.bundle_events_queue_name)["QueueUrl"])
-    res = q.send_message(MessageBody=json.dumps(app.current_request.json_body))
     return Response(status_code=requests.codes.accepted, body=res if isinstance(res, dict) else "")
 
 
