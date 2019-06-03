@@ -1,0 +1,20 @@
+{
+    "Records": [
+        {
+            "messageId": null,
+            "receiptHandle": "AAAAA",
+            "body": "{\"transaction_id\": \"71af50f6-2cb7-45d1-9ce6-ce13a43b5cc0\", \"subscription_id\": \"80b2136b-79ee-4bb4-aee3-f3da687d2ec6\", \"event_type\": \"CREATE\", \"match\": {\"bundle_uuid\": \"5541acba-066e-4b1e-9420-323513d0a899\", \"bundle_version\": \"2018-10-05T103504.447604Z\"}}",
+            "attributes": {
+                "ApproximateReceiveCount": "1",
+                "SentTimestamp": "1547593710857",
+                "SenderId": "AROAIW2TZ546I:query-api-dev",
+                "ApproximateFirstReceiveTimestamp": "154"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "0",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:***",
+            "awsRegion": "us-east-1"
+        }
+    ]
+}

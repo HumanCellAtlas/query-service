@@ -7,7 +7,7 @@ from dcplib import aws
 
 from dcpquery import api, config
 from dcpquery.api.query_jobs import process_async_query, set_job_status
-from dcpquery.etl import etl_one_bundle
+from dcpquery.etl import process_bundle_event
 
 swagger_spec_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{os.environ["APP_NAME"]}-api.yml')
 app = api.DCPQueryServer(app_name=os.environ["APP_NAME"], swagger_spec_path=swagger_spec_path)
@@ -35,8 +35,7 @@ def version():
 
 @app.route("/bundles/event", methods=["POST"])
 def handle_bundle_event():
-    print("Received bundle event:")
-    print(app.current_request.json_body)
+    app.log.info("Received bundle event: %s", app.current_request.json_body)
     try:
         # The hostname component is ignored in signature calculation
         HTTPSignatureAuth.verify(requests.Request(url="http://host/bundles/event",
@@ -54,11 +53,8 @@ def handle_bundle_event():
 @app.on_sqs_message(queue=config.bundle_events_queue_name)
 def bundle_event_handler(event):
     for record in event:
-        print("Processing:", record.body)
-        dss_event = json.loads(record.body)
-        if dss_event["event_type"] != "CREATE":
-            continue
-        etl_one_bundle(**dss_event["match"])
+        app.log.info("Processing bundle event:", record.body)
+        process_bundle_event(json.loads(record.body))
 
 
 @app.on_sqs_message(queue=config.async_queries_queue_name)

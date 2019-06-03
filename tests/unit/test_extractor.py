@@ -1,20 +1,15 @@
-import os
-import sys
-import unittest
+import os, sys, json, unittest
 
-from tests import vx_bundle
+from dcpquery.etl import process_bundle_event
 
 
-@unittest.skip("WIP")
 class TestExtractor(unittest.TestCase):
+    def test_bundle_event_handling(self):
+        with open(f'{os.path.dirname(__file__)}/../fixtures/mock_sqs_bundle_create_event.json', 'r') as fh:
+            process_bundle_event(json.loads(json.load(fh)["Records"][0]["body"]))
 
-    # extractor = FixtureExtractor()
-
-    def test_bundle(self):
-        bundle = self.extractor.extract_bundle(vx_bundle.uuid, vx_bundle.version)
-        self.assertEqual(vx_bundle, bundle)
-        bundle._files = bundle._files[:-1]
-        self.assertNotEqual(vx_bundle, bundle)
+        with open(f'{os.path.dirname(__file__)}/../fixtures/mock_sqs_bundle_delete_event.json', 'r') as fh:
+            process_bundle_event(json.loads(json.load(fh)["Records"][0]["body"]))
 
 
 if __name__ == '__main__':

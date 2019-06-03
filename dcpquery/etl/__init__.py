@@ -1,10 +1,12 @@
-import os, re, json, tempfile
+import os, re, json, tempfile, logging
 from collections import OrderedDict
 
 from dcplib.etl import DSSExtractor
 
 from .. import config
 from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType
+
+logger = logging.getLogger(__name__)
 
 
 def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_path, extractor=None):
@@ -224,5 +226,27 @@ def link_parent_and_child_processes(process):
 
 def etl_one_bundle(bundle_uuid, bundle_version):
     extractor = DSSExtractor(staging_directory=tempfile.gettempdir(), dss_client=config.dss_client)
-    print(extractor.get_files_to_fetch_for_bundle(bundle_uuid=bundle_uuid, bundle_version=bundle_version))
-    # TODO: (akislyuk): implement etl_one_bundle
+    os.makedirs(f"{extractor.sd}/files", exist_ok=True)
+    os.makedirs(f"{extractor.sd}/bundles", exist_ok=True)
+    _, _, files_to_fetch = extractor.get_files_to_fetch_for_bundle(bundle_uuid, bundle_version)
+    for f in files_to_fetch:
+        extractor.get_file(f, bundle_uuid, bundle_version)
+
+    bundle_path = f"{extractor.sd}/bundles/{bundle_uuid}.{bundle_version}"
+    bundle_manifest_path = f"{extractor.sd}/bundle_manifests/{bundle_uuid}.{bundle_version}.json"
+    tb = transform_bundle(bundle_uuid=bundle_uuid, bundle_version=bundle_version, bundle_path=bundle_path,
+                          bundle_manifest_path=bundle_manifest_path, extractor=extractor)
+    BundleLoader().load_bundle(extractor=extractor, transformer=transform_bundle, bundle=tb)
+
+
+def drop_one_bundle(bundle_uuid, bundle_version):
+    pass
+
+
+def process_bundle_event(dss_event):
+    if dss_event["event_type"] == "CREATE":
+        etl_one_bundle(**dss_event["match"])
+    elif dss_event["event_type"] in {"TOMBSTONE", "DELETE"}:
+        drop_one_bundle(**dss_event["match"])
+    else:
+        logger.error("Ignoring unknown event type %s", dss_event["event_type"])
