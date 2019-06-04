@@ -43,6 +43,8 @@ args = parser.parse_args(sys.argv[1:])
 
 if args.db == "remote":
     config.local_mode = False
+if not args.dry_run:
+    config.readonly_db = False
 
 if args.action is None:
     parser.print_help()

@@ -148,17 +148,19 @@ def init_db(dry_run=True):
     if dry_run:
         orig_db_engine_params = dict(config._db_engine_params)
         config._db_engine_params.update(strategy="mock", executor=lambda sql, *args, **kwargs: print(sql))
-
+    migrate_db()
     if dry_run:
         config._db_engine_params = orig_db_engine_params
+        config.reset_db_session()
 
 
 def migrate_db():
     logger.info("Migrating database at %s", repr(config.db.url))
 
     alembic_cfg = AlembicConfig("alembic.ini")
-    alembic_cfg.set_main_option("sqlalchemy.url", config.db_url)
-    alembic.command.upgrade(alembic_cfg, "head")
+    with config.db.begin() as connection:
+        alembic_cfg.attributes['connection'] = connection
+        alembic.command.upgrade(alembic_cfg, "head")
 
 
 def run_query(query, rows_per_page=100):

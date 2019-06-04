@@ -13,7 +13,7 @@ from alembic import context
 sys.path.insert(0, os.getcwd())
 
 from dcpquery.db import SQLAlchemyBase  # noqa
-from dcpquery import DCPQueryConfig  # noqa
+from dcpquery import config as dcpquery_config  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -39,7 +39,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = DCPQueryConfig().db_url
+    url = dcpquery_config.db_url
     context.configure(
         url=url, target_metadata=target_metadata, literal_binds=True
     )
@@ -55,16 +55,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    config_info = alembic_config.get_section(alembic_config.config_ini_section)
-    config_info['sqlalchemy.url'] = DCPQueryConfig().db_url
-
-    connectable = engine_from_config(
-        config_info,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
+    with dcpquery_config.db.connect() as connection:
         context.configure(
             connection=connection, target_metadata=target_metadata
         )

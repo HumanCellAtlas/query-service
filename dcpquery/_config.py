@@ -39,7 +39,7 @@ class DCPQueryConfig:
         "connect_args": {"options": ""},
         "implicit_returning": False
     }
-    _readonly_db = True
+    readonly_db = True
 
     @property
     def webhook_keys(self):
@@ -76,7 +76,7 @@ class DCPQueryConfig:
         else:
             db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
             db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
-            if self._readonly_db:
+            if self.readonly_db:
                 db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/readonly_hostname"
             else:
                 db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/hostname"
