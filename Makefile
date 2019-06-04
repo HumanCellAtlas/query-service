@@ -106,6 +106,7 @@ migration-test:
 fetch:
 	scripts/fetch.py
 
+# create the database and apply migrations
 init-db:
 	python -m $(APP_NAME).db init
 
@@ -116,10 +117,10 @@ migrate-db:
 drop-db:
 	python -m $(APP_NAME).db drop
 
-load: init-db migrate-db
+load: init-db
 	python -m $(APP_NAME).db load
 
-load-test-data: init-db migrate-db
+load-test-data: init-db
 	python -m $(APP_NAME).db load-test
 
 # Update just the Lambda application code, but not the dependencies, routes, or other infra. Use xargs to parallelize the process.
