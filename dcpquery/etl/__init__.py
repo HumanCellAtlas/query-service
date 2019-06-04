@@ -65,6 +65,14 @@ def get_file_extension(filename):
     return file_extension
 
 
+def get_schema_type(body):
+    try:
+        regex_search_result = re.search('([^\/]+$)', body['describedBy']) # noqa W605
+        return regex_search_result.group(1)
+    except TypeError:
+        return None
+
+
 class BundleLoader:
     def __init__(self):
         schema_types = config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()
@@ -86,12 +94,12 @@ class BundleLoader:
         for file_data in bundle["files"]:
             filename = file_data.pop("name")
             file_extension = get_file_extension(filename)
-
+            schema_type = get_schema_type(file_data['body'])
             if filename == "links.json":
                 links = file_data['body']['links']
                 load_links(links)
 
-            self.register_dcp_metadata_schema_type(file_data['schema_type'])
+            self.register_dcp_metadata_schema_type(schema_type)
             file_row = File(
                 uuid=file_data['uuid'],
                 version=file_data['version'],
@@ -99,7 +107,7 @@ class BundleLoader:
                 size=file_data['size'],
                 extension=str(file_extension),
                 body=file_data['body'],
-                dcp_schema_type_name=file_data['schema_type']
+                dcp_schema_type_name=schema_type
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
