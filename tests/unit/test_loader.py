@@ -35,15 +35,16 @@ class TestPostgresLoader(unittest.TestCase):
     def test_biomaterial_view_table_contains_all_biomaterial_files(self):
         from dcpquery import config
         create_view_tables('mock_extractor')
+
         biomaterial_view_table_count = config.db_session.execute(
             """
-            SELECT count(*) from biomaterial;
+            SELECT count(*) from cell_line;
             """
         ).fetchall()[0][0]
 
         files_of_type_biomaterial_count = config.db_session.execute(
             """
-            SELECT count(*) from files where dcp_schema_type_name='biomaterial';
+            SELECT count(*) from files where dcp_schema_type_name='cell_line';
             """
         ).fetchall()[0][0]
         self.assertEqual(biomaterial_view_table_count, files_of_type_biomaterial_count)
