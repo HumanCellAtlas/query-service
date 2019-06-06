@@ -22,19 +22,19 @@ def root():
 
 
 @app.route("/internal/health")
-def health_check():
+def serve_health_check():
     config.db_session.execute("SELECT 1")
     list(aws.resources.s3.Bucket(config.s3_bucket_name).objects.limit(1))
     return {"status": "OK", "version_info": {"version": os.environ.get("VERSION")}}
 
 
 @app.route("/version")
-def version():
+def serve_version():
     return {"version_info": {"version": os.environ.get("VERSION")}}
 
 
 @app.route("/bundles/event", methods=["POST"])
-def handle_bundle_event():
+def receive_bundle_event():
     app.log.info("Received bundle event: %s", app.current_request.json_body)
     try:
         # The hostname component is ignored in signature calculation
