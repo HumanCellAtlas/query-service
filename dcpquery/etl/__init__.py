@@ -79,7 +79,10 @@ class BundleLoader:
 
     def load_bundle(self, bundle, extractor=None, transformer=None):
         bf_links = []
-        bundle_row = Bundle(uuid=bundle["uuid"], version=bundle["version"], manifest=bundle["manifest"])
+        bundle_row = Bundle(uuid=bundle["uuid"],
+                            version=bundle["version"],
+                            manifest=bundle["manifest"],
+                            aggregate_metadata=bundle["aggregate_metadata"])
         for file_data in bundle["files"]:
             filename = file_data.pop("name")
             file_extension = get_file_extension(filename)

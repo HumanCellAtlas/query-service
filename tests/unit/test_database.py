@@ -58,8 +58,7 @@ class TestPostgresLoader(unittest.TestCase):
         self.assertEqual(result[0].version, vx_bundle.version)
         expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
         self.assertEqual(result[0].fqid, f"{vx_bundle.uuid}.{expect_version}")
-        # Todo figure out why this line isnt working
-        # self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
+        self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
         self.assertEqual(len(result[0].files), len(vx_bundle.files))
         self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(f.fqid for f in result[0].files))
 
