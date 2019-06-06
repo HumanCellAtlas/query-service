@@ -86,12 +86,14 @@ class BundleLoader:
         for file_data in bundle["files"]:
             filename = file_data.pop("name")
             file_extension = get_file_extension(filename)
-
+            schema_type = None
+            if file_data['body']:
+                schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
             if filename == "links.json":
                 links = file_data['body']['links']
                 load_links(links)
 
-            self.register_dcp_metadata_schema_type(file_data['schema_type'])
+            self.register_dcp_metadata_schema_type(schema_type)
             file_row = File(
                 uuid=file_data['uuid'],
                 version=file_data['version'],
@@ -99,7 +101,7 @@ class BundleLoader:
                 size=file_data['size'],
                 extension=str(file_extension),
                 body=file_data['body'],
-                dcp_schema_type_name=file_data['schema_type']
+                dcp_schema_type_name=schema_type
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
