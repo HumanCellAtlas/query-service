@@ -257,5 +257,14 @@ class TestDBManager:
         config.db_session.commit()
 
 
+class TestBundles(unittest.TestCase):
+    def test_delete_bundles_deletes_list_of_bundles(self):
+        bundle_fqids = [bundle[0] for bundle in config.db_session.query("fqid FROM bundles LIMIT 3;").all()]
+        Bundle.delete_bundles(bundle_fqids)
+
+        # Bundle.__table__.filter
+        Bundle.filter()
+
+
 if __name__ == '__main__':
     unittest.main()
