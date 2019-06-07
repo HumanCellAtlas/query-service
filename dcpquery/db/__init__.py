@@ -39,6 +39,11 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
     aggregate_metadata = Column(MutableDict.as_mutable(JSONB))
     files = relationship("File", secondary='bundle_file_links')
 
+    @classmethod
+    def delete_bundles(cls, bundle_fqids):
+        delete_q = cls.__table__.delete().where(cls.fqid.in_(bundle_fqids))
+        config.db_session.execute(delete_q)
+
 
 class DCPMetadataSchemaType(SQLAlchemyBase):
     __tablename__ = 'dcp_metadata_schema_types'
@@ -58,6 +63,11 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     size = Column(BigInteger)
     extension = Column(String)
 
+    @classmethod
+    def delete_files(cls, file_fqids):
+        delete_q = cls.__table__.delete().where(cls.fqid.in_(file_fqids))
+        config.db_session.execute(delete_q)
+
 
 class BundleFileLink(SQLAlchemyBase):
     __tablename__ = 'bundle_file_links'
@@ -66,6 +76,21 @@ class BundleFileLink(SQLAlchemyBase):
     bundle = relationship(Bundle)
     file = relationship(File)
     name = Column(String, nullable=False)
+
+    @classmethod
+    def delete_links_for_bundles(cls, bundle_fqids):
+        delete_q = cls.__table__.delete().where(cls.bundle_fqid.in_(bundle_fqids))
+        config.db_session.execute(delete_q)
+
+    @classmethod
+    def select_links_for_bundle_fqids(cls, bundle_fqids):
+        links = cls.__table__.select().where(cls.bundle_fqid.in_(bundle_fqids))
+        return config.db_session.execute(links)
+
+    @classmethod
+    def select_links_for_file_fqids(cls, file_fqids):
+        links = cls.__table__.select().where(cls.file_fqid.in_(file_fqids))
+        return config.db_session.execute(links)
 
 
 class ConnectionTypeEnum(enum.Enum):
