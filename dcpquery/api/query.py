@@ -11,13 +11,13 @@ from .query_job import create_async_query_job
 
 
 def post(body):
-    query = body["query"]
+    query, params = body["query"], body.get("params", {})
     # FIXME: make sure tests include readonly enforcement
     # TODO: for async query, introduce hidden parameter for seconds to wait for S3 to settle
     try:
         results = []
         total_result_size = 0
-        for row in run_query(query):
+        for row in run_query(query, params):
             result = dict(row.items())
             total_result_size += len(json.dumps(result, cls=JSONEncoder)) + 2
             results.append(result)

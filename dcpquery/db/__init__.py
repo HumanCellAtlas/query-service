@@ -163,9 +163,9 @@ def migrate_db():
         alembic.command.upgrade(alembic_cfg, "head")
 
 
-def run_query(query, rows_per_page=100):
+def run_query(query, params, rows_per_page=100):
     try:
-        cursor = config.db_session.execute(query)
+        cursor = config.db_session.execute(query, params=params)
         while True:
             rows = cursor.fetchmany(size=rows_per_page)
             for row in rows:
