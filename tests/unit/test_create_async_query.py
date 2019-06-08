@@ -9,10 +9,11 @@ from dcpquery.api.query_jobs import process_async_query
 
 class TestCreateAsyncQuery(unittest.TestCase):
     job_id = '26f0424a-fdce-455f-ac2e-f8f5619c6eda'
-    query = "SELECT * FROM files limit 10;"
+    query = "SELECT * FROM files limit :l;"
+    params = {"l": 10}
     mock_event_record = {'messageId': job_id,
                          'receiptHandle': 'AAAAA',
-                         'body': json.dumps(query),
+                         'body': json.dumps(dict(query=query, params=params)),
                          'attributes': {'ApproximateReceiveCount': '1',
                                         'SentTimestamp': '1547593710857',
                                         'SenderId': 'AROAIW2TZ546I:query-api-dev',
@@ -36,7 +37,8 @@ class TestCreateAsyncQuery(unittest.TestCase):
     @patch("dcpquery.api.query_jobs.set_job_status")
     def test_process_async_query_with_invalid_query(self, set_job_status):
         config.db_statement_timeout_seconds = 880
-        process_async_query(dict(self.mock_event_record, body=json.dumps("SELECT * FROM NONEXISTENT_TABLE")))
+        body = json.dumps(dict(query="SELECT * FROM NONEXISTENT_TABLE", params={}))
+        process_async_query(dict(self.mock_event_record, body=body))
         set_job_status_args = set_job_status.call_args
         self.assertEqual(set_job_status_args[0][0], self.job_id)
         self.assertEqual(set_job_status_args[1]["status"], "failed")
@@ -44,7 +46,7 @@ class TestCreateAsyncQuery(unittest.TestCase):
     @patch("dcpquery.api.query_job.set_job_status")
     @patch("dcpquery.api.query_job.aws.resources.sqs.Queue")
     def test_create_async_query_calls_process_async_func_with_correct_args(self, sqs, set_job_status):
-        create_async_query_job(self.mock_event_record["body"])
+        create_async_query_job(**json.loads(self.mock_event_record["body"]))
         set_job_status.assert_called()
         sqs.assert_called()
 
