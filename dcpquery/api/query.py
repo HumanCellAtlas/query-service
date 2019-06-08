@@ -24,6 +24,6 @@ def post(body):
             if total_result_size > config.API_GATEWAY_MAX_RESULT_SIZE:
                 raise QuerySizeError()
     except (QuerySizeError, QueryTimeoutError):
-        job_id = create_async_query_job(query)
+        job_id = create_async_query_job(query, params)
         return redirect(f"query_jobs/{job_id}?redirect_when_waiting=true&redirect_when_done=true")
     return {"query": query, "results": results}, requests.codes.ok

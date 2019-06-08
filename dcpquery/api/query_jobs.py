@@ -64,7 +64,7 @@ def process_async_query(event_record):
         results = []
         total_result_size = 0
         config.reset_db_timeout_seconds(880)
-        for result in run_query(query):
+        for result in run_query(**query):
             total_result_size += len(json.dumps(result, cls=JSONEncoder))
             results.append(result)
             if total_result_size > config.S3_SINGLE_UPLOAD_MAX_SIZE:
