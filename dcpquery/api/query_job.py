@@ -19,4 +19,4 @@ def create_async_query_job(query, params):
 def post(body):
     query, params = body["query"], body.get("params", {})
     job_id = create_async_query_job(query, params)
-    return {"query": query, "job_id": job_id}, requests.codes.accepted
+    return {"query": query, "params": params, "job_id": job_id}, requests.codes.accepted
