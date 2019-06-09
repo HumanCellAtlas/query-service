@@ -177,10 +177,14 @@ components:
         query:
           type: string
           description: Submitted query
+        params:
+          type: object
+          description: Parameters of the submitted query
         results:
           type: array
       required:
         - query
+        - params
         - results
 
     Error:
