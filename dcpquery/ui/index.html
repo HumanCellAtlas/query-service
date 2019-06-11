@@ -47,6 +47,7 @@
           CodeMirror.fromTextArea(this, {mode: 'sql', readOnly: 'nocursor'});
         });
         document.editor = CodeMirror.fromTextArea($('#cm-editor').first(), {mode: 'sql'});
+        CodeMirror.fromTextArea($('#foobar').first(), {mode: 'json'});
       });
     </script>
 
@@ -57,6 +58,7 @@
         <div class="col-sm-8 col-md-7 py-4">
           <h4 class="text-white">About</h4>
           <p class="text-muted">The HCA DCP Query Service provides an interface for scientists and developers to query metadata associated with experimental and analysis data stored in the <a href="https://staging.data.humancellatlas.org/">Human Cell Atlas</a> <a href="https://www.humancellatlas.org/data-sharing">Data Coordination Platform</a> (DCP). Metadata from the <a href="https://github.com/HumanCellAtlas/data-store">DCP Data Store</a> are indexed and stored in an <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a> <a href="https://www.postgresql.org/">PostgreSQL</a> database.</p>
+
         </div>
         <div class="col-sm-4 offset-md-1 py-4">
           <h4 class="text-white">Contact</h4>
@@ -91,6 +93,11 @@
         Each example can be opened, edited, run in the browser to display the results in a table view, or copied as an HCA CLI command or API request.
       </p>
       <p>
+        <textarea id="foobar">
+            foobar
+          </textarea>
+      </p>
+      <p>
         <a href="#" class="btn btn-primary my-2" data-toggle="modal" data-target="#queryEditorModal">Open query editor</a>
         <a href="v1/ui" class="btn btn-secondary my-2">Open API documentation & Swagger UI</a>
       </p>
@@ -103,7 +110,7 @@
         {% for query in queries %}
         <div class="col-md-4">
           <div class="card mb-4 shadow-sm">
-            <div class="card-body" id="cm-viewer-{{loop.index}}-container">
+            <div class="card-body">
               <textarea width="100%" height="100%" id="cm-viewer-{{loop.index}}" onload="console.dir('x');">{{ query }}</textarea>
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
