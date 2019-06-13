@@ -31,6 +31,14 @@ class TestQueryService(unittest.TestCase, DCPAssertMixin):
         self.assertEqual(response.json['query'], query)
         self.assertGreaterEqual(response.json['results'][0]['count'], 0)
 
+        query = "SELECT count(*) FROM FILES WHERE SIZE > :s;"
+        params = {"s": 0}
+        response = self.assertPostResponse(f"{self.api_url}/v1/query",
+                                           json_request_body=dict(query=query, params=params),
+                                           expected_code=requests.codes.ok)
+        self.assertEqual(response.json['query'], query)
+        self.assertGreaterEqual(response.json['results'][0]['count'], 0)
+
     def test_create_async_query(self):
         logger.warning("CHECK CREATE LONG QUERIES ENDPOINT")
         query = "SELECT * FROM FILES LIMIT 1;"

@@ -146,6 +146,12 @@ components:
         query:
           type: string
           description: Query to run, given as a SQL string.
+        params:
+          type: object
+          description: >
+            Parameters of the query. Supply a mapping of parameters using the _named_ parameter style. For example,
+            a query to count all files over a certain size might look like `select count(*) from files where size > :s`.
+            To find all files over 1TB in size, pass the following `params` value for this query: `{"s": 2**30}}`.
       required:
         - query
 
@@ -171,10 +177,14 @@ components:
         query:
           type: string
           description: Submitted query
+        params:
+          type: object
+          description: Parameters of the submitted query
         results:
           type: array
       required:
         - query
+        - params
         - results
 
     Error:

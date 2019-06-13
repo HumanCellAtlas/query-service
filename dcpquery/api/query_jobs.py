@@ -48,10 +48,10 @@ def set_job_status(job_id, status, error=None, result_location=None):
     return {"Bucket": bucket.name, "Key": job_status_object.key}
 
 
-def set_job_result(job_id, result, error=None):
+def set_job_result(job_id, query, params, result, error=None):
     bucket = aws.resources.s3.Bucket(config.s3_bucket_name)
     job_result_object = bucket.Object(f"job_result/{job_id}")
-    job_result_doc = {"job_id": job_id, "status": "done", "result": result, "error": error}
+    job_result_doc = dict(job_id=job_id, status="done", query=query, params=params, result=result, error=error)
     job_result_object.put(Body=json.dumps(job_result_doc, cls=JSONEncoder).encode())
     return {"Bucket": bucket.name, "Key": job_result_object.key}
 
@@ -59,18 +59,19 @@ def set_job_result(job_id, result, error=None):
 def process_async_query(event_record):
     job_id = event_record["messageId"]
     set_job_status(job_id, status="running")
-    query = json.loads(event_record["body"])
+    event = json.loads(event_record["body"])
+    query, params = event["query"], event["params"]
     try:
         results = []
         total_result_size = 0
         config.reset_db_timeout_seconds(880)
-        for result in run_query(query):
+        for result in run_query(query, params):
             total_result_size += len(json.dumps(result, cls=JSONEncoder))
             results.append(result)
             if total_result_size > config.S3_SINGLE_UPLOAD_MAX_SIZE:
                 # TODO stream large query results to s3
                 break
-        job_result_location = set_job_result(job_id, result=results)
+        job_result_location = set_job_result(job_id, query=query, params=params, result=results)
         set_job_status(job_id, status="done", result_location=job_result_location)
     except DCPQueryError as e:
         set_job_status(job_id, status="failed", error=e.to_problem().body)

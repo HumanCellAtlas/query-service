@@ -28,6 +28,12 @@ class TestEndpoints(TestChaliceApp, DCPQueryUnitTest):
         res = self.assertResponse("POST", "/v1/query", requests.codes.ok, {"query": query})
         self.assertEqual(len(res.json['results']), 10)
 
+    def test_query_endpoint_with_params(self):
+        query = "select * from files where size > :s limit 10"
+        params = {"s": 0}
+        res = self.assertResponse("POST", "/v1/query", requests.codes.ok, {"query": query, "params": params})
+        self.assertEqual(len(res.json['results']), 10)
+
     def test_query_endpoint_redirects_timeouts(self):
         with manage_query_timeout(3):
             query = "select pg_sleep(5); select * from files limit 10"
