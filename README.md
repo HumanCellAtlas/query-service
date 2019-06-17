@@ -196,6 +196,15 @@ tail and filter logs on the command line, you can use the `logs` command in
 the [Aegea](https://github.com/kislyuk/aegea) package, for example: `aegea logs /aws/lambda/dcpquery-api-dev
 --start-time=-15m` (this is what `make get_logs` runs).
 
+#### Metric dashboards for core DCP deployments
+
+You can view metric dashboards for each deployment stage at the links below
+
+* [`dev`](https://metrics.dev.data.humancellatlas.org/d/dss-dev2/query-dev?orgId=1)
+* [`integration`](https://metrics.dev.data.humancellatlas.org/d/query-integration/query-integration?orgId=1)
+* [`staging`](https://metrics.dev.data.humancellatlas.org/d/query-staging/query-staging?orgId=1)
+* [`prod`](https://metrics.data.humancellatlas.org/d/query-prod/query-prod?refresh=1m&orgId=1)
+
 ### Bugs & Feature Requests
 
 Please report bugs, issues, feature requests, etc. on [GitHub](https://github.com/HumanCellAtlas/query-service/issues).
