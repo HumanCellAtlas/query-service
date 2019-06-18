@@ -144,7 +144,8 @@ the `environment` file to set essential variables to control the deployment:
 * `API_DNS_ZONE` - The name of a [Route 53](https://aws.amazon.com/route53/) zone that must be present in your AWS
   account, with a registered domain pointing to it. You can set up both at https://console.aws.amazon.com/route53/.
 
-Run `source environment` to set the results of the above edits in your shell.
+Run `source environment` to set the results of the above edits in your shell. (You can also source environment-specific
+convenience files such as `environment.staging` that set the `STAGE` variable and then `source environment` for you.)
 
 In the same shell, run `make install-secrets` to initialize and upload credentials that Query Service
 components need to communicate with each other.
@@ -155,11 +156,6 @@ Finally, to deploy the Query Service, run `make deploy` in the same shell.
 
 After deploying, you can update just the Lambda function codebase by running `make update-lambda` (this is faster, but
 no dependencies, routes, or IAM policies will be updated).
-
-If you are using an AWS Assume Role profile, credentials expire in 15 minutes by default. Terraform does not integrate
-with the AWS CLI, and will not automatically refresh these credentials. If your commands fail with an "ExpiredToken"
-error, run `make init-tf` to refresh the credentials. To lengthen the lifetime of your Assume Role token, add a line
-like `duration_seconds = 43200` in your profile in `~/.aws/config`.
 
 #### Database management
 
