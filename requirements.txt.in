@@ -1,9 +1,9 @@
-hca
-dcplib
 psycopg2-binary
 sqlalchemy
 requests-http-signature
 connexion[swagger-ui]
+hca
+dcplib
 
 # The following packages are pinned to match the versions provided in the Lambda runtime.
 # Their contents are deleted from the Lambda package by `make prune`.
