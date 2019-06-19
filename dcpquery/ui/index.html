@@ -108,10 +108,10 @@
     $('#copy-ack-text').text(text);
   }
   function prepareCLISnippet(text) {
-    return "hca query post-query --query=$'" + text.replace("'", "\\'") + "'";
+    return "hca query post-query --query=$'" + text.replace(/'/g, "\\'") + "'";
   }
   function prepareAPISnippet(text) {
-    return "http https://{{env["API_DOMAIN_NAME"]}}/v1/query query=$'" + text.replace("'", "\\'") + "'";
+    return "http https://{{env["API_DOMAIN_NAME"]}}/v1/query query=$'" + text.replace(/'/g, "\\'") + "'";
   }
   function configureModalEditor(text) {
     document.editor.setValue(text);
