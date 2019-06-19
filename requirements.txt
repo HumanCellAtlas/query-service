@@ -48,7 +48,7 @@ rsa==3.4.2
 s3transfer==0.2.1
 six==1.12.0
 SQLAlchemy==1.3.5
-swagger-ui-bundle==0.0.4
+swagger-ui-bundle==0.0.5
 tenacity==5.0.4
 tweak==1.0.2
 urllib3==1.24.3
