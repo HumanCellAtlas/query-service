@@ -72,7 +72,7 @@ package: build-chalice-config
 # Remove unused dependencies that consume substantial space in the package.
 # See https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
 prune:
-	cd dist/deployment; rm -rf boto3* botocore* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
+	cd dist/deployment; rm -rf awscli* boto3* botocore* cryptography* swagger_ui_bundle/vendor/swagger-ui-2* connexion/vendor/swagger-ui*
 
 # init-tf prepares the repo for Terraform commands. It assembles the partial S3 backend config as a JSON file, `aws_config.json`.
 # This file is referenced by the TF_CLI_ARGS_init environment variable, which is set by running `source environment`.
