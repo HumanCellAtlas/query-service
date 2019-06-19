@@ -1,15 +1,4 @@
-Welcome to HCA DCP Query Service's documentation!
-=================================================
+HCA DCP Query Service
+=====================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+[User Stories](USER_STORIES.md)
