@@ -1,13 +1,14 @@
 chalice
 aws-sam-translator
 furl
-requests
-boto3
-awscli
 flake8
 mypy
 coverage
 sqlalchemy-utils
 sphinx
 recommonmark
+
+awscli==1.16.52
+PyYAML==5.1.1
+
 -r requirements.txt.in
