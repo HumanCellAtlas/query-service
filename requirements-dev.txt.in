@@ -2,14 +2,12 @@ chalice
 aws-sam-translator
 furl
 requests
+boto3
+awscli
 flake8
 mypy
 coverage
 sqlalchemy-utils
 sphinx
 recommonmark
-
-# The following package is pinned to match the versions of boto3 and botocore provided in the Lambda runtime.
-awscli==1.16.52
-
 -r requirements.txt.in
