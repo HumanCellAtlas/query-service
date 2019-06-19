@@ -165,7 +165,7 @@ def migrate_db():
 
 def run_query(query, params, rows_per_page=100):
     try:
-        cursor = config.db_session.execute(query, params=params)
+        cursor = config.db.execute(query, params)
         while True:
             rows = cursor.fetchmany(size=rows_per_page)
             for row in rows:
@@ -173,7 +173,6 @@ def run_query(query, params, rows_per_page=100):
             if not rows:
                 break
     except (sqlalchemy_exceptions.InternalError, sqlalchemy_exceptions.ProgrammingError) as e:
-        config.db_session.rollback()
         raise DCPQueryError(title=e.orig.pgerror, detail={"pgcode": e.orig.pgcode})
     except sqlalchemy_exceptions.OperationalError as e:
         if "canceling statement due to statement timeout" in str(e):
