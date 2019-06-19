@@ -29,7 +29,7 @@ before_script:
   - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
   - virtualenv --python=python3.7 .venv
   - source .venv/bin/activate
-  - pip install --quiet -r requirements-dev.txt
+  - pip install --quiet -r requirements-dev.txt vendor.in/*/*.whl
   - if [[ $CI_COMMIT_REF_NAME =~ ^(staging|integration|prod)$ ]]; then export DEPLOYMENT_STAGE=$CI_COMMIT_REF_NAME; fi
   - source environment
   - aws secretsmanager get-secret-value --secret-id ${APP_NAME}/${STAGE}/gcp-credentials.json | jq -r .SecretString > gcp-credentials.json
