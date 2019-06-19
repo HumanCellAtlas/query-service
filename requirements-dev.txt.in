@@ -1,12 +1,13 @@
-chalice
+alembic
 aws-sam-translator
+chalice
+coverage
 furl
 flake8
 mypy
-coverage
+recommonmark
 sqlalchemy-utils
 sphinx
-recommonmark
 
 awscli==1.16.52
 PyYAML==5.1.1
