@@ -1,3 +1,5 @@
+hca
+dcplib
 psycopg2-binary
 sqlalchemy
 requests-http-signature
@@ -8,5 +10,5 @@ connexion[swagger-ui]
 # See https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
 boto3==1.9.42
 botocore==1.12.42
-
-# hca and dcplib are installed without their dependencies via wheels in vendor.in.
+awscli==1.16.52
+PyYAML==5.1.1

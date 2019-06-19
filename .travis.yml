@@ -26,7 +26,7 @@ env:
 install:
   - curl -Os https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
   - sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
-  - pip install -r requirements-dev.txt vendor.in/*/*.whl
+  - pip install -r requirements-dev.txt
 
 before_script:
   - source environment

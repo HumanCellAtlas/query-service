@@ -8,8 +8,4 @@ mypy
 recommonmark
 sqlalchemy-utils
 sphinx
-
-awscli==1.16.52
-PyYAML==5.1.1
-
 -r requirements.txt.in
