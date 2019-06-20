@@ -1,4 +1,4 @@
-import os, sys, re, json, collections, logging, datetime, uuid
+import os, sys, re, json, collections, logging, datetime, uuid, gzip
 from decimal import Decimal
 
 import requests, connexion, chalice
@@ -103,7 +103,7 @@ class ChaliceWithRequestLogging(chalice.Chalice):
         return res
 
 
-class ChaliceWithBinaryResponses(chalice.Chalice):
+class ChaliceWithGzipBinaryResponses(chalice.Chalice):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api.binary_types.append('*/*')
@@ -114,8 +114,11 @@ class ChaliceWithBinaryResponses(chalice.Chalice):
             res.body = json.dumps(res.body)
         if not isinstance(res.body, bytes):
             res.body = res.body.encode()
+        if "Content-Encoding" not in res.headers:
+            res.body = gzip.compress(res.body)
+            res.headers["Content-Encoding"] = "gzip"
         return res
 
 
-class DCPQueryServer(ChaliceWithConnexion, ChaliceWithRequestLogging, ChaliceWithBinaryResponses):
+class DCPQueryServer(ChaliceWithConnexion, ChaliceWithRequestLogging, ChaliceWithGzipBinaryResponses):
     pass
