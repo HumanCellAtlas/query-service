@@ -83,7 +83,9 @@ class ChaliceWithConnexion(chalice.Chalice):
             flask_res = self.connexion_app.app.full_dispatch_request()
         res_headers = dict(flask_res.headers)
         res_headers.pop("Content-Length", None)
-        res_body = b"".join([c for c in flask_res.response]).decode()
+        res_body = b"".join([c for c in flask_res.response])
+        if not chalice.app._matches_content_type(res_headers.get("Content-Type", "*/*"), self.api.binary_types):
+            res_body = res_body.decode()
         return chalice.Response(status_code=flask_res._status_code, headers=res_headers, body=res_body)
 
 
