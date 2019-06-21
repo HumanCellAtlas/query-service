@@ -10,6 +10,7 @@ from dcpquery import api, ui, config
 from dcpquery.api.query_jobs import process_async_query, set_job_status
 from dcpquery.etl import process_bundle_event
 
+ui_assets_dir = os.path.join(os.path.abspath(os.path.dirname(dcpquery.__file__)), "ui")
 swagger_spec_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{os.environ["APP_NAME"]}-api.yml')
 app = api.DCPQueryServer(app_name=os.environ["APP_NAME"], swagger_spec_path=swagger_spec_path)
 config.app = app
@@ -18,11 +19,16 @@ config.configure_logging()
 
 @app.route("/")
 def root():
-    ui_assets_dir = os.path.join(os.path.abspath(os.path.dirname(dcpquery.__file__)), "ui")
     queries = [open(f).read() for f in glob.glob(os.path.join(ui_assets_dir, "queries/*"))]
     with open(os.path.join(ui_assets_dir, "index.html")) as fh:
         body = jinja2.Template(fh.read()).render(env=os.environ, queries=queries)
     return Response(status_code=requests.codes.ok, headers={"Content-Type": "text/html"}, body=body)
+
+
+@app.route("/favicon.ico")
+def favicon():
+    with open(os.path.join(ui_assets_dir, "favicon.ico"), "rb") as fh:
+        return Response(status_code=requests.codes.ok, headers={"Content-Type": "image/x-icon"}, body=fh.read())
 
 
 @app.route("/internal/health")

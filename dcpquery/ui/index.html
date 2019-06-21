@@ -46,6 +46,7 @@
     .dataTable td {
       max-width: 25rem;
       overflow: hidden;
+      font-size: .75rem;
     }
   </style>
 
@@ -69,7 +70,7 @@
     if (typeof data === "object") {
       return "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
     }
-    return data;
+    return "<samp>" + data + "</samp>";
   }
   function dispatchQuery(query, params) {
     $('#query-result').DataTable().clear().destroy();
