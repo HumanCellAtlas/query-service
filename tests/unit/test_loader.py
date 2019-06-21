@@ -2,6 +2,7 @@ import json, unittest, secrets
 
 from unittest.mock import patch
 
+from inflection import pluralize
 from dcpquery import config
 from dcpquery.db import Bundle
 
@@ -30,7 +31,10 @@ class TestPostgresLoader(unittest.TestCase):
 
         schema_types = [schema[0] for schema in
                         config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()]
-        self.assertEqual(sorted(views), sorted(schema_types))
+
+        def schema_type_to_view_name(s):
+            return s if s == "process" else pluralize(s)
+        self.assertEqual(sorted(views), sorted(map(schema_type_to_view_name, schema_types)))
 
     def test_biomaterial_view_table_contains_all_biomaterial_files(self):
         from dcpquery import config
@@ -38,7 +42,7 @@ class TestPostgresLoader(unittest.TestCase):
 
         biomaterial_view_table_count = config.db_session.execute(
             """
-            SELECT count(*) from cell_line;
+            SELECT count(*) from cell_lines;
             """
         ).fetchall()[0][0]
 

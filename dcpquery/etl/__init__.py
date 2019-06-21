@@ -1,6 +1,7 @@
 import os, re, json, tempfile, logging
 from collections import OrderedDict
 
+from inflection import pluralize
 from dcplib.etl import DSSExtractor
 
 from .. import config
@@ -113,9 +114,10 @@ def create_view_tables(extractor):
     schema_types = [schema[0] for schema in
                     config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()]
     for schema_type in schema_types:
+        view_name = schema_type if schema_type == "process" else pluralize(schema_type)
         config.db_session.execute(
             f"""
-              CREATE OR REPLACE VIEW {schema_type} AS
+              CREATE OR REPLACE VIEW {view_name} AS
               SELECT f.* FROM files as f
               WHERE f.dcp_schema_type_name = '{schema_type}'
             """
