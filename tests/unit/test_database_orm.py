@@ -9,6 +9,7 @@ from dcpquery import config
 
 class TestBundles(unittest.TestCase):
     def test_insert_select_bundle(self):
+
         config.db_session.add(vx_bundle)
         config.db_session.commit()
 
@@ -58,6 +59,7 @@ class TestBundleFileLinks(unittest.TestCase):
         self.assertEqual(result[0].file_fqid, self.process_file.fqid)
 
         res = BundleFileLink.select_links_for_bundle_fqids(bundle_fqids=[vx_bundle.fqid]).fetchall()
+
         result = sorted(res, key=lambda x: x.file_fqid)
         self.assertEqual(len(result), 14)
         expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
@@ -97,6 +99,7 @@ class TestBundleFileLinks(unittest.TestCase):
         self.assertGreater(len(bundle_file_links), 0)
         BundleFileLink.delete_links_for_files([file_fqid])
         bundle_file_links = BundleFileLink.select_links_for_file_fqids(file_fqids=[file_fqid]).fetchall()
+
 
         self.assertEqual(len(bundle_file_links), 0)
 
