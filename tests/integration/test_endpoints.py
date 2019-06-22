@@ -31,7 +31,7 @@ class TestQueryService(unittest.TestCase, DCPAssertMixin):
         self.assertEqual(response.json['query'], query)
         self.assertGreaterEqual(response.json['results'][0]['count'], 0)
 
-        query = "SELECT count(*) FROM FILES WHERE SIZE > :s;"
+        query = "SELECT count(*) FROM FILES WHERE SIZE > :(s)s;"
         params = {"s": 0}
         response = self.assertPostResponse(f"{self.api_url}/v1/query",
                                            json_request_body=dict(query=query, params=params),

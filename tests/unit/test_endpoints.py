@@ -29,7 +29,7 @@ class TestEndpoints(TestChaliceApp, DCPQueryUnitTest):
         self.assertEqual(len(res.json['results']), 10)
 
     def test_query_endpoint_with_params(self):
-        query = "select * from files where size > :s limit 10"
+        query = "select * from files where size > %(s)s limit 10"
         params = {"s": 0}
         res = self.assertResponse("POST", "/v1/query", requests.codes.ok, {"query": query, "params": params})
         self.assertEqual(len(res.json['results']), 10)

@@ -9,7 +9,7 @@ from dcpquery.api.query_jobs import process_async_query
 
 class TestCreateAsyncQuery(unittest.TestCase):
     job_id = '26f0424a-fdce-455f-ac2e-f8f5619c6eda'
-    query = "SELECT * FROM files limit :l;"
+    query = "SELECT * FROM files limit %(l)s;"
     params = {"l": 10}
     mock_event_record = {'messageId': job_id,
                          'receiptHandle': 'AAAAA',
