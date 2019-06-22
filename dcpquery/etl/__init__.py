@@ -258,6 +258,8 @@ def drop_one_bundle(bundle_uuid, bundle_version):
 
 
 def process_bundle_event(dss_event):
+    config.readonly_db = False
+    config.reset_db_session()
     if dss_event["event_type"] == "CREATE":
         etl_one_bundle(**dss_event["match"])
     elif dss_event["event_type"] in {"TOMBSTONE", "DELETE"}:

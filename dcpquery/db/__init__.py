@@ -2,14 +2,15 @@
 This module provides a SQLAlchemy-based database schema for the DCP Query Service.
 """
 import enum
-import os, sys, argparse, json, logging, typing
+import logging, typing
 
-from sqlalchemy import (Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions,
+from sqlalchemy import (Column, String, DateTime, Integer, ForeignKey, Enum, exc as sqlalchemy_exceptions,
                         UniqueConstraint, BigInteger)
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship
+from typing import List
 
 from .. import config
 from ..exceptions import DCPQueryError, QueryTimeoutError
@@ -44,6 +45,10 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
         delete_q = cls.__table__.delete().where(cls.fqid.in_(bundle_fqids))
         config.db_session.execute(delete_q)
 
+    @classmethod
+    def select_bundle(cls, bundle_fqid):
+        return config.db_session.query(cls).filter(cls.fqid == bundle_fqid).one_or_none()
+
 
 class DCPMetadataSchemaType(SQLAlchemyBase):
     __tablename__ = 'dcp_metadata_schema_types'
@@ -64,6 +69,10 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     extension = Column(String)
 
     @classmethod
+    def select_file(cls, file_fqid):
+        return config.db_session.query(cls).filter(cls.fqid == file_fqid).one_or_none()
+
+    @classmethod
     def delete_files(cls, file_fqids):
         delete_q = cls.__table__.delete().where(cls.fqid.in_(file_fqids))
         config.db_session.execute(delete_q)
@@ -78,17 +87,22 @@ class BundleFileLink(SQLAlchemyBase):
     name = Column(String, nullable=False)
 
     @classmethod
-    def delete_links_for_bundles(cls, bundle_fqids):
+    def delete_links_for_bundles(cls, bundle_fqids: List[str]):
         delete_q = cls.__table__.delete().where(cls.bundle_fqid.in_(bundle_fqids))
         config.db_session.execute(delete_q)
 
     @classmethod
-    def select_links_for_bundle_fqids(cls, bundle_fqids):
+    def delete_links_for_files(cls, file_fqids: List[str]):
+        delete_q = cls.__table__.delete().where(cls.file_fqid.in_(file_fqids))
+        config.db_session.execute(delete_q)
+
+    @classmethod
+    def select_links_for_bundle_fqids(cls, bundle_fqids: List[str]):
         links = cls.__table__.select().where(cls.bundle_fqid.in_(bundle_fqids))
         return config.db_session.execute(links)
 
     @classmethod
-    def select_links_for_file_fqids(cls, file_fqids):
+    def select_links_for_file_fqids(cls, file_fqids: List[str]):
         links = cls.__table__.select().where(cls.file_fqid.in_(file_fqids))
         return config.db_session.execute(links)
 
