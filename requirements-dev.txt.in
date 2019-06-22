@@ -1,13 +1,11 @@
-chalice
+alembic
 aws-sam-translator
+chalice
+coverage
 furl
-requests
-boto3
-awscli
 flake8
 mypy
-coverage
+recommonmark
 sqlalchemy-utils
 sphinx
-recommonmark
 -r requirements.txt.in

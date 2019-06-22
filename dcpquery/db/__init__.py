@@ -4,9 +4,6 @@ This module provides a SQLAlchemy-based database schema for the DCP Query Servic
 import enum
 import os, sys, argparse, json, logging, typing
 
-import alembic
-from alembic.config import Config as AlembicConfig
-
 from sqlalchemy import (Column, String, DateTime, Integer, ForeignKey, Table, Enum, exc as sqlalchemy_exceptions,
                         UniqueConstraint, BigInteger)
 from sqlalchemy.dialects.postgresql import UUID, JSONB
@@ -155,6 +152,9 @@ def init_db(dry_run=True):
 
 
 def migrate_db():
+    import alembic
+    from alembic.config import Config as AlembicConfig
+
     logger.info("Migrating database at %s", repr(config.db.url))
 
     alembic_cfg = AlembicConfig("alembic.ini")
