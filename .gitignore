@@ -38,7 +38,7 @@ npm-debug.log
 .coverage.*
 
 # Terraform files
-/.terraform
+/.terraform*
 /terraform/variables.tf
 
 /.chalice/config.json
