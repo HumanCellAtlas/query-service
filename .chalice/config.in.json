@@ -7,15 +7,14 @@
   "environment_variables": {
     "XDG_CONFIG_HOME": "/tmp"
   },
+  "tags": {
+    "managedBy": "chalice",
+    "project": "dcp"
+  },
   "stages": {
-    "dev": {
-      "api_gateway_stage": "api",
-      "iam_policy_file": "policy-dev.json",
-      "environment_variables": {},
-      "tags": {
-        "managedBy": "chalice",
-        "project": "dcp"
-      }
-    }
+    "dev": {},
+    "integration": {},
+    "staging": {},
+    "prod": {}
   }
 }

@@ -52,6 +52,7 @@ build-chalice-config:
 	cd .chalice; jq .stages.$(STAGE).tags.env=env.STAGE config.json | sponge config.json
 	cd .chalice; jq .stages.$(STAGE).tags.service=env.APP_NAME config.json | sponge config.json
 	cd .chalice; jq .stages.$(STAGE).tags.owner=env.OWNER config.json | sponge config.json
+	cd .chalice; jq .stages.$(STAGE).api_gateway_stage=env.STAGE config.json | sponge config.json
 
 # package prepares a Lambda zipfile with the help of the Chalice packager (which also emits a SAM template).
 # We also inject any wheels found in vendor.in, and rewrite the zipfile to make the build reproducible.
