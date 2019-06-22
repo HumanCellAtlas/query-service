@@ -1,4 +1,4 @@
-import os, sys, json, re, unittest, functools, typing, collections, pprint, time
+import os, sys, json, re, unittest, functools, typing, collections, pprint, time, base64, gzip
 
 import requests
 from chalice.cli import CLIFactory
@@ -29,6 +29,7 @@ class ChaliceTestHarness:
 
     def request(self, path, headers={}, data={}, method="GET"):
         headers.setdefault("host", "localhost")
+        headers.setdefault("accept", "*/*")
         if isinstance(data, dict):
             data = json.dumps(data)
         resp_obj = requests.Response()
@@ -42,9 +43,9 @@ class ChaliceTestHarness:
             resp_obj.status_code = response['statusCode']
             resp_obj.headers = response['headers']
             resp_obj._content = response['body']
+            if resp_obj.headers["Content-Encoding"] == "gzip":
+                resp_obj._content = gzip.decompress(resp_obj._content)
         resp_obj.encoding = "utf-8"
-        if not isinstance(resp_obj._content, bytes):
-            resp_obj._content = resp_obj._content.encode()
         resp_obj.headers['Content-Length'] = str(len(resp_obj.content))
         return resp_obj
 

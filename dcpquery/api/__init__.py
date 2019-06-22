@@ -1,4 +1,4 @@
-import os, sys, re, json, collections, logging, datetime, uuid
+import os, sys, re, json, collections, logging, datetime, uuid, gzip
 from decimal import Decimal
 
 import requests, connexion, chalice
@@ -83,7 +83,7 @@ class ChaliceWithConnexion(chalice.Chalice):
             flask_res = self.connexion_app.app.full_dispatch_request()
         res_headers = dict(flask_res.headers)
         res_headers.pop("Content-Length", None)
-        res_body = b"".join([c for c in flask_res.response]).decode()
+        res_body = b"".join([c for c in flask_res.response])
         return chalice.Response(status_code=flask_res._status_code, headers=res_headers, body=res_body)
 
 
@@ -103,5 +103,22 @@ class ChaliceWithRequestLogging(chalice.Chalice):
         return res
 
 
-class DCPQueryServer(ChaliceWithConnexion, ChaliceWithRequestLogging):
+class ChaliceWithGzipBinaryResponses(chalice.Chalice):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api.binary_types.append('*/*')
+
+    def _get_view_function_response(self, view_function, function_args):
+        res = super()._get_view_function_response(view_function, function_args)
+        if isinstance(res.body, dict):
+            res.body = json.dumps(res.body)
+        if not isinstance(res.body, bytes):
+            res.body = res.body.encode()
+        if "Content-Encoding" not in res.headers:
+            res.body = gzip.compress(res.body)
+            res.headers["Content-Encoding"] = "gzip"
+        return res
+
+
+class DCPQueryServer(ChaliceWithConnexion, ChaliceWithRequestLogging, ChaliceWithGzipBinaryResponses):
     pass
