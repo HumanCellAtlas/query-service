@@ -2,6 +2,7 @@ psycopg2-binary
 sqlalchemy
 requests-http-signature
 connexion[swagger-ui]
+brotli
 hca
 dcplib
 
