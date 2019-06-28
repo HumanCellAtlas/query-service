@@ -43,7 +43,7 @@ class ChaliceTestHarness:
             resp_obj.status_code = response['statusCode']
             resp_obj.headers = response['headers']
             resp_obj._content = response['body']
-            if resp_obj.headers["Content-Encoding"] == "gzip":
+            if resp_obj.headers.get("Content-Encoding") == "gzip":
                 resp_obj._content = gzip.decompress(resp_obj._content)
         resp_obj.encoding = "utf-8"
         resp_obj.headers['Content-Length'] = str(len(resp_obj.content))
