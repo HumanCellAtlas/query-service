@@ -1,10 +1,11 @@
 import os, sys, re, json, collections, logging, datetime, uuid, gzip
 from decimal import Decimal
 
-import requests, connexion, chalice
+import requests, connexion, chalice, brotli
 from sqlalchemy.engine.result import RowProxy
 from connexion.resolver import RestyResolver
 from connexion.lifecycle import ConnexionResponse
+from werkzeug.http import parse_accept_header
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -115,8 +116,13 @@ class ChaliceWithGzipBinaryResponses(chalice.Chalice):
         if not isinstance(res.body, bytes):
             res.body = res.body.encode()
         if "Content-Encoding" not in res.headers:
-            res.body = gzip.compress(res.body)
-            res.headers["Content-Encoding"] = "gzip"
+            accept_encoding = parse_accept_header(self.current_request.headers.get("Accept-Encoding"))
+            if "br" in accept_encoding:
+                res.body = brotli.compress(res.body, mode=brotli.MODE_TEXT, quality=5)
+                res.headers["Content-Encoding"] = "br"
+            elif "gzip" in accept_encoding:
+                res.body = gzip.compress(res.body)
+                res.headers["Content-Encoding"] = "gzip"
         return res
 
 

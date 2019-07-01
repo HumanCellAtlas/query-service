@@ -1,6 +1,6 @@
 import os, sys, json, re, unittest, functools, typing, collections, pprint, time, base64, gzip
 
-import requests
+import requests, brotli
 from chalice.cli import CLIFactory
 from chalice.local import LocalGateway, LocalGatewayException
 from furl import furl
@@ -30,6 +30,7 @@ class ChaliceTestHarness:
     def request(self, path, headers={}, data={}, method="GET"):
         headers.setdefault("host", "localhost")
         headers.setdefault("accept", "*/*")
+        headers.setdefault("accept-encoding", "br")
         if isinstance(data, dict):
             data = json.dumps(data)
         resp_obj = requests.Response()
@@ -43,7 +44,9 @@ class ChaliceTestHarness:
             resp_obj.status_code = response['statusCode']
             resp_obj.headers = response['headers']
             resp_obj._content = response['body']
-            if resp_obj.headers["Content-Encoding"] == "gzip":
+            if resp_obj.headers.get("Content-Encoding") == "br":
+                resp_obj._content = brotli.decompress(resp_obj._content)
+            elif resp_obj.headers.get("Content-Encoding") == "gzip":
                 resp_obj._content = gzip.decompress(resp_obj._content)
         resp_obj.encoding = "utf-8"
         resp_obj.headers['Content-Length'] = str(len(resp_obj.content))
