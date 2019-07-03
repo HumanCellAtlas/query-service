@@ -23,8 +23,9 @@ sending them to the response data location. In this mode, response data are conf
 accessible for 7 days. The caller may turn off this functionality by setting the `async=False` flag when calling
 `/query`.
 
-* For more user documentation, example queries, design goals, and other help, see the
-  [Query Service documentation on Read The Docs](https://dcpquery.readthedocs.io/).
+* For more user documentation, example queries, design goals, and other help, see
+  - [User Guide](docs/user_onboarding.md)
+  - [Query Service documentation on Read The Docs](https://dcpquery.readthedocs.io/).
 * For issue and task tracking, see our
   [ZenHub board](https://app.zenhub.com/workspaces/dcp-5ac7bcf9465cb172b77760d9/board?repos=145019370).
 
