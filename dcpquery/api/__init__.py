@@ -74,9 +74,10 @@ class ChaliceWithConnexion(chalice.Chalice):
                 return chalice.Response(status_code=requests.codes.found, headers={"Location": path + "/"}, body="")
         req_body = self.current_request.raw_body if self.current_request._body is not None else None
         base_url = "https://{}".format(self.current_request.headers["host"])
+        query_string = self.current_request.query_params or {}
         with self.connexion_app.app.test_request_context(path=path,
                                                          base_url=base_url,
-                                                         query_string=self.current_request.query_params,
+                                                         query_string=list(query_string.items()),
                                                          method=self.current_request.method,
                                                          headers=list(self.current_request.headers.items()),
                                                          data=req_body,
