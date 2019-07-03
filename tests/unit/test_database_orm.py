@@ -9,7 +9,6 @@ from dcpquery import config
 
 class TestBundles(unittest.TestCase):
     def test_insert_select_bundle(self):
-        # config.reset_db_session()
         config.db_session.add(vx_bundle)
         config.db_session.commit()
 
@@ -58,7 +57,7 @@ class TestBundleFileLinks(unittest.TestCase):
         self.assertEqual(result[0].bundle_fqid, vx_bundle.fqid)
         self.assertEqual(result[0].file_fqid, self.process_file.fqid)
 
-        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid)
+        res = BundleFileLink.select_links_for_bundle_fqids(bundle_fqids=[vx_bundle.fqid]).fetchall()
         result = sorted(res, key=lambda x: x.file_fqid)
         self.assertEqual(len(result), 14)
         expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
@@ -94,12 +93,10 @@ class TestBundleFileLinks(unittest.TestCase):
 
     def test_delete_links_for_file(self):
         file_fqid = config.db_session.query("file_fqid FROM bundle_file_links LIMIT 1;").all()[0][0]
-        bundle_file_links = config.db_session.execute(
-            f"SELECT * FROM bundle_file_links where file_fqid='{file_fqid}'").fetchall()
+        bundle_file_links = BundleFileLink.select_links_for_file_fqids(file_fqids=[file_fqid]).fetchall()
         self.assertGreater(len(bundle_file_links), 0)
         BundleFileLink.delete_links_for_files([file_fqid])
-        bundle_file_links = config.db_session.execute(
-            f"SELECT * FROM bundle_file_links where file_fqid='{file_fqid}'").fetchall()
+        bundle_file_links = BundleFileLink.select_links_for_file_fqids(file_fqids=[file_fqid]).fetchall()
 
         self.assertEqual(len(bundle_file_links), 0)
 
@@ -141,15 +138,15 @@ class TestFiles(unittest.TestCase):
         config.db_session.commit()
 
         # select files
-        res = config.db_session.query(File).filter(File.uuid == self.project_file.uuid,
-                                                   File.version == self.project_file.version)
-        result = list(res)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].uuid, self.project_file.uuid)
-        self.assertEqual(result[0].version, self.project_file.version)
+        result = File.select_file(file_fqid=self.project_file.fqid)
+        # res = config.db_session.query(File).filter(File.uuid == self.project_file.uuid,
+        #                                            File.version == self.project_file.version)
+
+        self.assertEqual(result.uuid, self.project_file.uuid)
+        self.assertEqual(result.version, self.project_file.version)
         expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[0].fqid, f"{self.project_file.uuid}.{expect_version}")
-        self.assertEqual(result[0].body, self.project_file.body)
+        self.assertEqual(result.fqid, f"{self.project_file.uuid}.{expect_version}")
+        self.assertEqual(result.body, self.project_file.body)
 
     def test_delete_files(self):
         file_fqids = [file[0] for file in config.db_session.query("fqid FROM files LIMIT 3;").all()]
