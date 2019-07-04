@@ -32,7 +32,7 @@ class DCPQueryModelHelper:
 
 
 class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
-    __tablename__ = 'bundles'
+    __tablename__ = 'bundles_all_versions'
     fqid = Column(String, primary_key=True, unique=True, nullable=False)
     uuid = Column(UUID, nullable=False)
     version = Column(DateTime, nullable=False)
@@ -57,7 +57,7 @@ class DCPMetadataSchemaType(SQLAlchemyBase):
 
 
 class File(DCPQueryModelHelper, SQLAlchemyBase):
-    __tablename__ = 'files'
+    __tablename__ = 'files_all_versions'
     fqid = Column(String, primary_key=True, unique=True, nullable=False)
     uuid = Column(UUID, nullable=False)
     version = Column(DateTime, nullable=False)
@@ -80,8 +80,8 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
 
 class BundleFileLink(SQLAlchemyBase):
     __tablename__ = 'bundle_file_links'
-    bundle_fqid = Column(String, ForeignKey('bundles.fqid'), primary_key=True)
-    file_fqid = Column(String, ForeignKey('files.fqid'), primary_key=True)
+    bundle_fqid = Column(String, ForeignKey('bundles_all_versions.fqid'), primary_key=True)
+    file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True)
     bundle = relationship(Bundle)
     file = relationship(File)
     name = Column(String, nullable=False)
