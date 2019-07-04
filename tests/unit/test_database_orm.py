@@ -139,8 +139,6 @@ class TestFiles(unittest.TestCase):
 
         # select files
         result = File.select_file(file_fqid=self.project_file.fqid)
-        # res = config.db_session.query(File).filter(File.uuid == self.project_file.uuid,
-        #                                            File.version == self.project_file.version)
 
         self.assertEqual(result.uuid, self.project_file.uuid)
         self.assertEqual(result.version, self.project_file.version)
