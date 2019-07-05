@@ -98,7 +98,7 @@ lint:
 test: lint docs build-chalice-config unit-test migration-test
 
 unit-test: load-test-data
-	coverage run --source $(APP_NAME) -m unittest discover --start-directory tests/unit --top-level-directory . --verbose
+	coverage run --timid --source $(APP_NAME) -m unittest discover --start-directory tests/unit --top-level-directory . --verbose
 
 integration-test:
 	python -m unittest discover --start-directory tests/integration --top-level-directory . --verbose
