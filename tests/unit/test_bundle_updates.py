@@ -6,8 +6,8 @@ from dcpquery.etl import drop_one_bundle, process_bundle_event
 from tests import mock_bundle_deletion_event
 
 
-@unittest.skip("WIP")
 class BundleUpdateEvents(unittest.TestCase):
+    @unittest.skip("WIP")
     def test_drop_one_bundle_handles_deletion(self):
         bundle_uuid = 'dfb5a10e-656f-4faa-a0c9-588afdd47e10'
         bundle_version = '2018-10-11T220440.437634Z'
