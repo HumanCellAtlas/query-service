@@ -255,3 +255,7 @@ class TestDBManager:
     def create_recursive_functions_in_db(cls):
         config.db_session.execute(cls.get_all_children_function_sql + cls.get_all_parents_function_sql)
         config.db_session.commit()
+
+
+if __name__ == '__main__':
+    unittest.main()

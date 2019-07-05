@@ -7,7 +7,6 @@ from dcpquery.api.query_job import create_async_query_job
 from dcpquery.api.query_jobs import process_async_query
 
 
-@unittest.skip("WIP")
 class TestCreateAsyncQuery(unittest.TestCase):
     job_id = '26f0424a-fdce-455f-ac2e-f8f5619c6eda'
     query = "SELECT * FROM files limit %(l)s;"
@@ -24,12 +23,12 @@ class TestCreateAsyncQuery(unittest.TestCase):
                          'eventSource': 'aws:sqs',
                          'eventSourceARN': 'arn:***',
                          'awsRegion': 'us-east-1'}
-#
-#    def setUp(self):
-#        config.reset_db_session()
-##
-#    def tearDown(self):
-#        config.reset_db_session()
+
+    def setUp(self):
+        config.reset_db_session()
+
+    def tearDown(self):
+        config.reset_db_session()
 
     @patch("dcpquery.api.query_jobs.set_job_status")
     def test_process_async_query_keeps_job_status_updated(self, set_job_status):
