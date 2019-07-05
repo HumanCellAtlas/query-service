@@ -7,6 +7,7 @@ from dcpquery.api.query_job import create_async_query_job
 from dcpquery.api.query_jobs import process_async_query
 
 
+@unittest.skip("WIP")
 class TestCreateAsyncQuery(unittest.TestCase):
     job_id = '26f0424a-fdce-455f-ac2e-f8f5619c6eda'
     query = "SELECT * FROM files limit %(l)s;"
@@ -26,10 +27,10 @@ class TestCreateAsyncQuery(unittest.TestCase):
 #
 #    def setUp(self):
 #        config.reset_db_session()
-#
+##
 #    def tearDown(self):
 #        config.reset_db_session()
-    '''
+
     @patch("dcpquery.api.query_jobs.set_job_status")
     def test_process_async_query_keeps_job_status_updated(self, set_job_status):
         config.db_statement_timeout_seconds = 880
@@ -48,7 +49,6 @@ class TestCreateAsyncQuery(unittest.TestCase):
         set_job_status_args = set_job_status.call_args
         self.assertEqual(set_job_status_args[0][0], self.job_id)
         self.assertEqual(set_job_status_args[1]["status"], "failed")
-    '''
 
     @patch("dcpquery.api.query_job.set_job_status")
     @patch("dcpquery.api.query_job.aws.resources.sqs.Queue")
