@@ -24,8 +24,11 @@ class TestCreateAsyncQuery(unittest.TestCase):
                          'eventSourceARN': 'arn:***',
                          'awsRegion': 'us-east-1'}
 
-#    def setUp(self):
-#        config.reset_db_session()
+    def setUp(self):
+        config.reset_db_session()
+
+    def tearDown(self):
+        config.reset_db_session()
 
     @patch("dcpquery.api.query_jobs.set_job_status")
     def test_process_async_query_keeps_job_status_updated(self, set_job_status):

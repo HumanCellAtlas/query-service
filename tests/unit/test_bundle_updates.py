@@ -12,7 +12,7 @@ class BundleUpdateEvents(unittest.TestCase):
         bundle_version = '2018-10-11T220440.437634Z'
         bundle_fqid = bundle_uuid + '.' + bundle_version
 
-        file_count = config.db_session.execute("SELECT COUNT(*) from files;").fetchall()[0][0]
+        file_count = config.db_session.execute("SELECT COUNT(*) from files;").fetchall()[0][0]  # noqa
         self.assertEqual(config.db_session.execute(
             f"SELECT COUNT(*) FROM bundles WHERE fqid='{bundle_fqid}'").fetchall()[0][0], 1)
 
