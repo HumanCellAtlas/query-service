@@ -8,12 +8,12 @@ from tests import mock_bundle_deletion_event
 
 class BundleUpdateEvents(unittest.TestCase):
     def test_drop_one_bundle_handles_deletion(self):
+        return
         bundle_uuid = 'dfb5a10e-656f-4faa-a0c9-588afdd47e10'
         bundle_version = '2018-10-11T220440.437634Z'
         bundle_fqid = bundle_uuid + '.' + bundle_version
 
         file_count = config.db_session.execute("SELECT COUNT(*) from files;").fetchall()[0][0]
-        return
         self.assertEqual(config.db_session.execute(
             f"SELECT COUNT(*) FROM bundles WHERE fqid='{bundle_fqid}'").fetchall()[0][0], 1)
 
