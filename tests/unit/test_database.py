@@ -26,6 +26,7 @@ class TestReadOnlyTransactions(unittest.TestCase):
 class TestDBRules(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        config.reset_db_session()
         cls.uuid = "a309af02-0888-4184-bcf2-5971dec9e8ab"
         cls.version = "2018-09-06T190237.485774Z"
         config.db_session.add(File(uuid=cls.uuid, version=cls.version))
