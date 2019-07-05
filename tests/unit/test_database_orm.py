@@ -7,7 +7,6 @@ from tests import vx_bundle, vx_bf_links, vx_bundle_aggregate_md, mock_links
 from dcpquery import config
 
 
-@unittest.skip("WIP")
 class TestBundles(unittest.TestCase):
     def test_insert_select_bundle(self):
         # config.reset_db_session()
