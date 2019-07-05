@@ -19,7 +19,7 @@ class BundleUpdateEvents(unittest.TestCase):
         bundle_fqid = bundle_uuid + '.' + bundle_version
 
         file_count = config.db_session.execute("SELECT COUNT(*) from files;").fetchall()[0][0]
-        return
+
         self.assertEqual(config.db_session.execute(
             f"SELECT COUNT(*) FROM bundles WHERE fqid='{bundle_fqid}'").fetchall()[0][0], 1)
 
@@ -31,7 +31,7 @@ class BundleUpdateEvents(unittest.TestCase):
 
         self.assertEqual(config.db_session.execute(
             f"SELECT COUNT(*) FROM bundle_file_links where bundle_fqid='{bundle_fqid}'").fetchall()[0][0], 0)
-        config.reset_db_session()
+
         post_deletion_file_count = config.db_session.execute("SELECT COUNT(*) from files;").fetchall()[0][0]
 
         self.assertLess(post_deletion_file_count, file_count)
