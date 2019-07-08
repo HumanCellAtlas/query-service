@@ -70,18 +70,18 @@ class TestViewTables(unittest.TestCase):
 
     def test_bundle_view_table_only_contains_latest_version(self):
         bundle_versions = config.db_session.execute(
-            f"""
-            SELECT version from bundles_all_versions where uuid='{self.vx_bundle_uuid}'
             """
+            SELECT version from bundles_all_versions where uuid=:uuid
+            """, [{'uuid': self.vx_bundle_uuid}]
         ).fetchall()
 
         self.assertEqual(len(bundle_versions), 2)
         versions = sorted([x[0] for x in bundle_versions])
 
         latest_version = config.db_session.execute(
-            f"""
-            SELECT version from bundles where uuid='{self.vx_bundle_uuid}'
             """
+            SELECT version from bundles where uuid=:uuid
+            """, [{'uuid': self.vx_bundle_uuid}]
         ).fetchall()
         self.assertEqual(len(latest_version), 1)
         self.assertEqual(latest_version[0][0], versions[-1])
@@ -89,18 +89,18 @@ class TestViewTables(unittest.TestCase):
     def test_file_view_table_only_contains_latest_version(self):
         file_uuid = 'd96015ad-0783-454a-a836-264391c60b02'
         file_versions = config.db_session.execute(
-            f"""
-            SELECT version from files_all_versions where uuid='{file_uuid}'
             """
+            SELECT version from files_all_versions where uuid=:uuid
+            """, [{'uuid': file_uuid}]
         ).fetchall()
 
         self.assertEqual(len(file_versions), 2)
         versions = sorted([x[0] for x in file_versions])
 
         latest_version = config.db_session.execute(
-            f"""
-            SELECT version from files where uuid='{file_uuid}'
             """
+            SELECT version from files where uuid=:uuid
+            """, [{'uuid': file_uuid}]
         ).fetchall()
         self.assertEqual(len(latest_version), 1)
         self.assertEqual(latest_version[0][0], versions[-1])
