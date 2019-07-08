@@ -84,6 +84,7 @@ integration_test:
 
 release_integration:
   extends: .release
+  when: on_success
   variables:
     RELEASE_COMMAND: scripts/release.sh master integration --no-deploy --skip-account-verification
   only:
