@@ -47,6 +47,6 @@ def upgrade():
 
 def downgrade():
     op.rename_table('bundles_all_versions', 'bundles')
-    op.rename_table('marathon', 'files_all_versions')
+    op.rename_table('files_all_versions', 'files')
     op.execute("DROP RULE IF EXISTS file_table_ignore_duplicate_inserts ON files_all_versions;")
     op.execute("DROP RULE IF EXISTS bundle_table_ignore_duplicate_inserts ON bundles_all_versions;")
