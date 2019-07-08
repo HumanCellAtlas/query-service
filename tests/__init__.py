@@ -32,6 +32,8 @@ vx_bundle_aggregate_md = json.loads(load_fixture('vx_bundle_document.json'))
 fast_query_mock_result = json.loads(load_fixture('fast_query_mock_result.json'))
 fast_query_expected_results = json.loads(load_fixture('fast_query_expected_results.json'))
 mock_links = json.loads(load_fixture('process_links.json'))
+mock_bundle_deletion_event = json.loads(
+    json.loads(load_fixture('mock_sqs_bundle_delete_event.json'))['Records'][0]['body'])
 vx_bundle = Bundle(fqid=vx_bundle_fqid,
                    manifest=json.loads(vx_bundle_manifest),
                    aggregate_metadata=vx_bundle_aggregate_md)

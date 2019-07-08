@@ -1,14 +1,12 @@
-import os, sys
-import sqlalchemy
-import unittest, secrets
-from uuid import uuid4
+import os
+import sys
 
-# from lib.etl.load import PostgresLoader
-from dcpquery.db import Process, File, Bundle, ProcessFileLink, BundleFileLink, drop_db, init_db
-from dcpquery.etl import load_links
-from tests import vx_bundle, vx_bf_links, clear_views, truncate_tables, eventually, mock_links, vx_bundle_aggregate_md
+import sqlalchemy
+import unittest
 
 from dcpquery import config
+from dcpquery.db import File, Bundle, Process, ProcessFileLink, drop_db, init_db, BundleFileLink
+from tests import vx_bf_links
 
 
 class TestReadOnlyTransactions(unittest.TestCase):
@@ -22,117 +20,6 @@ class TestReadOnlyTransactions(unittest.TestCase):
                                  'extension']
 
         self.assertEqual(list(dict(row).keys()), expected_column_names)
-
-
-class TestPostgresLoader(unittest.TestCase):
-    project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
-    process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
-
-    def test_insert_select_file(self):
-        # insert files
-        config.db_session.add_all([self.project_file, self.process_file])
-        config.db_session.commit()
-
-        # select files
-        res = config.db_session.query(File).filter(File.uuid == self.project_file.uuid,
-                                                   File.version == self.project_file.version)
-        result = list(res)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].uuid, self.project_file.uuid)
-        self.assertEqual(result[0].version, self.project_file.version)
-        expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[0].fqid, f"{self.project_file.uuid}.{expect_version}")
-        self.assertEqual(result[0].body, self.project_file.body)
-
-    def test_insert_select_bundle(self):
-        # insert bundle
-        config.db_session.add(vx_bundle)
-        config.db_session.commit()
-
-        # select bundle
-        res = config.db_session.query(Bundle).filter(Bundle.uuid == vx_bundle.uuid,
-                                                     Bundle.version == vx_bundle.version)
-        result = list(res)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].uuid, vx_bundle.uuid)
-        self.assertEqual(result[0].version, vx_bundle.version)
-        expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[0].fqid, f"{vx_bundle.uuid}.{expect_version}")
-        self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
-        self.assertEqual(len(result[0].files), len(vx_bundle.files))
-        self.assertSetEqual(set(f.fqid for f in vx_bundle.files), set(f.fqid for f in result[0].files))
-
-    def test_insert_select_bundle_file_link(self):
-        # insert bundle-file links
-        config.db_session.add_all(vx_bf_links)
-        config.db_session.commit()
-
-        # select bundle-file links
-        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid,
-                                                             BundleFileLink.file_fqid == self.process_file.fqid)
-        result = list(res)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].name, "process_0.json")
-        self.assertEqual(result[0].bundle_fqid, vx_bundle.fqid)
-        self.assertEqual(result[0].file_fqid, self.process_file.fqid)
-
-        res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid)
-        result = sorted(res, key=lambda x: x.file_fqid)
-        self.assertEqual(len(result), 14)
-        expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-
-        self.assertEqual(result[1].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
-        expect_version = self.process_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[1].file_fqid, f"{self.process_file.uuid}.{expect_version}")
-
-        self.assertEqual(result[6].bundle_fqid, f"{vx_bundle.uuid}.{expect_version}")
-
-        expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result[6].file_fqid, f"{self.project_file.uuid}.{expect_version}")
-
-    @unittest.skip("WIP")
-    def test_table_create_list(self):
-        num_test_tables = 3
-        test_table_names = [
-            f"test_table_{secrets.token_hex(12)}" for _ in range(num_test_tables)
-        ]
-
-        # def test_list(tables: Tables, num_intersecting_tables: int):
-
-        @eventually(5.0, 1.0)
-        def test_list(tables, num_intersecting_tables: int):
-            ls_result = set(tables.files.select_views())
-            inner_result = ls_result & set(test_table_names)
-            self.assertEqual(len(inner_result), num_intersecting_tables)
-
-        try:
-            with self.db.transaction() as (cursor, tables):
-                # create
-                for table_name in test_table_names:
-                    tables.files.create_view(table_name, schema_type=secrets.token_hex(8))
-                # list
-                test_list(tables, num_test_tables)
-        finally:
-            with self.db.transaction() as (cursor, _):
-                clear_views(cursor)
-            self.db._connection.commit()
-            with self.db.transaction() as (_, tables):
-                test_list(tables, 0)
-
-    def test_get_all_parents(self):
-        load_links(mock_links['links'])
-
-        parent_processes = Process.list_all_parent_processes('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-        expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
-        self.assertCountEqual(expected_parents, parent_processes)
-
-    def test_get_all_children(self):
-        load_links(mock_links['links'])
-
-        child_processes = Process.list_all_child_processes('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-        expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                             'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
-        self.assertCountEqual(expected_children, child_processes)
 
 
 # Note: these tests alter global state and so may not play well with other concurrent tests/operations
@@ -165,7 +52,6 @@ class TestDBRules(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         config.db_session.rollback()
-
         TestDBManager().create_upsert_rules_in_db()
 
     def test_file_table_rule(self):
@@ -356,18 +242,18 @@ class TestDBManager:
             $$ LANGUAGE SQL;
     """
 
-    def create_upsert_rules_in_db(cls):
+    def create_upsert_rules_in_db(self):
         config.db_session.execute(
-            cls.bundle_file_link_ignore_duplicate_rule_sql + cls.bundle_ignore_duplicate_rule_sql
+            self.bundle_file_link_ignore_duplicate_rule_sql + self.bundle_ignore_duplicate_rule_sql
         )
         config.db_session.execute(
-            cls.process_file_link_ignore_duplicate_rule_sql + cls.process_ignore_duplicate_rule_sql
+            self.process_file_link_ignore_duplicate_rule_sql + self.process_ignore_duplicate_rule_sql
         )
-        config.db_session.execute(cls.file_ignore_duplicate_rule_sql)
+        config.db_session.execute(self.file_ignore_duplicate_rule_sql)
         config.db_session.commit()
 
-    def create_recursive_functions_in_db(cls):
-        config.db_session.execute(cls.get_all_children_function_sql + cls.get_all_parents_function_sql)
+    def create_recursive_functions_in_db(self):
+        config.db_session.execute(self.get_all_children_function_sql + self.get_all_parents_function_sql)
         config.db_session.commit()
 
 

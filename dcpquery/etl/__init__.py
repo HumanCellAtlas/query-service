@@ -1,5 +1,6 @@
 import os, re, json, tempfile, logging
 from collections import OrderedDict
+from contextlib import contextmanager
 
 from dcplib.etl import DSSExtractor
 
@@ -245,10 +246,20 @@ def etl_one_bundle(bundle_uuid, bundle_version):
 
 
 def drop_one_bundle(bundle_uuid, bundle_version):
-    pass
+    bundle_fqid = bundle_uuid + '.' + bundle_version
+    file_fqids = [link[1] for link in BundleFileLink.select_links_for_bundle_fqids([bundle_fqid])]
+    BundleFileLink.delete_links_for_bundles([bundle_fqid])
+    files_to_keep = [link[1] for link in BundleFileLink.select_links_for_file_fqids(file_fqids)]
+    files_to_delete = list(set(file_fqids) - set(files_to_keep))
+    # TODO @madison once processes link to file versions cascade file deletions to associated processes
+    File.delete_files(files_to_delete)
+    Bundle.delete_bundles([bundle_fqid])
+    config.db_session.commit()
 
 
 def process_bundle_event(dss_event):
+    config.readonly_db = False
+    config.reset_db_session()
     if dss_event["event_type"] == "CREATE":
         etl_one_bundle(**dss_event["match"])
     elif dss_event["event_type"] in {"TOMBSTONE", "DELETE"}:
