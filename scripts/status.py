@@ -4,7 +4,7 @@ This script outputs GitLab pipeline status.
 The GitLab API is expected to be stored in AWS secretsmanager with secret id "$APP_NAME/gitlab-api"
 The GitLab Token is expected to be stored in AWS secretsmanager with secret id "$APP_NAME/gitlab-token"
 """
-import os, json, re, argparse, subprocess, urllib.parse
+import os, sys, json, re, argparse, subprocess, urllib.parse
 import boto3, requests
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -28,4 +28,6 @@ r = requests.get(
     params={"ref": args.branch},
     headers={"Private-Token": gitlab_token},
 )
+print(slug, file=sys.stderr)
+print(r.text, file=sys.stderr)
 print(json.loads(r.text)[0]['status'])

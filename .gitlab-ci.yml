@@ -89,7 +89,7 @@ release_integration:
   variables:
     RELEASE_COMMAND: scripts/release.sh master integration --no-deploy --skip-account-verification
   only:
-    - master
+    - akislyuk-releng-fixes
 
 force_release_integration:
   extends: .release

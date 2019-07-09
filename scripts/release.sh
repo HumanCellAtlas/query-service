@@ -65,12 +65,12 @@ if [[ $SKIP_ACCOUNT_VERIFICATION != "--skip-account-verification" ]]; then
 fi
 
 if ! git diff-index --quiet HEAD --; then
-    if [[ $FORCE == "--force" ]]; then
-        echo "You have uncommitted files in your Git repository. Forcing deployment anyway."
-    else
+#    if [[ $FORCE == "--force" ]]; then
+#        echo "You have uncommitted files in your Git repository. Forcing deployment anyway."
+#    else
         echo "You have uncommitted files in your Git repository. Please commit or stash them, or run $0 with --force."
-        exit 1
-    fi
+#        exit 1
+#    fi
 fi
 
 if ! diff <(pip freeze | grep -v "pkg-resources==0.0.0") <(tail -n +2 "$APP_HOME/requirements-dev.txt"); then
@@ -97,7 +97,8 @@ if [[ "$STATUS" != success ]]; then
 fi
 
 RELEASE_TAG=$(date -u +"%Y-%m-%d-%H-%M-%S")-${PROMOTE_DEST_BRANCH}.release
-
+echo "will release $RELEASE_TAG"
+exit
 if [[ "$(git --no-pager log --graph --abbrev-commit --pretty=oneline --no-merges -- $PROMOTE_DEST_BRANCH ^$PROMOTE_FROM_BRANCH)" != "" ]]; then
     echo "Warning: The following commits are present on $PROMOTE_DEST_BRANCH but not on $PROMOTE_FROM_BRANCH"
     git --no-pager log --graph --abbrev-commit --pretty=oneline --no-merges $PROMOTE_DEST_BRANCH ^$PROMOTE_FROM_BRANCH
