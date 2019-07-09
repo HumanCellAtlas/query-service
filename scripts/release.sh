@@ -73,7 +73,7 @@ if ! git diff-index --quiet HEAD --; then
     fi
 fi
 
-if ! diff <(pip freeze) <(tail -n +2 "$APP_HOME/requirements-dev.txt"); then
+if ! diff <(pip freeze | grep -v "pkg-resources==0.0.0") <(tail -n +2 "$APP_HOME/requirements-dev.txt"); then
     if [[ $FORCE == "--force" ]]; then
         echo "Your installed Python packages differ from requirements-dev.txt. Forcing deployment anyway."
     else
