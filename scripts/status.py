@@ -30,4 +30,5 @@ r = requests.get(
 )
 print(slug, file=sys.stderr)
 print(r.text, file=sys.stderr)
+print(json.loads(r.text)[0]['status'], file=sys.stderr)
 print(json.loads(r.text)[0]['status'])

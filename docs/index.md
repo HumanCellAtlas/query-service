@@ -1,4 +1,3 @@
-HCA DCP Query Service
-=====================
+#### HCA DCP Query Service
 
-[User Stories](USER_STORIES.md)
+Y u [no](https://goo.gl) _render_ *markdown*?

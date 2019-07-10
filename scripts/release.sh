@@ -86,6 +86,8 @@ fi
 export PROMOTE_FROM_BRANCH=$1 PROMOTE_DEST_BRANCH=$2
 
 STATUS=$(${APP_HOME}/scripts/status.py $PROMOTE_FROM_BRANCH)
+echo Status: $STATUS
+
 if [[ "$STATUS" != success ]]; then
     if [[ $FORCE == "--force" ]]; then
         echo "Status checks failed on branch $PROMOTE_FROM_BRANCH. Forcing promotion and deployment anyway."
