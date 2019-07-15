@@ -43,7 +43,7 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
             if f == fm["name"] and "schema_type" in file_doc:
                 result["files"][fm["name"]] = dict(fm,
                                                    body=file_doc,
-                                                   schema_type=file_doc.get('schema_type'))
+                                                   schema_type=file_doc['schema_type'])
     # For all other (non-metadata) files from the bundle manifest, insert them with a default body
     # indicating an empty schema type.
     for fm in result["manifest"]["files"]:
