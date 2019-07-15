@@ -136,6 +136,7 @@ def load_links(links):
         except AssertionError as e:
             logger.error("Error while loading link: %s", e)
 
+
 def format_process_info(link):
     assert 'process' in link
     process_uuid = link['process']
