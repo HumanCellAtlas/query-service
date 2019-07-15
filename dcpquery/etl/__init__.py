@@ -126,15 +126,18 @@ def create_view_tables(extractor):
 
 def load_links(links):
     for link in links:
-        process = format_process_info(link)
-        process['children'] = get_child_process_uuids(process['output_file_uuids'])
-        process['parents'] = get_parent_process_uuids(process['input_file_uuids'])
-        create_process(process['process_uuid'])
-        create_process_file_links(process)
-        link_parent_and_child_processes(process)
-
+        try:
+            process = format_process_info(link)
+            process['children'] = get_child_process_uuids(process['output_file_uuids'])
+            process['parents'] = get_parent_process_uuids(process['input_file_uuids'])
+            create_process(process['process_uuid'])
+            create_process_file_links(process)
+            link_parent_and_child_processes(process)
+        except AssertionError as e:
+            logger.error("Error while loading link: %s", e)
 
 def format_process_info(link):
+    assert 'process' in link
     process_uuid = link['process']
     protocol_uuids = []
     for protocol in link['protocols']:
