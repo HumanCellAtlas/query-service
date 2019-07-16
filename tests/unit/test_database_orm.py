@@ -141,7 +141,6 @@ class TestFiles(unittest.TestCase):
         # select files
         result = File.select_file(file_fqid=self.project_file.fqid)
 
-
         self.assertEqual(result.uuid, self.project_file.uuid)
         self.assertEqual(result.version, self.project_file.version)
         expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
