@@ -40,7 +40,7 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
                 result["aggregate_metadata"].setdefault(metadata_key, [])
                 result["aggregate_metadata"][metadata_key].append(file_doc)
         for fm in result["manifest"]["files"]:
-            if f == fm["name"]:
+            if f == fm["name"] and "schema_type" in file_doc:
                 result["files"][fm["name"]] = dict(fm,
                                                    body=file_doc,
                                                    schema_type=file_doc['schema_type'])
