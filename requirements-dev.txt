@@ -24,7 +24,7 @@ connexion==2.3.0
 coverage==4.5.3
 crc32c==1.7
 cryptography==2.3.1
-dcplib==2.0.3
+dcplib==2.1.2
 docutils==0.14
 entrypoints==0.3
 enum-compat==0.0.2
