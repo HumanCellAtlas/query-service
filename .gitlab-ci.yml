@@ -74,38 +74,27 @@ before_script:
   when: manual
   allow_failure: true
 
-.dev:
+test_dev:
+  extends: .test
   only:
     variables:
       - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
 
-.prod:
+deploy_dev:
+  extends: .deploy
   only:
     variables:
-      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
-    refs:
-      - prod
-
-test_dev:
-  extends:
-    - .test
-    - .dev
-
-deploy_dev:
-  extends:
-    - .deploy
-    - .dev
-  only:
+      - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
     refs:
       - master
       - integration
       - staging
 
 integration_test_dev:
-  extends:
-    - .integration_test
-    - .dev
+  extends: .integration_test
   only:
+    variables:
+      - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
     refs:
       - master
       - integration
@@ -155,16 +144,25 @@ force_release_prod:
     - staging
 
 test_prod:
-  extends:
-    - .test
-    - .prod
+  extends: .test
+  only:
+    variables:
+      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
+    refs:
+      - prod
 
 deploy_prod:
-  extends:
-    - .deploy
-    - .prod
+  extends: .deploy
+  only:
+    variables:
+      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
+    refs:
+      - prod
 
 integration_test_prod:
-  extends:
-    - .integration_test
-    - .prod
+  extends: .integration_test
+  only:
+    variables:
+      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
+    refs:
+      - prod
