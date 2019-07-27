@@ -60,7 +60,7 @@ deploy_dev:
       - integration
       - staging
     variables:
-      - $CI_API_V4_URL == https://allspark.dev.data.humancellatlas.org/api/v4
+      - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
 
 deploy_prod:
   extends: .deploy
@@ -68,7 +68,7 @@ deploy_prod:
     refs:
       - prod
     variables:
-      - $CI_API_V4_URL == https://allspark-prod.data.humancellatlas.org/api/v4
+      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
 
 integration_test:
   stage: integration_test
