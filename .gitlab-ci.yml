@@ -43,18 +43,31 @@ test:
     - make init-db migrate-db load-test-data init-tf
     - make test
 
-deploy:
+.deploy:
   stage: deploy
-  only:
-    refs:
-      - master
-      - integration
-      - staging
   except:
     - tags
     - schedules
   script:
     - make deploy
+
+deploy_dev:
+  extends: .deploy
+  only:
+    refs:
+      - master
+      - integration
+      - staging
+    variables:
+      - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
+
+deploy_prod:
+  extends: .deploy
+  only:
+    refs:
+      - prod
+    variables:
+      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
 
 integration_test:
   stage: integration_test
@@ -66,6 +79,7 @@ integration_test:
     - master
     - integration
     - staging
+    - prod
 
 .release:
   stage: release
