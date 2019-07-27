@@ -35,7 +35,7 @@ before_script:
   - aws secretsmanager get-secret-value --secret-id ${APP_NAME}/${STAGE}/gcp-credentials.json | jq -r .SecretString > gcp-credentials.json
   - export GOOGLE_APPLICATION_CREDENTIALS=$(pwd -P)/gcp-credentials.json
 
-test:
+.test:
   stage: test
   except:
     - tags
@@ -51,35 +51,12 @@ test:
   script:
     - make deploy
 
-deploy_dev:
-  extends: .deploy
-  only:
-    refs:
-      - master
-      - integration
-      - staging
-    variables:
-      - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
-
-deploy_prod:
-  extends: .deploy
-  only:
-    refs:
-      - prod
-    variables:
-      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
-
-integration_test:
+.integration_test:
   stage: integration_test
   except:
     - tags
   script:
     - make integration-test
-  only:
-    - master
-    - integration
-    - staging
-    - prod
 
 .release:
   stage: release
@@ -96,6 +73,43 @@ integration_test:
     - schedules
   when: manual
   allow_failure: true
+
+.dev:
+  only:
+    variables:
+      - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
+
+.prod:
+  only:
+    variables:
+      - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
+    refs:
+      - prod
+
+test_dev:
+  extends:
+    - .test
+    - .dev
+
+deploy_dev:
+  extends:
+    - .deploy
+    - .dev
+  only:
+    refs:
+      - master
+      - integration
+      - staging
+
+integration_test_dev:
+  extends:
+    - .integration_test
+    - .dev
+  only:
+    refs:
+      - master
+      - integration
+      - staging
 
 release_integration:
   extends: .release
@@ -139,3 +153,18 @@ force_release_prod:
     RELEASE_COMMAND: scripts/release.sh staging prod --force --no-deploy --skip-account-verification
   only:
     - staging
+
+test_prod:
+  extends:
+    - .test
+    - .prod
+
+deploy_prod:
+  extends:
+    - .deploy
+    - .prod
+
+integration_test_prod:
+  extends:
+    - .integration_test
+    - .prod
