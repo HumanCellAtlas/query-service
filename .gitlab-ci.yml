@@ -79,6 +79,9 @@ test_dev:
   only:
     variables:
       - $CI_API_V4_URL == "https://allspark.dev.data.humancellatlas.org/api/v4"
+  except:
+    refs:
+      - prod
 
 deploy_dev:
   extends: .deploy
