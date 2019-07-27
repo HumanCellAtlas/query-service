@@ -40,8 +40,8 @@ class TestDBRules(unittest.TestCase):
         config.db_session.commit()
 
         # remove rules
-        config.db_session.execute("DROP RULE file_table_ignore_duplicate_inserts ON files_all_versions;")
-        config.db_session.execute("DROP RULE bundle_table_ignore_duplicate_inserts ON bundles_all_versions;")
+        config.db_session.execute("DROP RULE file_table_ignore_duplicate_inserts ON files;")
+        config.db_session.execute("DROP RULE bundle_table_ignore_duplicate_inserts ON bundles;")
         config.db_session.execute("DROP RULE process_table_ignore_duplicate_inserts ON processes;")
         config.db_session.execute(
             "DROP RULE process_file_join_table_ignore_duplicate_inserts ON process_file_join_table;"
@@ -175,20 +175,20 @@ class TestDBManager:
     """
     file_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE file_table_ignore_duplicate_inserts AS
-            ON INSERT TO files_all_versions
+            ON INSERT TO files
                 WHERE EXISTS (
                   SELECT 1
-                FROM files_all_versions
+                FROM files
                 WHERE fqid = NEW.fqid
             )
             DO INSTEAD NOTHING;
     """
     bundle_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE bundle_table_ignore_duplicate_inserts AS
-            ON INSERT TO bundles_all_versions
+            ON INSERT TO bundles
                 WHERE EXISTS (
                   SELECT 1
-                FROM bundles_all_versions
+                FROM bundles
                 WHERE fqid = NEW.fqid
             )
             DO INSTEAD NOTHING;

@@ -58,7 +58,6 @@ class TestBundleFileLinks(unittest.TestCase):
         self.assertEqual(result[0].file_fqid, self.process_file.fqid)
 
         res = BundleFileLink.select_links_for_bundle_fqids(bundle_fqids=[vx_bundle.fqid]).fetchall()
-
         result = sorted(res, key=lambda x: x.file_fqid)
         self.assertEqual(len(result), 14)
         expect_version = vx_bundle.version.strftime("%Y-%m-%dT%H%M%S.%fZ")

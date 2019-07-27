@@ -111,20 +111,6 @@ class BundleLoader:
 
 
 def create_view_tables(extractor):
-    config.db_session.execute(
-        """
-          CREATE OR REPLACE VIEW files AS
-          SELECT * FROM files_all_versions
-          WHERE (uuid, version) IN (SELECT uuid, max(version) FROM files_all_versions GROUP BY uuid)
-        """
-    )
-    config.db_session.execute(
-        """
-          CREATE OR REPLACE VIEW bundles AS
-          SELECT * FROM bundles_all_versions
-          WHERE (uuid, version) IN (SELECT uuid, max(version) FROM bundles_all_versions GROUP BY uuid)
-        """
-    )
     schema_types = [schema[0] for schema in
                     config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()]
     for schema_type in schema_types:
