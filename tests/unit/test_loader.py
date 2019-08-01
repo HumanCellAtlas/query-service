@@ -52,19 +52,8 @@ class TestPostgresLoader(unittest.TestCase):
         self.assertEqual(result[0].uuid, vx_bundle_uuid)
         self.assertEqual(result[0].version.strftime("%Y-%m-%dT%H%M%S.%fZ"), vx_bundle_version)
         self.assertDictEqual(result[0].manifest, json.loads(vx_bundle_manifest))
-        # Todo figure out why this line isnt working
-        # self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
+        self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
 
-    def test_get_child_process_uuids_returns_correct_ids(self):
-        child_processes = get_child_process_uuids(['b0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa'])
-        expected_result = ['a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
-        self.assertCountEqual(expected_result, child_processes)
-
-    def test_get_parent_process_uuids_returns_correct_ids(self):
-        parent_processes = get_parent_process_uuids(['b0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                                     'b0000009-aaaa-aaaa-aaaa-aaaaaaaaaaaa'])
-        expected_result = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
-        self.assertCountEqual(expected_result, parent_processes)
 
     @patch('dcpquery.config.db_session.add_all')
     @patch('dcpquery.etl.ProcessFileLink', )
