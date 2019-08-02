@@ -42,7 +42,7 @@ class TestDBRules(unittest.TestCase):
         # remove rules
         config.db_session.execute("DROP RULE file_table_ignore_duplicate_inserts ON files;")
         config.db_session.execute("DROP RULE bundle_table_ignore_duplicate_inserts ON bundles;")
-        config.db_session.execute("DROP RULE process_table_ignore_duplicate_inserts ON processes;")
+        config.db_session.execute("DROP RULE process_table_ignore_duplicate_inserts ON processes_for_graph;")
         config.db_session.execute(
             "DROP RULE process_file_join_table_ignore_duplicate_inserts ON process_file_join_table;"
         )
@@ -206,10 +206,10 @@ class TestDBManager:
     """
     process_ignore_duplicate_rule_sql = """
         CREATE OR REPLACE RULE process_table_ignore_duplicate_inserts AS
-            ON INSERT TO processes
+            ON INSERT TO processes_for_graph
                 WHERE EXISTS (
                   SELECT 1
-                FROM processes
+                FROM processes_for_graph
                 WHERE process_uuid = NEW.process_uuid
             )
             DO INSTEAD NOTHING;

@@ -114,7 +114,7 @@ class ConnectionTypeEnum(enum.Enum):
 
 
 class Process(SQLAlchemyBase):
-    __tablename__ = 'processes'
+    __tablename__ = 'processes_for_graph'
     process_uuid = Column(UUID, primary_key=True)
 
     @classmethod
@@ -141,7 +141,7 @@ class Process(SQLAlchemyBase):
 class ProcessFileLink(SQLAlchemyBase):
     __tablename__ = 'process_file_join_table'
     id = Column(Integer, primary_key=True)
-    process_uuid = Column(UUID, ForeignKey("processes.process_uuid"))
+    process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"))
     process_file_connection_type = Column(Enum(ConnectionTypeEnum))
     process = relationship(Process)
     file_uuid = Column(UUID)
@@ -156,8 +156,8 @@ class ProcessFileLink(SQLAlchemyBase):
 class ProcessProcessLink(SQLAlchemyBase):
     __tablename__ = 'process_join_table'
     id = Column(Integer, primary_key=True)
-    child_process_uuid = Column(UUID, ForeignKey("processes.process_uuid"))
-    parent_process_uuid = Column(UUID, ForeignKey("processes.process_uuid"))
+    child_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"))
+    parent_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"))
     parent_process = relationship(Process, foreign_keys=[parent_process_uuid])
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
 
