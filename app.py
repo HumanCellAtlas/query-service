@@ -57,7 +57,7 @@ def receive_bundle_event():
 @app.on_sqs_message(queue=config.bundle_events_queue_name)
 def bundle_event_handler(event):
     for record in event:
-        app.log.info("Processing bundle event:", record.body)
+        app.log.info(f"Processing bundle event: {record.body}")
         process_bundle_event(json.loads(record.body))
 
 
