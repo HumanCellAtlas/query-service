@@ -7,7 +7,7 @@ from dcpquery.etl import load_links
 class TestETLHelpers(unittest.TestCase):
     @patch('dcpquery.etl.logger.error')
     def test_links_ignore_unknown_format(self, logger):
-        load_links([{1: 2}])
+        load_links([{1: 2}], 'mock_bundle_uuid')
         logger.assert_called_once()
 
 

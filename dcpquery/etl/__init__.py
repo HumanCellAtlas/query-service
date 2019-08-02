@@ -113,38 +113,38 @@ class BundleLoader:
 def update_process_join_table():
     config.db_session.execute(
         """
-        Insert into process_join_table (child_process_uuid, parent_process_uuid)
-select * from (
-              with
-                  input_files_table as (
-                                        select
-                                               process_uuid as child_process,
-                                               file_uuid    as input_file_uuid
-                                        from process_file_join_table
-                                        where process_file_connection_type = 'INPUT_ENTITY'
+        Insert INTO process_join_table (child_process_uuid, parent_process_uuid)
+          SELECT * FROM (
+              WITH
+                  input_files_table AS (
+                                        SELECT
+                                               process_uuid AS child_process,
+                                               file_uuid    AS input_file_uuid
+                                        FROM process_file_join_table
+                                        WHERE process_file_connection_type = 'INPUT_ENTITY'
                                       ),
 
-                  output_files_table as (
+                  output_files_table AS (
                                           SELECT
-                                                 process_uuid as parent_process,
-                                                 file_uuid as output_file_uuid
-                                        from process_file_join_table
-                                        where process_file_connection_type = 'OUTPUT_ENTITY'
+                                                 process_uuid AS parent_process,
+                                                 file_uuid AS output_file_uuid
+                                        FROM process_file_join_table
+                                        WHERE process_file_connection_type = 'OUTPUT_ENTITY'
                                       )
-                  select
+                  SELECT
                          input_files_table.child_process,
                          output_files_table.parent_process
-                  from input_files_table, output_files_table
-       where input_files_table.input_file_uuid = output_files_table.output_file_uuid) as temp_tables
+                  FROM input_files_table, output_files_table
+       WHERE input_files_table.input_file_uuid = output_files_table.output_file_uuid) AS temp_tables
        ON CONFLICT DO NOTHING;
         """
     )
+    config.db_session.commit()
 
 
-def query_service_finalizer(extractor):
+def dcpquery_etl_finalizer(extractor):
     create_view_tables()
     update_process_join_table()
-    config.db_session.commit()
 
 
 def create_view_tables():
@@ -173,6 +173,7 @@ def create_view_tables():
               WHERE f.dcp_schema_type_name = '{schema_type}'
             """
         )
+    config.db_session.commit()
 
 
 def load_links(links, bundle_uuid):
