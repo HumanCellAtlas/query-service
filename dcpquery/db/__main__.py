@@ -31,7 +31,7 @@ default_test_query = {
 config.configure_logging()
 parser = argparse.ArgumentParser(description=__doc__, prog="db_ctl")
 parser.add_argument(
-    "action", choices={"init", "drop", "load", "load-test", "connect", "describe", "run", "migrate"},
+    "action", choices={"init", "drop", "load", "load-test", "connect", "describe", "run", "migrate", "alembic"},
     nargs="?"
 )
 parser.add_argument("commands", nargs="*")
@@ -39,6 +39,12 @@ parser.add_argument("--db", choices={"local", "remote"}, default="local")
 parser.add_argument("--dss-swagger-url", default=f"https://{config.dss_host}/v1/swagger.json")
 parser.add_argument("--dry-run", action="store_true", help="Print commands that would be executed without running them")
 parser.add_argument("--test-query", type=json.loads, default=default_test_query)
+
+if sys.argv[1] == "alembic":
+    from alembic.config import CommandLine
+    alembic_cli = CommandLine(prog=__name__)
+    exit(alembic_cli.run_cmd(config.alembic_config, alembic_cli.parser.parse_args(sys.argv[2:])))
+
 args = parser.parse_args(sys.argv[1:])
 
 if args.db == "remote":

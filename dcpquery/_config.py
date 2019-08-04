@@ -118,3 +118,11 @@ class DCPQueryConfig:
             from hca.dss import DSSClient
             self._dss_client = DSSClient(swagger_url=f"https://{self.dss_host}/v1/swagger.json")
         return self._dss_client
+
+    @property
+    def alembic_config(self):
+        import alembic.config
+        alembic_cfg = alembic.config.Config(os.path.join(os.environ["APP_HOME"], "alembic.ini"))
+        with self.db.begin() as connection:
+            alembic_cfg.attributes['connection'] = connection
+            return alembic_cfg
