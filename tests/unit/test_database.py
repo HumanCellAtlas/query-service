@@ -149,7 +149,15 @@ class TestDatabaseUtils(unittest.TestCase):
             import dcpquery.db.__main__
         except SystemExit as e:
             self.assertEqual(e.args[0], os.EX_OK)
+        sys.argv = ["prog", "alembic", "--help"]
+        try:
+            import dcpquery.db.__main__  # noqa
+        except SystemExit as e:
+            self.assertEqual(e.args[0], os.EX_OK)
         sys.argv = orig_argv
+
+    def test_alembic_config(self):
+        self.assertGreater(len(dir(config.alembic_config)), 0)
 
     def test_init_db(self):
         init_db(dry_run=True)
