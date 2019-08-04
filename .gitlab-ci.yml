@@ -35,6 +35,7 @@ before_script:
   - aws secretsmanager get-secret-value --secret-id ${APP_NAME}/${STAGE}/gcp-credentials.json | jq -r .SecretString > gcp-credentials.json
   - export GOOGLE_APPLICATION_CREDENTIALS=$(pwd -P)/gcp-credentials.json
 
+
 .test:
   stage: test
   except:
