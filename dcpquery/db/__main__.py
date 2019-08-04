@@ -40,9 +40,12 @@ parser.add_argument("--dss-swagger-url", default=f"https://{config.dss_host}/v1/
 parser.add_argument("--dry-run", action="store_true", help="Print commands that would be executed without running them")
 parser.add_argument("--test-query", type=json.loads, default=default_test_query)
 
-if sys.argv[1] == "alembic":
+if len(sys.argv) > 1 and sys.argv[1] == "alembic":
     from alembic.config import CommandLine
-    alembic_cli = CommandLine(prog=__name__)
+    alembic_cli = CommandLine("db_ctl")
+    alembic_opts = alembic_cli.parser.parse_args(sys.argv[2:])
+    if not hasattr(alembic_opts, "cmd"):
+        exit(alembic_cli.parser.print_help())
     exit(alembic_cli.run_cmd(config.alembic_config, alembic_cli.parser.parse_args(sys.argv[2:])))
 
 args = parser.parse_args(sys.argv[1:])
