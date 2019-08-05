@@ -151,7 +151,7 @@ class TestDatabaseUtils(unittest.TestCase):
             self.assertEqual(e.args[0], os.EX_OK)
         sys.argv = ["prog", "alembic", "--help"]
         try:
-            import dcpquery.db.__main__  # noqa
+            import dcpquery.db.__main__ as alembic_cli
         except SystemExit as e:
             self.assertEqual(e.args[0], os.EX_OK)
         sys.argv = orig_argv
