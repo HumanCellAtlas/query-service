@@ -147,9 +147,7 @@ components:
           type: string
           description: Query to run, given as a SQL string.
         params:
-          oneOf:
-            - type: array
-            - type: object
+          type: object
           description: >
             Parameters of the query. Supply a mapping of parameters using the _format_ or _pyformat_ parameter style.
             For example, a query to count all files over a certain size might look like
@@ -181,9 +179,7 @@ components:
           type: string
           description: Submitted query
         params:
-          oneOf:
-            - type: array
-            - type: object
+          type: object
           description: Parameters of the submitted query
         results:
           type: array
