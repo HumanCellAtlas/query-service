@@ -32,9 +32,9 @@ class DCPQueryModelHelper:
 
 class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
     __tablename__ = 'bundles_all_versions'
-    fqid = Column(String, primary_key=True, unique=True, nullable=False)
-    uuid = Column(UUID, nullable=False)
-    version = Column(DateTime, nullable=False)
+    fqid = Column(String, primary_key=True, unique=True, nullable=False, index=True)
+    uuid = Column(UUID, nullable=False, index=True)
+    version = Column(DateTime, nullable=False, index=True)
     manifest = Column(MutableDict.as_mutable(JSONB))
     aggregate_metadata = Column(MutableDict.as_mutable(JSONB))
     files = relationship("File", secondary='bundle_file_links')
@@ -57,9 +57,9 @@ class DCPMetadataSchemaType(SQLAlchemyBase):
 
 class File(DCPQueryModelHelper, SQLAlchemyBase):
     __tablename__ = 'files_all_versions'
-    fqid = Column(String, primary_key=True, unique=True, nullable=False)
-    uuid = Column(UUID, nullable=False)
-    version = Column(DateTime, nullable=False)
+    fqid = Column(String, primary_key=True, unique=True, nullable=False, index=True)
+    uuid = Column(UUID, nullable=False, index=True)
+    version = Column(DateTime, nullable=False, index=True)
     dcp_schema_type_name = Column(String, ForeignKey("dcp_metadata_schema_types.name"))
     dcp_schema_type = relationship("DCPMetadataSchemaType", back_populates="files")
     body = Column(MutableDict.as_mutable(JSONB))
@@ -79,8 +79,8 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
 
 class BundleFileLink(SQLAlchemyBase):
     __tablename__ = 'bundle_file_links'
-    bundle_fqid = Column(String, ForeignKey('bundles_all_versions.fqid'), primary_key=True)
-    file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True)
+    bundle_fqid = Column(String, ForeignKey('bundles_all_versions.fqid'), primary_key=True, index=True)
+    file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True, index=True)
     bundle = relationship(Bundle)
     file = relationship(File)
     name = Column(String, nullable=False)
@@ -140,7 +140,7 @@ class Process(SQLAlchemyBase):
 class ProcessFileLink(SQLAlchemyBase):
     __tablename__ = 'process_file_join_table'
     id = Column(Integer, primary_key=True)
-    process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"))
+    process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"), index=True)
     process_file_connection_type = Column(Enum(ConnectionTypeEnum))
     process = relationship(Process)
     file_uuid = Column(UUID)
@@ -155,8 +155,8 @@ class ProcessFileLink(SQLAlchemyBase):
 class ProcessProcessLink(SQLAlchemyBase):
     __tablename__ = 'process_join_table'
     id = Column(Integer, primary_key=True)
-    child_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"))
-    parent_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"))
+    child_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"), index=True)
+    parent_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"), index=True)
     parent_process = relationship(Process, foreign_keys=[parent_process_uuid])
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
 
