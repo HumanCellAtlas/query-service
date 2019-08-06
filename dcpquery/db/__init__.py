@@ -193,6 +193,7 @@ def init_db(dry_run=True):
 def migrate_db():
     import alembic
     from alembic.config import Config as AlembicConfig
+    from dcpquery.etl import create_view_tables
 
     logger.info("Migrating database at %s", repr(config.db.url))
 
@@ -200,6 +201,8 @@ def migrate_db():
     with config.db.begin() as connection:
         alembic_cfg.attributes['connection'] = connection
         alembic.command.upgrade(alembic_cfg, "head")
+
+    create_view_tables()
 
 
 def run_query(query, params, rows_per_page=100):
