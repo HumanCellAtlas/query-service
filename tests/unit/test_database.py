@@ -144,16 +144,16 @@ class TestDBRules(unittest.TestCase):
 class TestDatabaseUtils(unittest.TestCase):
     def test_db_cli(self):
         orig_argv = sys.argv
-        sys.argv = ["prog", "--help"]
-        try:
-            import dcpquery.db.__main__
-        except SystemExit as e:
-            self.assertEqual(e.args[0], os.EX_OK)
-        sys.argv = ["prog", "alembic", "--help"]
-        try:
-            import dcpquery.db.__main__ as alembic_cli
-        except SystemExit as e:
-            self.assertEqual(e.args[0], os.EX_OK)
+        for command in (["prog"],
+                        ["prog", "--help"],
+                        ["prog", "alembic", "--help"],
+                        ["prog", "describe", "--dry-run"]):
+            sys.argv = command
+            try:
+                import importlib, dcpquery.db.__main__
+                importlib.reload(dcpquery.db.__main__)
+            except SystemExit:
+                pass
         sys.argv = orig_argv
 
     def test_alembic_config(self):

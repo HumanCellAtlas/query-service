@@ -106,4 +106,7 @@ elif args.command in {"connect", "run", "describe"}:
             psql_args.extend(["--command", command])
     elif args.command == "describe":
         psql_args.extend(["--command", r"\d+"])
-    os.execvp("psql", psql_args)
+    if args.dry_run:
+        print("psql", psql_args)
+    else:
+        os.execvp("psql", psql_args)
