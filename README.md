@@ -235,7 +235,7 @@ Contributions are welcome; please read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Applying new migrations to the database
 - Ensure you are connected to the correct database (run `python -m dcpquery.db connect` to see the database url, use the `--db remote` flag if necessary)
-- From the command line run `python -m dcpquery.db migrate` use the `--db remote` flag if necessary
+- From the command line run `python -m dcpquery.db migrate`; use the `--db remote` flag if necessary
 - To unapply a migration run (locally) `alembic downgrade migration_id` (the migration_id is the string in front of the underscore in the migration name, for file 000000000000_init_db.py the migration id is 000000000000)
 - To unapply a migration in a remote db it is simplest to hardcode the `db_url` in `alembic/env.py` and then run `alembic dowgrade migration_id`
 ### Autogenerate can't detect
