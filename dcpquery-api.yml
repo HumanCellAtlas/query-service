@@ -9,7 +9,7 @@ info:
     <a href="https://github.com/HumanCellAtlas/data-store">DCP Data Store</a> are indexed and stored in an
     <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a> <a href="https://www.postgresql.org/">PostgreSQL</a>
     database.
-
+    <a href="https://dcpquery.readthedocs.io/">Query Service documentation on Read The Docs</a>
 
     To get in touch with the DCP Query Service team, join the <code>#query-service</code> channel on the
     <a href="https://join-hca-slack.data.humancellatlas.org/">HCA Slack</a>.
