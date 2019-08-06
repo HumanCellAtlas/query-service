@@ -43,9 +43,25 @@ def upgrade():
             DO INSTEAD NOTHING;
         """
     )
+    op.execute(
+        """
+          CREATE OR REPLACE VIEW files AS
+          SELECT * FROM files_all_versions
+          WHERE (uuid, version) IN (SELECT uuid, max(version) FROM files_all_versions GROUP BY uuid)
+        """
+    )
+    op.execute(
+        """
+          CREATE OR REPLACE VIEW bundles AS
+          SELECT * FROM bundles_all_versions
+          WHERE (uuid, version) IN (SELECT uuid, max(version) FROM bundles_all_versions GROUP BY uuid)
+        """
+    )
 
 
 def downgrade():
+    op.execute("DROP VIEW IF EXISTS files CASCADE;")
+    op.execute("DROP VIEW IF EXISTS bundles CASCADE ;")
     op.rename_table('bundles_all_versions', 'bundles')
     op.rename_table('files_all_versions', 'files')
     op.execute("DROP RULE IF EXISTS file_table_ignore_duplicate_inserts ON files_all_versions;")
