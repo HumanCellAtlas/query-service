@@ -3,7 +3,7 @@ import unittest
 
 from dcpquery import config
 from dcpquery.db import BundleFileLink, File, Bundle, DCPMetadataSchemaType
-from dcpquery.etl import dcpquery_etl_finalizer
+from dcpquery.etl import dcpquery_etl_finalizer, create_view_tables, update_process_join_table
 from tests import load_fixture
 
 
@@ -32,7 +32,8 @@ class TestViewTables(unittest.TestCase):
 
         config.db_session.commit()
 
-        dcpquery_etl_finalizer('mock_extractor')
+        create_view_tables()
+        update_process_join_table()
 
     def test_db_views_exist_for_each_schema_type(self):
         from dcpquery import config
