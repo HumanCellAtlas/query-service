@@ -13,42 +13,6 @@ from dcpquery.etl import load_links, create_process_file_links, BundleLoader, dc
 class TestPostgresLoader(unittest.TestCase):
     _test_identifier = secrets.token_hex(16)
 
-    def setUp(self):
-        load_links(mock_links['links'], 'mock_bundle_uuid')
-
-    def test_db_views_exist_for_each_schema_type(self):
-        from dcpquery import config
-
-        views = [view[0] for view in config.db_session.execute(
-            """
-            SELECT table_name FROM INFORMATION_SCHEMA.views
-            WHERE table_schema = ANY (current_schemas(false))
-            """
-        ).fetchall()]
-
-        schema_types = [schema[0] for schema in
-                        config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()]
-        schema_types.append('bundles')
-        schema_types.append('files')
-        self.assertEqual(sorted(views), sorted(schema_types))
-
-    def test_biomaterial_view_table_contains_all_biomaterial_files(self):
-        from dcpquery import config
-        dcpquery_etl_finalizer('mock_extractor')
-
-        biomaterial_view_table_count = config.db_session.execute(
-            """
-            SELECT count(*) from cell_line;
-            """
-        ).fetchall()[0][0]
-
-        files_of_type_biomaterial_count = config.db_session.execute(
-            """
-            SELECT count(*) from files where dcp_schema_type_name='cell_line';
-            """
-        ).fetchall()[0][0]
-        self.assertEqual(biomaterial_view_table_count, files_of_type_biomaterial_count)
-
     @unittest.skip("WIP")
     def test_prepare_database(self):
         with self.db.transaction() as (_, tables):

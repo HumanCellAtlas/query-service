@@ -75,7 +75,7 @@ class BundleLoader:
         if schema_type and schema_type not in self.schema_types:
             schema = DCPMetadataSchemaType(name=schema_type)
             config.db_session.add(schema)
-            # config.db_session.commit()
+            config.db_session.commit()
             self.schema_types.append(schema_type)
 
     def load_bundle(self, bundle, extractor=None, transformer=None):
@@ -107,7 +107,7 @@ class BundleLoader:
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
         config.db_session.add_all(bf_links)
-        # config.db_session.commit()
+        config.db_session.commit()
 
 
 def update_process_join_table():
@@ -139,17 +139,21 @@ def update_process_join_table():
        ON CONFLICT DO NOTHING;
         """
     )
-    config.db_session.commit()
 
 
 def dcpquery_etl_finalizer(extractor):
-    config.reset_db_timeout_seconds(500)
     create_view_tables()
     update_process_join_table()
-    config.reset_db_session()
 
 
 def create_view_tables():
+    config.db_session.execute(
+        """
+          CREATE OR REPLACE VIEW bundles AS
+          SELECT * FROM bundles_all_versions
+          WHERE (uuid, version) IN (SELECT uuid, max(version) FROM bundles_all_versions GROUP BY uuid)
+        """
+    )
     config.db_session.execute(
         """
           CREATE OR REPLACE VIEW files AS
@@ -158,13 +162,6 @@ def create_view_tables():
         """
     )
 
-    config.db_session.execute(
-        """
-          CREATE OR REPLACE VIEW bundles AS
-          SELECT * FROM bundles_all_versions
-          WHERE (uuid, version) IN (SELECT uuid, max(version) FROM bundles_all_versions GROUP BY uuid)
-        """
-    )
     schema_types = [schema[0] for schema in
                     config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()]
     for schema_type in schema_types:
@@ -175,7 +172,6 @@ def create_view_tables():
               WHERE f.dcp_schema_type_name = '{schema_type}'
             """
         )
-    config.db_session.commit()
 
 
 def load_links(links, bundle_uuid):

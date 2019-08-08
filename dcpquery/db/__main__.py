@@ -95,7 +95,6 @@ elif args.command in {"load", "load-test"}:
         transformer=transform_bundle,
         loader=BundleLoader().load_bundle,
         finalizer=dcpquery_etl_finalizer,
-        page_processor=config.db_session.commit,
         **extractor_args
     )
 elif args.command in {"connect", "run", "describe"}:
