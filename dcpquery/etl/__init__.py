@@ -92,7 +92,7 @@ class BundleLoader:
                 schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
             if filename == "links.json":
                 links = file_data['body']['links']
-                load_links(links, bundle['uuid'])
+                load_links(links)
 
             self.register_dcp_metadata_schema_type(schema_type)
             file_row = File(
@@ -110,44 +110,7 @@ class BundleLoader:
         config.db_session.commit()
 
 
-def update_process_join_table():
-    config.db_session.execute(
-        """
-        Insert INTO process_join_table (child_process_uuid, parent_process_uuid)
-          SELECT * FROM (
-              WITH
-                  input_files_table AS (
-                                        SELECT
-                                               process_uuid AS child_process,
-                                               file_uuid    AS input_file_uuid
-                                        FROM process_file_join_table
-                                        WHERE process_file_connection_type = 'INPUT_ENTITY'
-                                      ),
-
-                  output_files_table AS (
-                                          SELECT
-                                                 process_uuid AS parent_process,
-                                                 file_uuid AS output_file_uuid
-                                        FROM process_file_join_table
-                                        WHERE process_file_connection_type = 'OUTPUT_ENTITY'
-                                      )
-                  SELECT
-                         input_files_table.child_process,
-                         output_files_table.parent_process
-                  FROM input_files_table, output_files_table
-       WHERE input_files_table.input_file_uuid = output_files_table.output_file_uuid) AS temp_tables
-       ON CONFLICT DO NOTHING;
-        """
-    )
-    config.db_session.commit()
-
-
-def dcpquery_etl_finalizer(extractor):
-    create_view_tables()
-    update_process_join_table()
-
-
-def create_view_tables():
+def create_view_tables(extractor):
     config.db_session.execute(
         """
           CREATE OR REPLACE VIEW files AS
@@ -155,7 +118,6 @@ def create_view_tables():
           WHERE (uuid, version) IN (SELECT uuid, max(version) FROM files_all_versions GROUP BY uuid)
         """
     )
-
     config.db_session.execute(
         """
           CREATE OR REPLACE VIEW bundles AS
@@ -176,14 +138,17 @@ def create_view_tables():
     config.db_session.commit()
 
 
-def load_links(links, bundle_uuid):
+def load_links(links):
     for link in links:
         try:
             process = format_process_info(link)
-            config.db_session.add(Process(process_uuid=process['process_uuid']))
+            process['children'] = get_child_process_uuids(process['output_file_uuids'])
+            process['parents'] = get_parent_process_uuids(process['input_file_uuids'])
+            create_process(process['process_uuid'])
             create_process_file_links(process)
+            link_parent_and_child_processes(process)
         except AssertionError as e:
-            logger.error(f"Error while loading link for bundle: {bundle_uuid} error: {e}")
+            logger.error("Error while loading link: %s", e)
 
 
 def format_process_info(link):
@@ -196,6 +161,33 @@ def format_process_info(link):
 
     return {"process_uuid": process_uuid, "input_file_uuids": link["inputs"], "output_file_uuids": link["outputs"],
             "protocol_uuids": protocol_uuids}
+
+
+def get_child_process_uuids(output_file_uuids):
+    children = []
+    for file_uuid in output_file_uuids:
+        child_uuids = config.db_session.query(ProcessFileLink).with_entities(ProcessFileLink.process_uuid).filter(
+            ProcessFileLink.file_uuid == file_uuid,
+            ProcessFileLink.process_file_connection_type == 'INPUT_ENTITY').all()
+        children = children + [child[0] for child in child_uuids]
+    return list(set(children))
+
+
+def get_parent_process_uuids(input_file_uuids):
+    parents = []
+    for file_uuid in input_file_uuids:
+        parent_uuids = config.db_session.query(ProcessFileLink).with_entities(ProcessFileLink.process_uuid).filter(
+            ProcessFileLink.file_uuid == file_uuid,
+            ProcessFileLink.process_file_connection_type == 'OUTPUT_ENTITY'
+        ).all()
+
+        parents = parents + [parent[0] for parent in parent_uuids]
+    return list(set(parents))
+
+
+def create_process(process_uuid):
+    config.db_session.add(Process(process_uuid=process_uuid))
+    config.db_session.commit()
 
 
 def create_process_file_links(process):
@@ -232,6 +224,28 @@ def create_process_file_links(process):
         )
 
     config.db_session.add_all(process_file_links)
+    config.db_session.commit()
+
+
+def link_parent_and_child_processes(process):
+    process_process_links = []
+
+    already_linked_parents = Process.list_direct_parent_processes(process['process_uuid'])
+    already_linked_children = Process.list_direct_child_processes(process['process_uuid'])
+
+    parents = [x for x in process['parents'] if x not in already_linked_parents]
+    children = [x for x in process['children'] if x not in already_linked_children]
+
+    for parent in parents:
+        process_process_links.append(
+            ProcessProcessLink(parent_process_uuid=parent, child_process_uuid=process['process_uuid']))
+
+    for child in children:
+        process_process_links.append(
+            ProcessProcessLink(parent_process_uuid=process['process_uuid'], child_process_uuid=child))
+
+    config.db_session.add_all(process_process_links)
+    config.db_session.commit()
 
 
 def etl_one_bundle(bundle_uuid, bundle_version):
