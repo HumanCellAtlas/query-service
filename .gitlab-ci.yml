@@ -42,6 +42,7 @@ before_script:
   script:
     - make init-db migrate-db load-test-data init-tf
     - make test
+    - make database-test
 
 .deploy:
   stage: deploy
