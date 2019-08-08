@@ -31,8 +31,12 @@ class TestViewTables(unittest.TestCase):
         config.db_session.add_all(vx_bf_links)
 
         config.db_session.commit()
-
+        config.reset_db_timeout_seconds(500)
         dcpquery_etl_finalizer('mock_extractor')
+
+    @classmethod
+    def tearDownClass(cls):
+        config.reset_db_timeout_seconds(20)
 
     def test_db_views_exist_for_each_schema_type(self):
         from dcpquery import config
