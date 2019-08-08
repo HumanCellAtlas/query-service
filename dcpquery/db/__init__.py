@@ -159,7 +159,6 @@ class ProcessProcessLink(SQLAlchemyBase):
     parent_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"), index=True)
     parent_process = relationship(Process, foreign_keys=[parent_process_uuid])
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
-    __table_args__ = (UniqueConstraint('child_process_uuid', 'parent_process_uuid', name='unq_process_combo'),)
 
 
 def drop_db(dry_run=True):

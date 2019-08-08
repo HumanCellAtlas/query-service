@@ -97,9 +97,6 @@ lint:
 
 test: lint docs build-chalice-config unit-test migration-test
 
-database-test: load-test-data
-	python -m unittest discover --start-directory tests/database --top-level-directory . --verbose
-
 unit-test: load-test-data
 	coverage run --timid --source $(APP_NAME) -m unittest discover --start-directory tests/unit --top-level-directory . --verbose
 
