@@ -1,7 +1,8 @@
+import time
 import unittest
 
 from dcpquery.db import Bundle, BundleFileLink, Process, File
-from dcpquery.etl import load_links
+from dcpquery.etl import load_links, update_process_join_table
 from tests import vx_bundle, vx_bf_links, vx_bundle_aggregate_md, mock_links
 
 from dcpquery import config
@@ -112,16 +113,18 @@ class TestBundleFileLinks(unittest.TestCase):
 
 
 class TestProcesses(unittest.TestCase):
-    def test_get_all_parents(self):
-        load_links(mock_links['links'])
+    @classmethod
+    def setUpClass(cls):
+        load_links(mock_links['links'], 'mock_bundle_uuid')
+        config.db_session.commit()
+        update_process_join_table()
 
+    def test_get_all_parents(self):
         parent_processes = Process.list_all_parent_processes('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_parents, parent_processes)
 
     def test_get_all_children(self):
-        load_links(mock_links['links'])
-
         child_processes = Process.list_all_child_processes('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                              'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']

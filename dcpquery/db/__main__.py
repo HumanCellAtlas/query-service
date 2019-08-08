@@ -8,7 +8,7 @@ from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
 
 from .. import config
-from ..etl import transform_bundle, BundleLoader, create_view_tables
+from ..etl import transform_bundle, BundleLoader, dcpquery_etl_finalizer
 
 from . import init_db, drop_db, migrate_db
 
@@ -94,7 +94,7 @@ elif args.command in {"load", "load-test"}:
     DSSExtractor(staging_directory=".", dss_client=dss_client).extract(
         transformer=transform_bundle,
         loader=BundleLoader().load_bundle,
-        finalizer=create_view_tables,
+        finalizer=dcpquery_etl_finalizer,
         **extractor_args
     )
 elif args.command in {"connect", "run", "describe"}:

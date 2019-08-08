@@ -3,8 +3,8 @@ import unittest
 
 from dcpquery import config
 from dcpquery.db import BundleFileLink, File, Bundle, DCPMetadataSchemaType
-from dcpquery.etl import create_view_tables, load_links
-from tests import load_fixture, mock_links
+from dcpquery.etl import dcpquery_etl_finalizer
+from tests import load_fixture
 
 
 class TestViewTables(unittest.TestCase):
@@ -32,10 +32,9 @@ class TestViewTables(unittest.TestCase):
 
         config.db_session.commit()
 
-        create_view_tables('mock_extractor')
+        dcpquery_etl_finalizer('mock_extractor')
 
     def test_db_views_exist_for_each_schema_type(self):
-        from dcpquery import config
 
         views = sorted([view[0] for view in config.db_session.execute(
             """
@@ -53,7 +52,6 @@ class TestViewTables(unittest.TestCase):
         self.assertEqual(views, schema_types)
 
     def test_biomaterial_view_table_contains_all_biomaterial_files(self):
-        from dcpquery import config
 
         biomaterial_view_table_count = config.db_session.execute(
             """
