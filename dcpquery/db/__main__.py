@@ -8,7 +8,7 @@ from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
 
 from .. import config
-from ..etl import transform_bundle, BundleLoader, dcpquery_etl_finalizer
+from ..etl import transform_bundle, BundleLoader, dcpquery_etl_finalizer, commit_to_db
 
 from . import init_db, drop_db, migrate_db
 
@@ -95,6 +95,7 @@ elif args.command in {"load", "load-test"}:
         transformer=transform_bundle,
         loader=BundleLoader().load_bundle,
         finalizer=dcpquery_etl_finalizer,
+        page_processor=commit_to_db,
         **extractor_args
     )
 elif args.command in {"connect", "run", "describe"}:

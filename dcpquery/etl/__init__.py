@@ -75,7 +75,6 @@ class BundleLoader:
         if schema_type and schema_type not in self.schema_types:
             schema = DCPMetadataSchemaType(name=schema_type)
             config.db_session.add(schema)
-            config.db_session.commit()
             self.schema_types.append(schema_type)
 
     def load_bundle(self, bundle, extractor=None, transformer=None):
@@ -107,7 +106,6 @@ class BundleLoader:
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
         config.db_session.add_all(bf_links)
-        config.db_session.commit()
 
 
 def update_process_join_table():
@@ -139,6 +137,11 @@ def update_process_join_table():
        ON CONFLICT DO NOTHING;
         """
     )
+    config.db_session.commit()
+
+
+def commit_to_db(extracted_bundles):
+    config.db_session.commit()
 
 
 def dcpquery_etl_finalizer(extractor):
@@ -172,6 +175,7 @@ def create_view_tables():
               WHERE f.dcp_schema_type_name = '{schema_type}'
             """
         )
+    config.db_session.commit()
 
 
 def load_links(links, bundle_uuid):
