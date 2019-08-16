@@ -74,7 +74,8 @@
   function dispatchQuery(query, params) {
     $('#query-result').DataTable().clear().destroy();
     $('#query-error').hide();
-    $('#query-result').text("Query running...");
+    $('#query-no-results').hide();
+    $('#query-running').show();
     if (!query) {
       query = document.editor.getValue();
     }
@@ -86,6 +87,7 @@
       console.dir(query);
       console.log("<<<");
       console.dir(results);
+      $('#query-running').hide();
       if (results.status >= 400) {
         $('#query-result').hide();
         $('#query-error-text').text(results.title);
@@ -97,12 +99,13 @@
           $('#query-result').empty();
           $('#query-result').DataTable({data: results["results"], columns: columns});
         } else {
-          $('#query-result').text("No results");
+          $('#query-no-results').show();
         }
         $('#query-result').show();
         return results["results"];
       }
     }).catch(function(error) {
+      $('#query-running').hide();
       alert(error);
     });
   }
@@ -248,6 +251,12 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
+        </div>
+        <div id="query-running">
+          <span class="d-block p-2 bg-secondary text-white">Query running...</span>
+        </div>
+        <div id="query-no-results">
+          <span class="d-block p-2 bg-warning text-white">No results for query</span>
         </div>
         <div class="modal-body table-responsive wrap">
           <div id="query-error" class="alert alert-danger" role="alert">
