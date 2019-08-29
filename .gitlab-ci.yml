@@ -169,3 +169,9 @@ integration_test_prod:
       - $CI_API_V4_URL == "https://allspark-prod.data.humancellatlas.org/api/v4"
     refs:
       - prod
+
+scale_test:on-schedule:
+  only:
+    - schedules
+  script:
+    - python -m tests.scale.test_scale
