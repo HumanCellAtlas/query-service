@@ -1,5 +1,6 @@
 alembic
-aws-sam-translator
+# aws-sam-translator pinned due to jsonschema subdependency version conflict
+aws-sam-translator >= 1.13, < 1.14
 chalice
 coverage
 furl
