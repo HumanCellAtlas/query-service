@@ -223,6 +223,7 @@ def create_dcp_schema_type_materialized_views(matviews):
 
 def create_materialized_view_tables():
     matviews = [x[0] for x in config.db_session.execute("SELECT matviewname FROM pg_catalog.pg_matviews;").fetchall()]
+    config.reset_db_timeout_seconds(880)
     create_bundle_materialized_view(matviews)
     create_files_materialized_view(matviews)
     create_dcp_schema_type_materialized_views(matviews)
