@@ -36,20 +36,19 @@ class TestViewTables(unittest.TestCase):
 
     def test_db_views_exist_for_each_schema_type(self):
 
-        views = sorted([view[0] for view in config.db_session.execute(
+        matviews = sorted([view[0] for view in config.db_session.execute(
             """
-            SELECT table_name FROM INFORMATION_SCHEMA.views
-            WHERE table_schema = ANY (current_schemas(false))
+            SELECT matviewname FROM pg_catalog.pg_matviews;
             """
         ).fetchall()])
-        views.remove('files')
-        views.remove('bundles')
+        matviews.remove('files')
+        matviews.remove('bundles')
 
         schema_types = sorted(
             [schema[0] for schema in config.db_session.query(DCPMetadataSchemaType).with_entities(
                 DCPMetadataSchemaType.name).all()])
 
-        self.assertEqual(views, schema_types)
+        self.assertEqual(matviews, schema_types)
 
     def test_biomaterial_view_table_contains_all_biomaterial_files(self):
 

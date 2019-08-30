@@ -24,6 +24,16 @@ def upgrade():
 def downgrade():
     op.execute(
         """
+        DROP MATERIALIZED VIEW bundles CASCADE;
+        """
+    )
+    op.execute(
+        """
+        DROP MATERIALIZED VIEW files CASCADE;
+        """
+    )
+    op.execute(
+        """
           CREATE OR REPLACE VIEW files AS
           SELECT * FROM files_all_versions
           WHERE (uuid, version) IN (SELECT uuid, max(version) FROM files_all_versions GROUP BY uuid)
