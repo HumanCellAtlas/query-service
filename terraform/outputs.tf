@@ -1,17 +1,13 @@
 output "api_handler_name" {
-  value = "${aws_cloudformation_stack.lambda.outputs["APIHandlerName"]}"
+  value = "${aws_lambda_function.api_handler.function_name}"
 }
 
 output "bundle_event_handler_name" {
-  value = "${aws_cloudformation_stack.lambda.outputs["BundleEventHandlerName"]}"
+  value = "${aws_lambda_function.bundle_event_handler.function_name}"
 }
 
 output "async_query_handler_name" {
-  value = "${aws_cloudformation_stack.lambda.outputs["AsyncQueryHandlerName"]}"
-}
-
-output "api_endpoint_url" {
-  value = "${aws_cloudformation_stack.lambda.outputs["EndpointURL"]}"
+  value = "${aws_lambda_function.async_query_handler.function_name}"
 }
 
 output "rds_cluster_id" {
