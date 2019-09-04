@@ -4,22 +4,12 @@ ifndef APP_NAME
 $(error Please run "source environment" in the repo root directory before running make commands)
 endif
 
-SAM_TX="import sys, json, boto3, samtranslator.translator.transform as t, samtranslator.public.translator as pt; \
-        print(json.dumps(t.transform(json.load(sys.stdin), {}, pt.ManagedPolicyLoader(boto3.client('iam')))))"
-CFN_TX='.Resources += (.Resources|with_entries(if .value.Type=="AWS::Lambda::Function" then .value.Properties.FunctionName=env.APP_NAME+"-"+env.STAGE+"-"+.key else . end))'
-GET_CREDS="import json, boto3.session as s; c = s.Session().get_credentials(); \
-           print(json.dumps(c.get_frozen_credentials()._asdict())) if c else exit('Please set your AWS credentials')"
+JQ_TF_RP=.resource.aws_lambda_function
 
 deploy: init-tf package
 	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
 	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip
-	cat dist/sam.json | \
-         jq '.Outputs.BundleEventHandlerName.Value.Ref="BundleEventHandler"' | \
-         jq '.Outputs.AsyncQueryHandlerName.Value.Ref="AsyncQueryHandler"' | \
-         jq '.Resources.APIHandler.Properties.CodeUri="s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip"' | \
-         jq '.Resources.BundleEventHandler.Properties.CodeUri="s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip"' | \
-         jq '.Resources.AsyncQueryHandler.Properties.CodeUri="s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip"' | \
-         python -c $(SAM_TX) | jq $(CFN_TX) > dist/cloudformation.json
+	jq 'del($(JQ_TF_RP)[].filename) | $(JQ_TF_RP)[].s3_bucket="$(TF_S3_BUCKET)" | $(JQ_TF_RP)[].s3_key="$(LAMBDA_MD5).zip"' dist/chalice.tf.json > terraform/chalice.tf.json
 	terraform apply
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
@@ -36,7 +26,7 @@ install-webhooks:
 	LC_ALL=C WHS=$$(tr -dc A-Za-z0-9 < /dev/urandom | head -c32) \
 	 jq -n '.active_hmac_key=env.STAGE|.hmac_keys[env.STAGE]=env.WHS' | \
 	 aws secretsmanager put-secret-value --secret-id $(WEBHOOK_SECRET_NAME) --secret-string file:///dev/stdin
-	python -m $(APP_NAME).webhooks install --callback-url=$$(terraform output --json $(APP_NAME) | jq -r .api_endpoint_url)bundles/event
+	python -m $(APP_NAME).webhooks install --callback-url=$$(terraform output --json $(APP_NAME) | jq -r .EndpointURL)bundles/event
 
 install-secrets:
 	aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string $$(python -c 'import secrets; print(secrets.token_urlsafe(32))')
@@ -63,7 +53,7 @@ package: build-chalice-config
 	find vendor -name '*.pyc' -delete
 	find vendor -exec touch -t 201901010000 {} \; # Reset mtimes on all vendor files to make zipfile contents reproducible
 	shopt -s nullglob; for wheel in vendor.in/*/*.whl; do pip install --target vendor --upgrade $$wheel; done
-	chalice package --stage $(STAGE) dist
+	chalice package --pkg-format terraform --stage $(STAGE) dist
 	cd dist; mkdir deployment; cd deployment; unzip -q -o ../deployment.zip
 	$(MAKE) prune
 	find dist/deployment -exec touch -t 201901010000 {} \; # Reset mtimes on all dep files to make zipfile contents reproducible
@@ -133,7 +123,7 @@ update-lambda: $(TFSTATE_FILE)
 	zip -r dist/deployment.zip app.py $(APP_NAME) $(APP_NAME)-api.yml
 	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
 	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip
-	terraform output --json $(APP_NAME) | jq -r '.|values[]' | egrep "^$(APP_NAME)-.+Handler" | \
+	terraform output --json $(APP_NAME) | jq -r '.|values[]' | egrep "^$(APP_NAME)-.+handler" | \
 	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --s3-bucket $(TF_S3_BUCKET) --s3-key $(LAMBDA_MD5).zip
 
 get-logs:

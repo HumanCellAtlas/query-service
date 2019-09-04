@@ -44,13 +44,6 @@ resource "aws_sqs_queue_policy" "async_queries_policy" {
   policy = "${data.template_file.async_queries_queue_policy_doc.rendered}"
 }
 
-resource "aws_cloudformation_stack" "lambda" {
-  name = "${var.APP_NAME}-${var.STAGE}"
-  capabilities = ["CAPABILITY_IAM"]
-  parameters = {}
-  template_body = "${file("dist/cloudformation.json")}"
-}
-
 data "aws_acm_certificate" "api_cert" {
   domain = "${var.API_DOMAIN_NAME}"
 }
@@ -77,7 +70,7 @@ resource "aws_route53_record" "api_dns_record" {
 }
 
 resource "aws_api_gateway_base_path_mapping" "api_bpm" {
-  api_id = "${aws_cloudformation_stack.lambda.outputs["RestAPIId"]}"
+  api_id = "${aws_api_gateway_deployment.rest_api.id}"
   stage_name = "api"
   domain_name = "${var.API_DOMAIN_NAME}"
 }
