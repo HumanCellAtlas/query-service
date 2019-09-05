@@ -79,10 +79,11 @@ destroy: init-tf
 clean:
 	git clean -Xdf dist .terraform* .chalice docs/_build tests/terraform/.terraform
 
-lint:
+lint: build-chalice-config
 	flake8 *.py $(APP_NAME) tests
 	mypy $(APP_NAME) --ignore-missing-imports
 	source environment
+	scripts/build_chalice_tf_config.py
 	unset TF_CLI_ARGS_init; cd tests/terraform; terraform init; terraform validate
 
 test: lint docs build-chalice-config unit-test migration-test
