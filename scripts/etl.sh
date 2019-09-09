@@ -22,6 +22,6 @@ pip install --quiet -r requirements-dev.txt
 source environment
 S3_CACHE_URL=s3://${SERVICE_S3_BUCKET}/etl/cache.xz
 aws s3 cp $S3_CACHE_URL - | tar -xJ
-scripts/db_ctl load-test --db remote
+scripts/db_ctl load --db remote
 # TODO: ETL cache should have a facility for purging deleted metadata
 tar -cJ bundle_manifests bundles files | aws s3 cp - $S3_CACHE_URL
