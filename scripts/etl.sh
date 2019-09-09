@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script executes the ETL process. It assumes an Ubuntu Linux environment with superuser privileges.
+# It is suitable for running on a stock Ubuntu Docker image using a task scheduler like AWS Batch.
+# Use scripts/launch_etl_job.sh to do that.
+
 set -eo pipefail
 
 cd /mnt
