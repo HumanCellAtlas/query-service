@@ -1,3 +1,4 @@
+aegea
 alembic
 # aws-sam-translator pinned due to jsonschema subdependency version conflict
 aws-sam-translator >= 1.11, < 1.12
