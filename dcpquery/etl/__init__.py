@@ -149,50 +149,20 @@ def dcpquery_etl_finalizer(extractor):
     update_process_join_table()
 
 
-def create_bundle_materialized_view(matviews):
-    if 'bundles' not in matviews:
-        config.db_session.execute(
-            """
-              CREATE MATERIALIZED VIEW bundles AS
-              SELECT * FROM bundles_all_versions
-              WHERE (uuid, version) IN (SELECT uuid, max(version) FROM bundles_all_versions GROUP BY uuid)
-            """
-        )
-        config.db_session.execute(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS bundles_idx ON bundles (fqid);
-
-            """
-        )
-    else:
-        config.db_session.execute(
-            """
-            REFRESH MATERIALIZED VIEW CONCURRENTLY bundles
-            """
-        )
+def update_bundles_materialized_view():
+    config.db_session.execute(
+        """
+        REFRESH MATERIALIZED VIEW CONCURRENTLY bundles
+        """
+    )
 
 
-def create_files_materialized_view(matviews):
-    if 'files' not in matviews:
-        config.db_session.execute(
-            """
-              CREATE MATERIALIZED VIEW files AS
-              SELECT * FROM files_all_versions
-              WHERE (uuid, version) IN (SELECT uuid, max(version) FROM files_all_versions GROUP BY uuid)
-            """
-        )
-        config.db_session.execute(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS files_idx ON files (fqid);
-
-            """
-        )
-    else:
-        config.db_session.execute(
-            """
-            REFRESH MATERIALIZED VIEW CONCURRENTLY files
-            """
-        )
+def update_files_materialized_view():
+    config.db_session.execute(
+        """
+        REFRESH MATERIALIZED VIEW CONCURRENTLY files
+        """
+    )
 
 
 def create_dcp_schema_type_materialized_views(matviews):
@@ -224,8 +194,8 @@ def create_dcp_schema_type_materialized_views(matviews):
 def create_materialized_view_tables():
     matviews = [x[0] for x in config.db_session.execute("SELECT matviewname FROM pg_catalog.pg_matviews;").fetchall()]
     config.reset_db_timeout_seconds(880)
-    create_bundle_materialized_view(matviews)
-    create_files_materialized_view(matviews)
+    update_bundles_materialized_view()
+    update_files_materialized_view()
     create_dcp_schema_type_materialized_views(matviews)
     config.db_session.commit()
 
