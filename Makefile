@@ -7,9 +7,9 @@ endif
 JQ_TF_RP=.resource.aws_lambda_function
 
 deploy: init-tf package
-	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
-	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip
-	jq 'del($(JQ_TF_RP)[].filename) | $(JQ_TF_RP)[].s3_bucket="$(TF_S3_BUCKET)" | $(JQ_TF_RP)[].s3_key="$(LAMBDA_MD5).zip"' dist/chalice.tf.json > terraform/chalice.tf.json
+	$(eval LAMBDA_SHA = $(shell sha256sum dist/deployment.zip | cut -f 1 -d ' ' | base64 --wrap=0))
+	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_SHA).zip
+	jq 'del($(JQ_TF_RP)[].filename) | $(JQ_TF_RP)[].s3_bucket="$(TF_S3_BUCKET)" | $(JQ_TF_RP)[].s3_key="$(LAMBDA_SHA).zip" | $(JQ_TF_RP)[].source_code_hash="$(LAMBDA_SHA)"' dist/chalice.tf.json > terraform/chalice.tf.json
 	terraform apply
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
@@ -122,10 +122,10 @@ load-test-data: init-db
 # Update just the Lambda application code, but not the dependencies, routes, or other infra. Use xargs to parallelize the process.
 update-lambda: $(TFSTATE_FILE)
 	zip -r dist/deployment.zip app.py $(APP_NAME) $(APP_NAME)-api.yml
-	$(eval LAMBDA_MD5 = $(shell md5sum dist/deployment.zip | cut -f 1 -d ' '))
-	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_MD5).zip
+	$(eval LAMBDA_SHA = $(shell sha256sum dist/deployment.zip | cut -f 1 -d ' ' | base64 --wrap=0))
+	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_SHA).zip
 	terraform output --json $(APP_NAME) | jq -r '.|values[]' | egrep "^$(APP_NAME)-.+handler" | \
-	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --s3-bucket $(TF_S3_BUCKET) --s3-key $(LAMBDA_MD5).zip
+	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --s3-bucket $(TF_S3_BUCKET) --s3-key $(LAMBDA_SHA).zip
 
 get-logs:
 	aws logs describe-log-groups --log-group-name-prefix /aws/lambda/$(APP_NAME)-$(STAGE)- | \

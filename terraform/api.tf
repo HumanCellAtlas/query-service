@@ -70,8 +70,8 @@ resource "aws_route53_record" "api_dns_record" {
 }
 
 resource "aws_api_gateway_base_path_mapping" "api_bpm" {
-  api_id = "${aws_api_gateway_deployment.rest_api.id}"
-  stage_name = "api"
+  api_id = "${aws_api_gateway_deployment.rest_api.rest_api_id}"
+  stage_name = "${var.STAGE}"
   domain_name = "${var.API_DOMAIN_NAME}"
 }
 
