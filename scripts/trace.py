@@ -61,4 +61,9 @@ Troubleshooting guide
 
         aegea logs --start-time=-5m API-Gateway-Execution-Logs_{get_apigateway_id()}/{os.environ['STAGE']}
 
+    * Turn on and examine X-Ray tracing for the Lambda
+
+        * On https://console.aws.amazon.com/lambda/home?region={os.environ['AWS_DEFAULT_REGION']}#/functions/{os.environ['APP_NAME']}-{os.environ['STAGE']}, select "Active Tracing" under "AWS X-Ray".
+
+        * Go to https://console.aws.amazon.com/xray/home?region=us-east-1#/traces?timeRange=PT1H&filter=service(%22{os.environ['APP_NAME']}-{os.environ['STAGE']}%22) to see the traces.
 """)
