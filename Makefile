@@ -4,12 +4,14 @@ ifndef APP_NAME
 $(error Please run "source environment" in the repo root directory before running make commands)
 endif
 
-JQ_TF_RP=.resource.aws_lambda_function
-
 deploy: init-tf package
 	$(eval LAMBDA_SHA = $(shell sha256sum dist/deployment.zip | cut -f 1 -d ' ' | base64 --wrap=0))
 	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_SHA).zip
-	jq 'del($(JQ_TF_RP)[].filename) | $(JQ_TF_RP)[].s3_bucket="$(TF_S3_BUCKET)" | $(JQ_TF_RP)[].s3_key="$(LAMBDA_SHA).zip" | $(JQ_TF_RP)[].source_code_hash="$(LAMBDA_SHA)" | .resource.aws_api_gateway_deployment.rest_api.lifecycle.create_before_destroy=true' dist/chalice.tf.json > terraform/chalice.tf.json
+	jq 'del(.resource.aws_lambda_function[].filename) | \
+            .resource.aws_lambda_function[].s3_bucket="$(TF_S3_BUCKET)" | \
+            .resource.aws_lambda_function[].s3_key="$(LAMBDA_SHA).zip" | \
+            .resource.aws_lambda_function[].source_code_hash="$(LAMBDA_SHA)" | \
+            .resource.aws_api_gateway_deployment.rest_api.lifecycle.create_before_destroy=true' dist/chalice.tf.json > terraform/chalice.tf.json
 	terraform apply
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
