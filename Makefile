@@ -128,7 +128,7 @@ update-lambda: $(TFSTATE_FILE)
 	 xargs -n 1 -P 8 -I % aws lambda update-function-code --function-name % --s3-bucket $(TF_S3_BUCKET) --s3-key $(LAMBDA_SHA).zip
 
 get-logs:
-	aws logs describe-log-groups --log-group-name-prefix /aws/lambda/$(APP_NAME)-$(STAGE)- | \
+	aws logs describe-log-groups --log-group-name-prefix /aws/lambda/$(APP_NAME)-$(STAGE) | \
 	 jq -r .logGroups[].logGroupName | \
 	 xargs -n 1 aegea logs --start-time=-5m
 
