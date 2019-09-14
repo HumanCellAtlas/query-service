@@ -34,7 +34,7 @@ def update_webhooks(action, replica, callback_url):
         else:
             print("Registering new subscription with", dss.host)
             if active_key_id is None:
-                new_key_id = os.environ['STAGE'] + "-" + secrets.token_hex(16)
+                new_key_id = os.environ['STAGE'] + "-" + secrets.token_hex(8)
                 keys[new_key_id] = secrets.token_urlsafe(32)
                 clients.secretsmanager.put_secret_value(SecretId=secret_id,
                                                         SecretString=json.dumps({"hmac_keys": keys,
