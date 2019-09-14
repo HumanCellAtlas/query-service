@@ -25,9 +25,6 @@ $(TFSTATE_FILE):
 	terraform state pull > $(TFSTATE_FILE)
 
 install-webhooks:
-	LC_ALL=C WHS=$$(tr -dc A-Za-z0-9 < /dev/urandom | head -c32) \
-	 jq -n '.active_hmac_key=env.STAGE|.hmac_keys[env.STAGE]=env.WHS' | \
-	 aws secretsmanager put-secret-value --secret-id $(WEBHOOK_SECRET_NAME) --secret-string file:///dev/stdin
 	python -m $(APP_NAME).webhooks install --callback-url=$$(terraform output --json $(APP_NAME) | jq -r .EndpointURL)bundles/event
 
 install-secrets:
