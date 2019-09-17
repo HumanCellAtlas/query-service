@@ -29,13 +29,17 @@ def get_apigateway_id():
 
 
 get_logs_doc = get_logs_commands()
+region = os.environ['AWS_DEFAULT_REGION']
+app_name = os.environ['APP_NAME']
+stage = os.environ['STAGE']
+app_slug = f"{app_name}-{stage}"
+console = "https://console.aws.amazon.com"
 print(f"""
 Troubleshooting guide
 
 * Get recent AWS Lambda logs on the command line (adjust "-5m" to the appropriate time horizon):
 
 {get_logs_doc}
-
     * Tip: search for unhandled Python errors and the context around them like this:
 
     {get_logs_doc.splitlines()[0]} | grep -C 20 Traceback
@@ -50,20 +54,22 @@ Troubleshooting guide
 
       The default is 1. You can temporarily change the value on deployed functions in the console here:
 
-        * https://console.aws.amazon.com/lambda/home?region={os.environ['AWS_DEFAULT_REGION']}#/functions/{os.environ['APP_NAME']}-{os.environ['STAGE']}
+        * {console}/lambda/home?region={region}#/functions/{app_slug}
 
 * Turn on and examine CloudWatch request logging.
 
-    * Go to https://console.aws.amazon.com/apigateway/home?region={os.environ['AWS_DEFAULT_REGION']}#/apis/{get_apigateway_id()}/stages/{os.environ['STAGE']}
+    * Go to {console}/apigateway/home?region={region}#/apis/{get_apigateway_id()}/stages/{stage}
     * Select the "Logs/Tracing" tab
     * Check "Enable CloudWatch Logs", "Enable Detailed CloudWatch Metrics" and "Enable X-Ray Tracing"
     * To see the logs, run:
 
-        aegea logs --start-time=-5m API-Gateway-Execution-Logs_{get_apigateway_id()}/{os.environ['STAGE']}
+        aegea logs --start-time=-5m API-Gateway-Execution-Logs_{get_apigateway_id()}/{stage}
 
     * Turn on and examine X-Ray tracing for the Lambda
 
-        * On https://console.aws.amazon.com/lambda/home?region={os.environ['AWS_DEFAULT_REGION']}#/functions/{os.environ['APP_NAME']}-{os.environ['STAGE']}, select "Active Tracing" under "AWS X-Ray".
+        * On {console}/lambda/home?region={region}#/functions/{app_slug},
+          select "Active Tracing" under "AWS X-Ray".
 
-        * Go to https://console.aws.amazon.com/xray/home?region=us-east-1#/traces?timeRange=PT1H&filter=service(%22{os.environ['APP_NAME']}-{os.environ['STAGE']}%22) to see the traces.
+        * Go to {console}/xray/home?region={region}#/traces?timeRange=PT1H&filter=service(%22{app_slug}%22)
+          to see the traces (for the past hour by default).
 """)
