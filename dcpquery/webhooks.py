@@ -2,7 +2,7 @@
 This module serves as a script to install and manage DSS subscriptions for the service.
 """
 
-import os, sys, argparse, json, logging
+import os, sys, argparse, json, logging, secrets
 
 import boto3
 from hca.dss import DSSClient
@@ -13,8 +13,18 @@ from . import config
 
 def update_webhooks(action, replica, callback_url):
     dss = config.dss_client
+    secret_id = f"{os.environ['APP_NAME']}/{os.environ['STAGE']}/webhook-auth-config"
+    try:
+        res = clients.secretsmanager.get_secret_value(SecretId=secret_id)
+        keys = json.loads(res["SecretString"])["hmac_keys"]
+        active_key_id = json.loads(res["SecretString"])["active_hmac_key"]
+    except clients.secretsmanager.exceptions.ResourceNotFoundException:
+        keys, active_key_id = {}, None
+
     if action == "install":
         for subscription in dss.get_subscriptions(replica=replica, subscription_type="jmespath")["subscriptions"]:
+            if active_key_id != subscription["hmac_key_id"]:
+                continue
             if callback_url != subscription["callback_url"]:
                 continue
             if replica != subscription["replica"]:
@@ -23,7 +33,12 @@ def update_webhooks(action, replica, callback_url):
             break
         else:
             print("Registering new subscription with", dss.host)
-            secret_id = f"{os.environ['APP_NAME']}/{os.environ['STAGE']}/webhook-auth-config"
+            if active_key_id is None:
+                new_key_id = os.environ['STAGE'] + "-" + secrets.token_hex(8)
+                keys[new_key_id] = secrets.token_urlsafe(32)
+                clients.secretsmanager.put_secret_value(SecretId=secret_id,
+                                                        SecretString=json.dumps({"hmac_keys": keys,
+                                                                                 "active_hmac_key": new_key_id}))
             res = clients.secretsmanager.get_secret_value(SecretId=secret_id)
             webhook_keys = json.loads(res["SecretString"])["hmac_keys"]
             hmac_key_id = json.loads(res["SecretString"])["active_hmac_key"]
