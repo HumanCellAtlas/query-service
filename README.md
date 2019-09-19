@@ -193,6 +193,10 @@ tail and filter logs on the command line, you can use the `logs` command in
 the [Aegea](https://github.com/kislyuk/aegea) package, for example: `aegea logs /aws/lambda/dcpquery-api-dev
 --start-time=-15m` (this is what `make get_logs` runs).
 
+#### Troubleshooting
+
+For more help troubleshooting failures in the system, run `scripts/trace.py` and follow the instructions.
+
 #### Metric dashboards for core DCP deployments
 
 You can view metric dashboards for each deployment stage at the links below
@@ -243,4 +247,3 @@ Contributions are welcome; please read [CONTRIBUTING.md](CONTRIBUTING.md).
 - Changes of column name. Like table name changes, these are detected as a column add/drop pair, which is not at all the same as a name change.
 - Anonymously named constraints. Give your constraints a name, e.g. UniqueConstraint('col1', 'col2', name="my_name"). 
 - Special SQLAlchemy types such as Enum when generated on a backend which doesn’t support ENUM directly - this because the representation of such a type in the non-supporting database, i.e. a CHAR+ CHECK constraint, could be any kind of CHAR+CHECK. For SQLAlchemy to determine that this is actually an ENUM would only be a guess, something that’s generally a bad idea.
-
