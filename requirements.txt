@@ -7,7 +7,7 @@ boto3==1.9.42
 botocore==1.12.42
 Brotli==1.0.7
 cachetools==3.1.1
-certifi==2019.6.16
+certifi==2019.9.11
 cffi==1.12.3
 chardet==3.0.4
 Click==7.0
@@ -17,10 +17,10 @@ commonmark==0.9.0
 connexion==2.3.0
 crc32c==1.7
 cryptography==2.3.1
-dcplib==3.3.0
+dcplib==3.8.0
 docutils==0.15.2
 Flask==1.1.1
-furl==2.0.0
+furl==2.1.0
 future==0.17.1
 google-auth==1.6.3
 google-auth-oauthlib==0.4.0
@@ -56,4 +56,4 @@ tenacity==5.0.4
 termcolor==1.1.0
 tweak==1.0.3
 urllib3==1.24.3
-Werkzeug==0.15.6
+Werkzeug==0.16.0
