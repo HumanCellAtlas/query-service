@@ -78,6 +78,9 @@ class TestQueryService(unittest.TestCase, DCPAssertMixin):
         job_id = '713bf52c-daa4-4ac7-8508-466add356e88'
         self.assertGetResponse(f"{self.api_url}/v1/query_jobs/{job_id}", expected_code=requests.codes.not_found)
 
+    def test_cors(self):
+        FIXME
+
 
 if __name__ == '__main__':
     unittest.main()
