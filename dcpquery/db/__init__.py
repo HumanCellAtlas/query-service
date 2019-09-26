@@ -143,13 +143,25 @@ class ProcessFileLink(SQLAlchemyBase):
     process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"), index=True)
     process_file_connection_type = Column(Enum(ConnectionTypeEnum))
     process = relationship(Process)
-    file_uuid = Column(UUID)
+    file_uuid = Column(UUID, index=True)
+    project_fqid = Column(String, index=True)
 
     __table_args__ = (UniqueConstraint(
-        'process_uuid', 'process_file_connection_type', 'file_uuid', name='process_file_connection_type_uc'),)
+        'process_uuid', 'process_file_connection_type', 'file_uuid', 'project_fqid',
+        name='process_file_connection_type_uc'),)
 
     def get_most_recent_file(self):
         return config.db_session.query(File).filter(File.uuid == self.file_uuid).order_by(File.version.desc()).first()
+
+    @property
+    def project_uuid(self):
+        # TODO add test for this
+        return self.project_fqid.split(".")[0]
+
+    @property
+    def project_version(self):
+        # TODO add test for this
+        return self.project_fqid.split(".", 1)[1]
 
 
 class ProcessProcessLink(SQLAlchemyBase):

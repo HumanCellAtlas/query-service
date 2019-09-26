@@ -1,7 +1,7 @@
 import time
 import unittest
 
-from dcpquery.db import Bundle, BundleFileLink, Process, File
+from dcpquery.db import Bundle, BundleFileLink, Process, File, ProcessFileLink, ConnectionTypeEnum
 from dcpquery.etl import load_links, update_process_join_table
 from tests import vx_bundle, vx_bf_links, vx_bundle_aggregate_md, mock_links
 
@@ -112,10 +112,47 @@ class TestBundleFileLinks(unittest.TestCase):
         self.assertCountEqual(expected_bundle_file_links, actual_bundle_file_links)
 
 
+class TestProcessFileLinks(unittest.TestCase):
+    def setUp(self):
+        self.project_uuid = "394a5578-90ec-41ec-9377-82b04dcca1d4"
+        self.project_verion = "2018-10-03T19:27:55.449Z"
+        process_uuid = "42fe7e59-220d-473c-afe5-42a6d315d778"
+        self.project_fqid = self.project_uuid + "." + self.project_verion
+        self.cell_suspension_fqid_v2 = "c4c2f98a-93d4-488c-aaf5-4602359e27e9.2018-12-08 09:35:54.808000"
+        cell_suspension_fqid = "c4c2f98a-93d4-488c-aaf5-4602359e27e9.2018-10-08 09:35:54.808000"
+
+        File(fqid=self.project_fqid, body={"mock": "mock"},
+             dcp_schema_type_name='project',
+             content_type="application/json; dcp-type='metadata/project'", extension=".json", size=4448)
+        process = Process(process_uuid=process_uuid)
+        cell_suspension = File(fqid=cell_suspension_fqid, body={"mock": "mock"},
+                               dcp_schema_type_name='cell_suspension',
+                               content_type="application/json; dcp-type='metadata/biomaterial'", size=921,
+                               extension=".json")
+
+        File(fqid=self.cell_suspension_fqid_v2, body={"mock": "mock"},
+             dcp_schema_type_name='cell_suspension',
+             content_type="application/json; dcp-type='metadata/biomaterial'", size=921,
+             extension=".json")
+        self.pfl = ProcessFileLink(process_uuid=process.process_uuid, project_fqid=self.project_fqid,
+                                   file_uuid=cell_suspension.uuid,
+                                   process_file_connection_type=ConnectionTypeEnum.INPUT_ENTITY)
+
+    def test_most_recent_file_version(self):
+        file = self.pfl.get_most_recent_file()
+        self.assertEqual(file.fqid, self.cell_suspension_fqid_v2)
+
+    def test_project_uuid(self):
+        self.assertEqual(self.pfl.project_uuid, self.project_uuid)
+
+    def test_project_version(self):
+        self.assertEqual(self.pfl.project_version, self.project_verion)
+
+
 class TestProcesses(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        load_links(mock_links['links'], 'mock_bundle_uuid')
+        load_links(mock_links['links'], 'mock_bundle_uuid', 'mock_project_fqid')
         config.db_session.commit()
         update_process_join_table()
 

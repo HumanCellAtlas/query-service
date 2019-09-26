@@ -32,7 +32,8 @@ class TestDBRules(unittest.TestCase):
         config.db_session.add(Bundle(uuid=cls.uuid, version=cls.version))
         config.db_session.add(Process(process_uuid=cls.uuid))
         config.db_session.add(ProcessFileLink(
-            process_uuid=cls.uuid, file_uuid=cls.uuid, process_file_connection_type="INPUT_ENTITY")
+            process_uuid=cls.uuid, file_uuid=cls.uuid, process_file_connection_type="INPUT_ENTITY",
+            project_fqid="716e8b3e-d5c0-4f56-acea-2ef0de3cc318.2019-03-15T110135.170000Z")
         )
         config.db_session.add(
             BundleFileLink(bundle_fqid=cls.uuid + "." + cls.version, file_fqid=cls.uuid + "." + cls.version, name='boo')
@@ -100,7 +101,8 @@ class TestDBRules(unittest.TestCase):
     def test_process_file_link_table_rule(self):
         with self.assertRaises(sqlalchemy.exc.IntegrityError):
             config.db_session.add(ProcessFileLink(
-                process_uuid=self.uuid, file_uuid=self.uuid, process_file_connection_type="INPUT_ENTITY")
+                process_uuid=self.uuid, file_uuid=self.uuid, process_file_connection_type="INPUT_ENTITY",
+                project_fqid="716e8b3e-d5c0-4f56-acea-2ef0de3cc318.2019-03-15T110135.170000Z")
             )
             config.db_session.commit()
         config.db_session.rollback()
@@ -111,7 +113,8 @@ class TestDBRules(unittest.TestCase):
 
         # try to add duplicate file, check no error thrown
         config.db_session.add(ProcessFileLink(
-            process_uuid=self.uuid, file_uuid=self.uuid, process_file_connection_type="INPUT_ENTITY")
+            process_uuid=self.uuid, file_uuid=self.uuid, process_file_connection_type="INPUT_ENTITY",
+            project_fqid="716e8b3e-d5c0-4f56-acea-2ef0de3cc318.2019-03-15T110135.170000Z")
         )
         config.db_session.commit()
 

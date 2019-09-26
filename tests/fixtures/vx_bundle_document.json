@@ -1117,7 +1117,7 @@
       "s3-etag": "5ee6456d7f83e83181d4f2ff112b0b54-2",
       "sha1": "8aa98ea4a16e393f2bb5be4b833d7b207c996376",
       "sha256": "b66edfd048f1fb62abc666aa36e0d59de492de32d25d0761fd488110ee310e30",
-      "body": null,
+      "body": {"describedBy": "data_file"},
       "schema_type": null
     }
   ]

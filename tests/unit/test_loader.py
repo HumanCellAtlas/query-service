@@ -53,6 +53,7 @@ class TestPostgresLoader(unittest.TestCase):
     @patch('dcpquery.config.db_session.add_all')
     @patch('dcpquery.etl.ProcessFileLink', )
     def test_create_processes_calls_insert_correct_number_times(self, mock_process_file_link, mock_add_all):
+        mock_project_fqid = '716e8b3e-d5c0-4f56-acea-2ef0de3cc318.2019-03-15T110135.170000Z'
         mock_process = {'process_uuid': 'a0000006-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                         'input_file_uuids': ["b0000011-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                                              "b0000012-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -61,7 +62,7 @@ class TestPostgresLoader(unittest.TestCase):
                                               "b0000015-aaaa-aaaa-aaaa-aaaaaaaaaaaa"],
                         'protocol_uuids': ['c0000010-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                            'c0000011-aaaa-aaaa-aaaa-aaaaaaaaaaaa']}
-        create_process_file_links(mock_process)
+        create_process_file_links(mock_process, mock_project_fqid)
         assert mock_process_file_link.call_count == 7
 
 

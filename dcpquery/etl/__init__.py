@@ -49,9 +49,8 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
     for fm in result["manifest"]["files"]:
         if fm["name"] not in result["files"]:
             result["files"][fm["name"]] = dict(fm,
-                                               body=None,
+                                               body={'describedBy': 'data_file'},
                                                schema_type=None)
-
     # Flatten the file list while preserving order.
     result["files"] = list(result["files"].values())
     return result
@@ -79,6 +78,9 @@ class BundleLoader:
 
     def load_bundle(self, bundle, extractor=None, transformer=None):
         bf_links = []
+        links = None
+        project_fqid = None
+
         bundle_row = Bundle(uuid=bundle["uuid"],
                             version=bundle["version"],
                             manifest=bundle["manifest"],
@@ -89,9 +91,10 @@ class BundleLoader:
             schema_type = None
             if file_data['body']:
                 schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
+                if schema_type == 'project':
+                    project_fqid = f"{file_data['uuid']}.{file_data['version']}"
             if filename == "links.json":
                 links = file_data['body']['links']
-                load_links(links, bundle['uuid'])
 
             self.register_dcp_metadata_schema_type(schema_type)
             file_row = File(
@@ -105,6 +108,8 @@ class BundleLoader:
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
+        if links:
+            load_links(links, bundle['uuid'], project_fqid)
         config.db_session.add_all(bf_links)
 
 
@@ -200,12 +205,12 @@ def create_materialized_view_tables():
     config.db_session.commit()
 
 
-def load_links(links, bundle_uuid):
+def load_links(links, bundle_uuid, project_fqid):
     for link in links:
         try:
             process = format_process_info(link)
             config.db_session.add(Process(process_uuid=process['process_uuid']))
-            create_process_file_links(process)
+            create_process_file_links(process, project_fqid)
         except AssertionError as e:
             logger.error(f"Error while loading link for bundle: {bundle_uuid} error: {e}")
 
@@ -222,7 +227,7 @@ def format_process_info(link):
             "protocol_uuids": protocol_uuids}
 
 
-def create_process_file_links(process):
+def create_process_file_links(process, project_fqid):
     process_file_links = []
     input_file_uuids = process['input_file_uuids']
     output_file_uuids = process['output_file_uuids']
@@ -233,7 +238,8 @@ def create_process_file_links(process):
             ProcessFileLink(
                 process_uuid=process['process_uuid'],
                 file_uuid=file_uuid,
-                process_file_connection_type='INPUT_ENTITY'
+                process_file_connection_type='INPUT_ENTITY',
+                project_fqid=project_fqid
             )
         )
 
@@ -242,7 +248,8 @@ def create_process_file_links(process):
             ProcessFileLink(
                 process_uuid=process['process_uuid'],
                 file_uuid=file_uuid,
-                process_file_connection_type='OUTPUT_ENTITY'
+                process_file_connection_type='OUTPUT_ENTITY',
+                project_fqid=project_fqid
             )
         )
 
@@ -251,7 +258,8 @@ def create_process_file_links(process):
             ProcessFileLink(
                 process_uuid=process['process_uuid'],
                 file_uuid=file_uuid,
-                process_file_connection_type='PROTOCOL_ENTITY'
+                process_file_connection_type='PROTOCOL_ENTITY',
+                project_fqid=project_fqid
             )
         )
 

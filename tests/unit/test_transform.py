@@ -17,7 +17,6 @@ class TestTransform(unittest.TestCase):
                                            bundle_version=vx_bundle_version,
                                            bundle_path=td,
                                            bundle_manifest_path=os.path.join(fixtures_path, "vx_bundle.json"))
-
             self.assertDictEqual(bundle_dict, expected)
 
     @unittest.skip("WIP")
