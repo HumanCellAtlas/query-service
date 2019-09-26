@@ -76,6 +76,15 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
         delete_q = cls.__table__.delete().where(cls.fqid.in_(file_fqids))
         config.db_session.execute(delete_q)
 
+    @property
+    def link(self, platform="aws"):
+        STAGE = os.getenv('STAGE')
+        if STAGE == 'prod':
+            # TODO fix me
+            return f"https://dss.data.humancellatlas.org/v1/files/{self.uuid}?replica={platform}&version={self.version}&directurl=true"  # noqa
+        else:
+            return f"https://dss.{STAGE}.data.humancellatlas.org/v1/files/{self.uuid}?replica={platform}&version={self.version}&directurl=true"  # noqa
+
 
 class BundleFileLink(SQLAlchemyBase):
     __tablename__ = 'bundle_file_links'

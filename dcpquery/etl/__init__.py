@@ -49,8 +49,8 @@ def transform_bundle(bundle_uuid, bundle_version, bundle_path, bundle_manifest_p
     for fm in result["manifest"]["files"]:
         if fm["name"] not in result["files"]:
             result["files"][fm["name"]] = dict(fm,
-                                               body=None,
-                                               schema_type=None)
+                                               body={'describedBy': 'data_file'},
+                                               schema_type='data_file')
 
     # Flatten the file list while preserving order.
     result["files"] = list(result["files"].values())

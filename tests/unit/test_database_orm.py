@@ -160,6 +160,19 @@ class TestFiles(unittest.TestCase):
         for file_fqid in file_fqids:
             self.assertEqual(File.select_file(file_fqid=file_fqid), None)
 
+    def test_link_format(self):
+        data_file_fqid = [file[0] for file in config.db_session.query(
+            "fqid FROM files WHERE DCP_SCHEMA_TYPE_NAME=data_file;").all()]
+
+        data_file = File.select_file(file_fqid=data_file_fqid)
+        link = data_file.link()
+        ## do they look the same
+        pass
+
+    def test_dss_link_call(self):
+        ## mock dss client called
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
