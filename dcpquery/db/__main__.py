@@ -20,10 +20,18 @@ fmi_test_query = {
     }
 }
 
-default_test_query = {
+hpsi_test_query = {
     "query": {
         "match": {
             "files.project_json.project_core.project_short_name": "HPSI human cerebral organoids"
+        }
+    }
+}
+
+default_test_query = {
+    "query": {
+        "match": {
+            "files.project_json.project_core.project_short_name": "Tissue stability"
         }
     }
 }
