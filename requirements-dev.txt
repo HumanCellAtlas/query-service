@@ -26,7 +26,7 @@ connexion==2.3.0
 coverage==4.5.4
 crc32c==1.7
 cryptography==2.3.1
-dcplib==3.3.0
+dcplib==3.8.0
 dnspython==1.16.0
 docutils==0.15.2
 entrypoints==0.3
