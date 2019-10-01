@@ -54,13 +54,13 @@ class TestViewTables(unittest.TestCase):
 
         biomaterial_view_table_count = config.db_session.execute(
             """
-            SELECT count(*) from cell_line;
+            SELECT count(*) from cell_suspension;
             """
         ).fetchall()[0][0]
 
         files_of_type_biomaterial_count = config.db_session.execute(
             """
-            SELECT count(*) from files where dcp_schema_type_name='cell_line';
+            SELECT count(*) from files where dcp_schema_type_name='cell_suspension';
             """
         ).fetchall()[0][0]
         self.assertEqual(biomaterial_view_table_count, files_of_type_biomaterial_count)
