@@ -5,14 +5,8 @@ import time
 import unittest
 import requests
 
+from dcpquery.utils import get_secret, post_to_slack
 from tests import logger
-
-
-def post_to_slack(message):
-    slack_url = 'https://hooks.slack.com/services/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'
-    headers = {"Content-Type": "application/json"}
-    data = json.dumps({'text': message})
-    requests.post(slack_url, headers=headers, data=data)
 
 
 class TestRequestScale(unittest.TestCase):
@@ -210,7 +204,6 @@ if __name__ == '__main__':
     print("Starting test_graph_traversal_queries_run_in_parallel")
     gt_time, gt_problems, gt_redirects = scale_test.test_graph_traversal_queries_run_in_parallel()
     end = time.time()
-
     message = f"""
     Scale test in {stage} environment ran {scale} queries per test with {threads} threads in {round(end-start)} seconds.
     Basic queries: {basic_query_time} second(s), {basic_query_problems} problem(s), {basic_query_redirects} redirect(s)
@@ -218,4 +211,5 @@ if __name__ == '__main__':
     Graph traversal queries: {gt_time} second(s), {gt_problems} problem(s), {gt_redirects} redirect(s)
     """
     print(message)
-    post_to_slack(message)
+    slack_url = json.loads(get_secret("dcp/query/slackalert"))['SLACK_WEBHOOK']
+    post_to_slack(message, slack_url)
