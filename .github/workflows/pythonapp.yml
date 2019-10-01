@@ -1,0 +1,29 @@
+name: Python application
+
+on: [push]
+
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_DEFAULT_OUTPUT: json
+  TERRAFORM_VERSION: 0.12.0
+
+jobs:
+  build:
+    runs-on: ubuntu:18.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        curl -Os https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+        unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin
+        pip install -r requirements-dev.txt
+    - name: Prepare environment
+      run: |
+        source environment
+        make build-chalice-config init-db migrate-db load-test-data
+    - name: Run tests
+      run: make test
