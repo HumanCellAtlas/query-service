@@ -123,12 +123,14 @@ class TestProcesses(unittest.TestCase):
         parent_processes = Process.list_all_parent_processes('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_parents, parent_processes)
+        self.assertSetEqual(set(expected_parents), set(parent_processes))
 
     def test_get_all_children(self):
         child_processes = Process.list_all_child_processes('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                              'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_children, child_processes)
+        self.assertSetEqual(set(expected_children), set(child_processes))
 
 
 class TestFiles(unittest.TestCase):
