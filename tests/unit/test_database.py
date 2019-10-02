@@ -223,33 +223,6 @@ class TestDBManager:
             DO INSTEAD NOTHING;
     """
 
-    get_all_children_function_sql = """
-        CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
-            RETURNS TABLE(child_process UUID) as $$
-              WITH RECURSIVE recursive_table AS (
-                SELECT child_process_uuid FROM process_join_table
-                WHERE parent_process_uuid=$1
-                UNION
-                SELECT process_join_table.child_process_uuid FROM process_join_table
-                INNER JOIN recursive_table
-                ON process_join_table.parent_process_uuid = recursive_table.child_process_uuid)
-            SELECT * from recursive_table;
-            $$ LANGUAGE SQL;
-    """
-    get_all_parents_function_sql = """
-        CREATE or REPLACE FUNCTION get_all_parents(IN child_process_uuid UUID)
-            RETURNS TABLE(parent_process UUID) as $$
-              WITH RECURSIVE recursive_table AS (
-                SELECT parent_process_uuid FROM process_join_table
-                WHERE child_process_uuid=$1
-                UNION
-                SELECT process_join_table.parent_process_uuid FROM process_join_table
-                INNER JOIN recursive_table
-                ON process_join_table.child_process_uuid = recursive_table.parent_process_uuid)
-            SELECT * from recursive_table;
-            $$ LANGUAGE SQL;
-    """
-
     def create_upsert_rules_in_db(self):
         config.db_session.execute(
             self.bundle_file_link_ignore_duplicate_rule_sql + self.bundle_ignore_duplicate_rule_sql
@@ -258,10 +231,6 @@ class TestDBManager:
             self.process_file_link_ignore_duplicate_rule_sql + self.process_ignore_duplicate_rule_sql
         )
         config.db_session.execute(self.file_ignore_duplicate_rule_sql)
-        config.db_session.commit()
-
-    def create_recursive_functions_in_db(self):
-        config.db_session.execute(self.get_all_children_function_sql + self.get_all_parents_function_sql)
         config.db_session.commit()
 
 
