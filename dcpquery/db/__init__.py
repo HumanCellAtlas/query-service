@@ -129,6 +129,16 @@ class Process(SQLAlchemyBase):
         return [str(parent_process[0]) for parent_process in parent_process_uuids]
 
     @classmethod
+    def list_all_child_files(cls, process_uuid):
+        child_process_uuids = config.db_session.execute(f"SELECT * FROM children_of_file('{process_uuid}')").fetchall()
+        return [str(child_process[0]) for child_process in child_process_uuids]
+
+    @classmethod
+    def list_all_parent_files(cls, process_uuid):
+        parent_process_uuids = config.db_session.execute(f"SELECT * FROM parents_of_file('{process_uuid}')").fetchall()
+        return [str(parent_process[0]) for parent_process in parent_process_uuids]
+
+    @classmethod
     def list_direct_child_processes(cls, process_uuid):
         return config.db_session.query(ProcessProcessLink).with_entities(ProcessProcessLink.child_process_uuid).filter(
             ProcessProcessLink.parent_process_uuid == process_uuid).all()

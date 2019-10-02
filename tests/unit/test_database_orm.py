@@ -119,18 +119,42 @@ class TestProcesses(unittest.TestCase):
         config.db_session.commit()
         update_process_join_table()
 
-    def test_get_all_parents(self):
+    def test_get_all_parent_processes(self):
         parent_processes = Process.list_all_parent_processes('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_parents, parent_processes)
         self.assertSetEqual(set(expected_parents), set(parent_processes))
 
-    def test_get_all_children(self):
+    def test_get_all_child_processes(self):
         child_processes = Process.list_all_child_processes('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                              'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_children, child_processes)
         self.assertSetEqual(set(expected_children), set(child_processes))
+
+    def test_list_all_parent_files(self):
+        parent_files = Process.list_all_parent_files('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')
+        expected_files = [
+            "2107cab5-4f14-4008-bc82-4df8637c05a9",
+            "77af67ca-e99a-45ef-9c68-40daa76e664e",
+            "77af67ca-e99a-45ef-9c68-40daa76e664e",
+            "8b6895ba-eda2-4bf9-9d22-c9ab3fe3ae4d",
+            "d153ebcf-828a-41b7-ace8-57376349636a"
+        ]
+        self.assertCountEqual(expected_files, parent_files)
+        self.assertSetEqual(set(expected_files), set(parent_files))
+
+    def test_get_all_child_files(self):
+        child_files = Process.list_all_child_files('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')
+        expected_files = [
+            "5c0e51a9-8262-42e1-bfc1-ea883f7f0d17",
+            "6eeadcee-dd1a-4153-97db-db5778e830d7",
+            "bccacace-69e9-4585-a7af-30287ef9545b",
+            "f6b720da-7695-4900-9e23-0c8516c2a3b2",
+            "f94db122-3f6b-47b0-8559-d635e1c6238e"
+        ]
+        self.assertCountEqual(expected_files, child_files)
+        self.assertCountEqual(set(expected_files), set(child_files))
 
 
 class TestFiles(unittest.TestCase):
