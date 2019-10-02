@@ -118,12 +118,14 @@ class Process(SQLAlchemyBase):
 
     @classmethod
     def list_all_child_processes(cls, process_uuid):
-        child_process_uuids = config.db_session.execute(f"SELECT * FROM get_all_children('{process_uuid}')").fetchall()
+        child_process_uuids = config.db_session.execute(
+            f"SELECT * FROM children_of_process('{process_uuid}')").fetchall()
         return [str(child_process[0]) for child_process in child_process_uuids]
 
     @classmethod
     def list_all_parent_processes(cls, process_uuid):
-        parent_process_uuids = config.db_session.execute(f"SELECT * FROM get_all_parents('{process_uuid}')").fetchall()
+        parent_process_uuids = config.db_session.execute(
+            f"SELECT * FROM parents_of_process('{process_uuid}')").fetchall()
         return [str(parent_process[0]) for parent_process in parent_process_uuids]
 
     @classmethod
