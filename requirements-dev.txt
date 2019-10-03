@@ -1,5 +1,5 @@
 # You should not edit this file directly.  Instead, you should edit requirements-dev.txt.in.
-aegea==2.7.3
+aegea==2.7.5
 alabaster==0.7.12
 alembic==1.2.1
 argcomplete==1.10.0
