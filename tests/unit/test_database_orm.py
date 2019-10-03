@@ -120,20 +120,20 @@ class TestProcesses(unittest.TestCase):
         update_process_join_table()
 
     def test_get_all_parent_processes(self):
-        parent_processes = Process.list_all_parent_processes('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+        parent_processes = Process.process_ancestors('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_parents, parent_processes)
         self.assertSetEqual(set(expected_parents), set(parent_processes))
 
     def test_get_all_child_processes(self):
-        child_processes = Process.list_all_child_processes('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+        child_processes = Process.process_subtree('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                              'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
         self.assertCountEqual(expected_children, child_processes)
         self.assertSetEqual(set(expected_children), set(child_processes))
 
-    def test_list_all_parent_files(self):
-        parent_files = Process.list_all_parent_files('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')
+    def test_file_ancestors(self):
+        parent_files = Process.file_ancestors('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')
         expected_files = [
             "2107cab5-4f14-4008-bc82-4df8637c05a9",
             "77af67ca-e99a-45ef-9c68-40daa76e664e",
@@ -145,7 +145,7 @@ class TestProcesses(unittest.TestCase):
         self.assertSetEqual(set(expected_files), set(parent_files))
 
     def test_get_all_child_files(self):
-        child_files = Process.list_all_child_files('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')
+        child_files = Process.file_subtree('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')
         expected_files = [
             "5c0e51a9-8262-42e1-bfc1-ea883f7f0d17",
             "6eeadcee-dd1a-4153-97db-db5778e830d7",

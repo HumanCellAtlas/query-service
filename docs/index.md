@@ -139,22 +139,22 @@ Experiments are represented in HCA's metadata as a [directed acyclic graph](http
 
 ### Traversing the graph of material entities
 
-Using the `children_of_file` and `parents_of_file` postgres methods, you can find the child nodes and parent nodes of a given material entity in the experimental DAG respectively.
+Using the `file_subtree` and `file_ancestors` postgres methods, you can find the child nodes and parent nodes of a given material entity in the experimental DAG respectively.
 
 Let's say you have a FASTQ file and you are curious about the donor organism from which it was derived. If `6eeadcee-dd1a-4153-97db-db5778e830d7` is the UUID of a donor file, you can run:
 
 ```sql
-SELECT parents_of_file('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865');
+SELECT file_ancestors('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865');
 ```
 
-The results are the uuids of files represent parent material entities in the DAG for this sequence file. In other words, `parents_of_file` returns all of the inputs that went into making the file with the given UUID.
+The results are the uuids of files represent parent material entities in the DAG for this sequence file. In other words, `file_ancestors` returns all of the inputs that went into making the file with the given UUID.
 
 If we want to get the donor organism from which this file was derived from, we simply join with the files table and filter:
 
 ```sql
 SELECT * FROM files
 WHERE
-  uuid IN (SELECT parents_of_file('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')) AND
+  uuid IN (SELECT file_ancestors('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')) AND
   dcp_schema_type_name = 'donor_organism';
 ```
 
@@ -163,6 +163,6 @@ Conversely, you could use the UUID of the donor organism to find the sequencing 
 ```sql
 SELECT * FROM files
 WHERE
-  uuid IN (SELECT children_of_file('2107cab5-4f14-4008-bc82-4df8637c05a9')) AND
+  uuid IN (SELECT file_subtree('2107cab5-4f14-4008-bc82-4df8637c05a9')) AND
   dcp_schema_type_name = 'sequence_file';
 ```

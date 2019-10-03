@@ -21,7 +21,7 @@ def upgrade():
     op.execute("DROP FUNCTION get_all_parents;")
     op.execute(
         """
-         CREATE or REPLACE FUNCTION children_of_process(IN parent_process_uuid UUID)
+         CREATE or REPLACE FUNCTION process_subtree(IN parent_process_uuid UUID)
             RETURNS TABLE(child_process UUID) as $$
               WITH RECURSIVE recursive_table AS (
                 SELECT child_process_uuid FROM process_join_table
@@ -36,7 +36,7 @@ def upgrade():
     )
     op.execute(
         """
-        CREATE or REPLACE FUNCTION parents_of_process(IN child_process_uuid UUID)
+        CREATE or REPLACE FUNCTION process_ancestors(IN child_process_uuid UUID)
             RETURNS TABLE(parent_process UUID) as $$
               WITH RECURSIVE recursive_table AS (
                 SELECT parent_process_uuid FROM process_join_table
@@ -51,11 +51,11 @@ def upgrade():
     )
     op.execute(
         """
-        CREATE or REPLACE FUNCTION children_of_file(IN uuid UUID)
+        CREATE or REPLACE FUNCTION file_subtree(IN uuid UUID)
         RETURNS TABLE(uuid UUID) AS $$
         SELECT file_uuid
           FROM process_file_join_table
-          WHERE process_uuid IN (SELECT children_of_process(process_uuid)
+          WHERE process_uuid IN (SELECT process_subtree(process_uuid)
                                  FROM process_file_join_table
                                  WHERE file_uuid = $1)
             AND file_uuid != $1;
@@ -64,11 +64,11 @@ def upgrade():
     )
     op.execute(
         """
-        CREATE or REPLACE FUNCTION parents_of_file(IN uuid UUID)
+        CREATE or REPLACE FUNCTION file_ancestors(IN uuid UUID)
         RETURNS TABLE(uuid UUID) AS $$
         SELECT file_uuid
           FROM process_file_join_table
-          WHERE process_uuid IN (SELECT parents_of_process(process_uuid)
+          WHERE process_uuid IN (SELECT process_ancestors(process_uuid)
                                  FROM process_file_join_table
                                  WHERE file_uuid = $1)
             AND file_uuid != $1;
@@ -78,10 +78,10 @@ def upgrade():
 
 
 def downgrade():
-    op.execute("DROP FUNCTION children_of_process;")
-    op.execute("DROP FUNCTION parents_of_process;")
-    op.execute("DROP FUNCTION children_of_file;")
-    op.execute("DROP FUNCTION parents_of_file;")
+    op.execute("DROP FUNCTION process_subtree;")
+    op.execute("DROP FUNCTION process_ancestors;")
+    op.execute("DROP FUNCTION file_subtree;")
+    op.execute("DROP FUNCTION file_ancestors;")
     op.execute(
         """
          CREATE or REPLACE FUNCTION get_all_children(IN parent_process_uuid UUID)
