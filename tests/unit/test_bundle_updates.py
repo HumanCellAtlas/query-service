@@ -34,6 +34,4 @@ class BundleUpdateEvents(unittest.TestCase):
     @patch('dcpquery.etl.drop_one_bundle')
     def test_process_bundle_event_handles_deletions(self, mock_bundle_drop):
         process_bundle_event(mock_bundle_deletion_event)
-        mock_bundle_drop.assert_called_once_with(
-            bundle_uuid='5541acba-066e-4b1e-9420-323513d0a899', bundle_version='2018-10-05T103504.447604Z'
-        )
+        mock_bundle_drop.assert_called_once()
