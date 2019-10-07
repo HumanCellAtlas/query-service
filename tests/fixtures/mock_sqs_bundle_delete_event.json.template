@@ -3,7 +3,7 @@
         {
             "messageId": null,
             "receiptHandle": "AAAAA",
-            "body": "{\"transaction_id\": \"71af50f6-2cb7-45d1-9ce6-ce13a43b5cc0\", \"subscription_id\": \"80b2136b-79ee-4bb4-aee3-f3da687d2ec6\", \"event_type\": \"DELETE\", \"match\": {\"bundle_uuid\": \"5541acba-066e-4b1e-9420-323513d0a899\", \"bundle_version\": \"2018-10-05T103504.447604Z\"}}",
+            "body": "{\"transaction_id\": \"71af50f6-2cb7-45d1-9ce6-ce13a43b5cc0\", \"subscription_id\": \"80b2136b-79ee-4bb4-aee3-f3da687d2ec6\", \"event_type\": \"DELETE\", \"match\": {\"bundle_uuid\": \"$TEST_BUNDLE_UUID\", \"bundle_version\": \"$TEST_BUNDLE_VERSION\"}}",
             "attributes": {
                 "ApproximateReceiveCount": "1",
                 "SentTimestamp": "1547593710857",

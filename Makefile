@@ -86,7 +86,7 @@ test: lint docs build-chalice-config unit-test migration-test
 unit-test: load-test-data
 	coverage run --timid --source $(APP_NAME) -m unittest discover --start-directory tests/unit --top-level-directory . --verbose
 
-integration-test:
+integration-test: update-fixtures
 	python -m unittest discover --start-directory tests/integration --top-level-directory . --verbose
 	scripts/invoke-lambda bundle_event_handler tests/fixtures/mock_sqs_bundle_create_event.json
 	scripts/invoke-lambda bundle_event_handler tests/fixtures/mock_sqs_bundle_delete_event.json
@@ -111,8 +111,13 @@ drop-db:
 load: init-db
 	python -m $(APP_NAME).db load
 
-load-test-data: init-db
+load-test-data: init-db update-fixtures
 	python -m $(APP_NAME).db load-test
+
+update-fixtures:
+	export TEST_BUNDLE_UUID=$$(hca dss get-bundles-all --replica aws | jq -r .bundles[2].uuid) TEST_BUNDLE_VERSION=$$(hca dss get-bundles-all --replica aws | jq -r .bundles[2].version); \
+	envsubst < tests/fixtures/mock_sqs_bundle_create_event.json.template > tests/fixtures/mock_sqs_bundle_create_event.json; \
+	envsubst < tests/fixtures/mock_sqs_bundle_delete_event.json.template > tests/fixtures/mock_sqs_bundle_delete_event.json
 
 # Update just the Lambda application code, but not the dependencies, routes, or other infra. Use xargs to parallelize the process.
 update-lambda: $(TFSTATE_FILE)
@@ -154,4 +159,4 @@ create-migration:
 
 .PHONY: deploy init-secrets install-webhooks install-secrets build-chalice-config package init-tf init-db destroy
 .PHONY: clean lint test fetch init-db load load-test-data update-lambda get-logs refresh-all-requirements docs
-.PHONY: create-migration migration-test
+.PHONY: create-migration migration-test update-fixtures
