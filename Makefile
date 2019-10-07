@@ -88,6 +88,9 @@ unit-test: load-test-data
 
 integration-test:
 	python -m unittest discover --start-directory tests/integration --top-level-directory . --verbose
+	export TEST_BUNDLE_UUID=$$(hca dss get-bundles-all --replica aws | jq -r .bundles[0].uuid) TEST_BUNDLE_VERSION=$$(hca dss get-bundles-all --replica aws | jq -r .bundles[0].version); \
+	envsubst < tests/fixtures/mock_sqs_bundle_create_event.json.template > tests/fixtures/mock_sqs_bundle_create_event.json; \
+	envsubst < tests/fixtures/mock_sqs_bundle_delete_event.json.template > tests/fixtures/mock_sqs_bundle_delete_event.json
 	scripts/invoke-lambda bundle_event_handler tests/fixtures/mock_sqs_bundle_create_event.json
 	scripts/invoke-lambda bundle_event_handler tests/fixtures/mock_sqs_bundle_delete_event.json
 
