@@ -155,12 +155,10 @@ class ProcessFileLink(SQLAlchemyBase):
 
     @property
     def project_uuid(self):
-        # TODO add test for this
         return self.project_fqid.split(".")[0]
 
     @property
     def project_version(self):
-        # TODO add test for this
         return self.project_fqid.split(".", 1)[1]
 
 
