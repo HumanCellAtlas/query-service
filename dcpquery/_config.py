@@ -74,13 +74,10 @@ class DCPQueryConfig:
             db_password = ""
             db_host = ""
         else:
-            db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
-            db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
-            if self.readonly_db:
-                db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/readonly_hostname"
-            else:
-                db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/hostname"
-            db_host = AwsSecret(db_host_secret_name).value.strip()
+            db_credentials = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/credentials").value.strip()
+            db_user = json.loads(db_credentials)["username"]
+            db_password = json.loads(db_credentials)["password"]
+            db_host = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/hostname").value.strip()
         db_name = self.app_name
 
         return f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
