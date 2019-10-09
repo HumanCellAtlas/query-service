@@ -5,7 +5,8 @@ from contextlib import contextmanager
 from dcplib.etl import DSSExtractor
 
 from .. import config
-from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType
+from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType, \
+    Project, ProjectFileLink
 
 logger = logging.getLogger(__name__)
 
@@ -86,14 +87,22 @@ class BundleLoader:
         for file_data in bundle["files"]:
             filename = file_data.pop("name")
             file_extension = get_file_extension(filename)
-            schema_type = None
             if file_data['body']:
                 schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
-            if filename == "links.json":
+            else:
+                schema_type = 'data_file'
+            self.register_dcp_metadata_schema_type(schema_type)
+
+            if schema_type == "links":
                 links = file_data['body']['links']
                 load_links(links, bundle['uuid'])
 
-            self.register_dcp_metadata_schema_type(schema_type)
+            if schema_type == "project":
+                project = Project(
+                    uuid=file_data['uuid'],
+                    version=file_data['version']
+                )
+                config.db_session.add(project)
             file_row = File(
                 uuid=file_data['uuid'],
                 version=file_data['version'],
@@ -105,7 +114,12 @@ class BundleLoader:
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
+        assert project is not None
+        project_file_links = []
+        for link in bf_links:
+            project_file_links.append(ProjectFileLink(project=project, file=link.file))
         config.db_session.add_all(bf_links)
+        config.db_session.add_all(project_file_links)
 
 
 def update_process_join_table():
