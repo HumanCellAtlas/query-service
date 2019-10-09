@@ -1,40 +1,46 @@
-module "query_db" {
-  source = "github.com/chanzuckerberg/terraform-aws-rds-aurora"
-  name = "${var.APP_NAME}-${var.STAGE}"
-  vpc_id = "${aws_default_vpc.query_db_vpc.id}"
-  subnets = data.aws_subnet_ids.query_db_subnets.ids
+locals {
+  query_db_username = var.APP_NAME
+  query_db_port = "5432"
+}
+
+resource "aws_rds_cluster" "query_db" {
+  cluster_identifier = "${var.APP_NAME}-${var.STAGE}"
   engine = "aurora-postgresql"
   engine_version = "10.7"
-  instance_type = "db.r4.large"
-  db_parameter_group_name = "default.aurora-postgresql10"
+  engine_mode = "serverless"
   db_cluster_parameter_group_name = "default.aurora-postgresql10"
-  publicly_accessible = true
+  port = local.query_db_port
+  # Requires https://github.com/terraform-providers/terraform-provider-aws/pull/9657
+  # Until merged, use `aws rds modify-db-cluster --db-cluster-identifier ID --enable-http-endpoint --apply-immediately`
+  # enable_data_api = true
+  vpc_security_group_ids = [aws_security_group.query_db_access.id]
   apply_immediately = true
   skip_final_snapshot = true
-  username = "${aws_secretsmanager_secret_version.query_db_username.secret_string}"
-  password = "${random_string.placeholder_db_password.result}"
+  master_username = local.query_db_username
+  master_password = random_string.placeholder_db_password.result
   tags = {
     managedBy = "terraform"
     project = "dcp"
-    env = "${var.STAGE}"
-    service = "${var.APP_NAME}"
-    owner = "${var.OWNER}"
+    env = var.STAGE
+    service = var.APP_NAME
+    owner = var.OWNER
   }
 }
 
 resource "aws_default_vpc" "query_db_vpc" {}
 
-resource "aws_security_group_rule" "query_db_access" {
-  type = "ingress"
-  from_port = "${module.query_db.this_rds_cluster_port}"
-  to_port = "${module.query_db.this_rds_cluster_port}"
-  protocol = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
-  security_group_id = "${module.query_db.this_security_group_id}"
+resource "aws_security_group" "query_db_access" {
+  name = "${var.APP_NAME}-${var.STAGE}-rds-access"
+  ingress {
+    from_port = local.query_db_port
+    to_port = local.query_db_port
+    protocol = "tcp"
+    self = true
+  }
 }
 
 data "aws_subnet_ids" "query_db_subnets" {
-  vpc_id = "${aws_default_vpc.query_db_vpc.id}"
+  vpc_id = aws_default_vpc.query_db_vpc.id
 }
 
 resource "aws_secretsmanager_secret" "query_db_hostname" {
@@ -42,30 +48,20 @@ resource "aws_secretsmanager_secret" "query_db_hostname" {
 }
 
 resource "aws_secretsmanager_secret_version" "query_db_hostname" {
-  secret_id = "${aws_secretsmanager_secret.query_db_hostname.id}"
-  secret_string = "${module.query_db.this_rds_cluster_endpoint}"
+  secret_id = aws_secretsmanager_secret.query_db_hostname.id
+  secret_string = aws_rds_cluster.query_db.endpoint
 }
 
-resource "aws_secretsmanager_secret" "query_db_readonly_hostname" {
-  name = "${var.APP_NAME}/${var.STAGE}/postgresql/readonly_hostname"
+resource "aws_secretsmanager_secret" "query_db_credentials" {
+  name = "${var.APP_NAME}/${var.STAGE}/postgresql/credentials"
 }
 
-resource "aws_secretsmanager_secret_version" "query_db_readonly_hostname" {
-  secret_id = "${aws_secretsmanager_secret.query_db_readonly_hostname.id}"
-  secret_string = "${module.query_db.this_rds_cluster_reader_endpoint}"
-}
-
-resource "aws_secretsmanager_secret" "query_db_username" {
-  name = "${var.APP_NAME}/${var.STAGE}/postgresql/username"
-}
-
-resource "aws_secretsmanager_secret_version" "query_db_username" {
-  secret_id = "${aws_secretsmanager_secret.query_db_username.id}"
-  secret_string = "${var.APP_NAME}"
-}
-
-resource "aws_secretsmanager_secret" "query_db_password" {
-  name = "${var.APP_NAME}/${var.STAGE}/postgresql/password"
+resource "aws_secretsmanager_secret_version" "query_db_credentials" {
+  secret_id = "${aws_secretsmanager_secret.query_db_credentials.id}"
+  secret_string = jsonencode({
+    "username": local.query_db_username
+    "password": random_string.placeholder_db_password.result
+  })
 }
 
 # The database password is managed out of band.

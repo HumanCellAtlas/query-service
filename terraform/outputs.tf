@@ -11,13 +11,15 @@ output "async_query_handler_name" {
 }
 
 output "rds_cluster_id" {
-  value = "${module.query_db.this_rds_cluster_id}"
+  value = "${aws_rds_cluster.query_db.id}"
 }
 
 output "rds_cluster_endpoint" {
-  value = "${module.query_db.this_rds_cluster_endpoint}"
+  value = "${aws_rds_cluster.query_db.endpoint}"
 }
 
 output "rds_cluster_readonly_endpoint" {
-  value = "${module.query_db.this_rds_cluster_reader_endpoint}"
+  # FIXME: serverless Aurora does not have readonly hostnames. This has been changed to point to the RW endpoint.
+  # FIXME: after migrating to data API, retire this secret and use the HTTP endpoint instead.
+  value = "${aws_rds_cluster.query_db.endpoint}"
 }

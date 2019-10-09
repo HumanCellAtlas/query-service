@@ -24,8 +24,9 @@ install-webhooks:
 	python -m $(APP_NAME).webhooks install --callback-url=$$(terraform output --json $(APP_NAME) | jq -r .EndpointURL)bundles/event
 
 install-secrets:
-	aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password --secret-string $$(python -c 'import secrets; print(secrets.token_urlsafe(32))')
-	aws rds modify-db-cluster --db-cluster-identifier $$(terraform output --json $(APP_NAME) | jq -r .rds_cluster_id) --master-user-password $$(aws secretsmanager get-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/password | jq -r .SecretString) --apply-immediately
+	$(eval export DB_PW = $(shell python -c 'import secrets; print(secrets.token_urlsafe(32))'))
+	aws secretsmanager put-secret-value --secret-id $(APP_NAME)/$(STAGE)/postgresql/credentials --secret-string "$$(jq -n '.username=env.APP_NAME | .password=env.DB_PW')"
+	@aws rds modify-db-cluster --db-cluster-identifier $$(terraform output --json $(APP_NAME) | jq -r .rds_cluster_id) --master-user-password "$(DB_PW)" --apply-immediately
 
 build-chalice-config:
 	envsubst < iam/policy-templates/$(APP_NAME)-lambda.json > .chalice/policy-$(STAGE).json
