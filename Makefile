@@ -9,6 +9,8 @@ deploy: init-tf package
 	aws s3 cp dist/deployment.zip s3://$(TF_S3_BUCKET)/$(LAMBDA_SHA).zip
 	jq -f scripts/preprocess_chalice_tf_config.jq dist/chalice.tf.json > terraform/chalice.tf.json
 	terraform apply
+# FIXME: this will error out while the cluster is modifying
+	aws rds modify-db-cluster --db-cluster-identifier $(terraform output --json $APP_NAME | jq -r .rds_cluster_id) --enable-http-endpoint --apply-immediately
 	$(MAKE) $(TFSTATE_FILE)
 	$(MAKE) install-webhooks
 	terraform output $(APP_NAME)
