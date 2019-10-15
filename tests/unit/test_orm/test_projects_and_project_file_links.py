@@ -17,16 +17,18 @@ class TestProjects(unittest.TestCase):
     def test_insert_select_project(self):
         project_fqid = 'DEDEDEDE-5c98-4d26-a614-246d12c2e5d7.2019-05-15T183023.365000Z'
         # check none
-        res = Project.select_one(project_fqid)
-        self.assertIsNone(res)
+        res = config.db_session.query(Project).filter(Project.fqid == project_fqid).all()
+        result = list(res)
+        self.assertEqual(len(result), 0)
 
         project = Project(fqid=project_fqid)
         config.db_session.add(project)
         config.db_session.commit()
 
         # check exists
-        res = Project.select_one(project_fqid)
-        self.assertIsNotNone(res)
+        res = config.db_session.query(Project).filter(Project.fqid == project_fqid).all()
+        result = list(res)
+        self.assertEqual(len(result), 1)
 
     def test_delete_many(self):
         # check both projects are there
@@ -123,9 +125,8 @@ class TestProjectFileLinks(unittest.TestCase):
 
     def test_select_links_for_project_fqids(self):
         links = ProjectFileLink.select_links_for_project_fqids(
-            [self.mock_project_fqid_0, self.mock_project_fqid_1])
+            [self.mock_project_fqid_0, self.mock_project_fqid_1]).fetchall()
         self.assertEqual(len(links), 4)
-
         for link in links:
             self.assertIn(link[0], [self.mock_project_fqid_0, self.mock_project_fqid_1])
             self.assertIn(link[1], [self.mock_file_fqid, self.mock_file_fqid_1])

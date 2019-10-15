@@ -33,8 +33,8 @@ def delete_projects_and_project_file_links_for_file_deletion(file_fqids):
 
     # delete file specific project file links
     ProjectFileLink.delete_links_for_files(file_fqids)
-    config.db_session.flush()
-    # find which projects are still connected to remaining files
+
+    # find which projects are connected to different files
     projects_to_keep = [link[0] for link in ProjectFileLink.select_links_for_project_fqids(project_fqids)]
     projects_to_delete = list(set(project_fqids) - set(projects_to_keep))
     Project.delete_many(projects_to_delete)
@@ -51,4 +51,5 @@ def process_bundle_event(dss_event):
         logger.info(f"Processing DSS DELETE or TOMBSTONE event: {dss_event}")
         drop_one_bundle(**dss_event["match"])
     else:
+        # todo search logs for this
         logger.error("Ignoring unknown event type %s", dss_event["event_type"])
