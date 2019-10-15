@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from dcpquery.etl import load_links
+from dcpquery.etl.load import load_links
 
 
 class TestETLHelpers(unittest.TestCase):

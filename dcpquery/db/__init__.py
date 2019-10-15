@@ -1,7 +1,7 @@
 """
 This module provides a SQLAlchemy-based database schema for the DCP Query Service.
 """
-import os, enum, logging, typing
+import enum, logging, typing
 
 from sqlalchemy import (Column, String, DateTime, Integer, ForeignKey, Enum, exc as sqlalchemy_exceptions,
                         UniqueConstraint, BigInteger)
@@ -212,3 +212,7 @@ def run_query(query, params, rows_per_page=100):
             raise QueryTimeoutError(title=e.orig.pgerror, detail={"pgcode": e.orig.pgcode})
         else:
             raise
+
+
+def commit_to_db(arg):
+    config.db_session.commit()
