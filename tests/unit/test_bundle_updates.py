@@ -42,31 +42,30 @@ class BundleUpdateEvents(unittest.TestCase):
 class BundleDeletion(unittest.TestCase):
     def setUp(self):
         self.version = str(datetime.datetime.utcnow())
-        self.version_2 = str(datetime.datetime.utcnow() + datetime.timedelta(0, 60))
+        version_2 = str(datetime.datetime.utcnow() + datetime.timedelta(0, 60))
+        project_0_uuid = str(uuid.uuid4())
+        project_1_uuid = str(uuid.uuid4())
+        project_2_uuid = str(uuid.uuid4())
 
-        self.project_0_uuid = str(uuid.uuid4())
-        self.project_1_uuid = str(uuid.uuid4())
-        self.project_2_uuid = str(uuid.uuid4())
-
-        self.bundle_0_uuid = str(uuid.uuid4())
+        bundle_0_uuid = str(uuid.uuid4())
         self.bundle_1_uuid = str(uuid.uuid4())
 
-        self.file_0_uuid = str(uuid.uuid4())
+        file_0_uuid = str(uuid.uuid4())
         self.file_1_uuid = str(uuid.uuid4())
         self.file_2_uuid = str(uuid.uuid4())
 
-        project_0 = Project(uuid=self.project_0_uuid, version=self.version)
-        project_1 = Project(uuid=self.project_1_uuid, version=self.version)
-        project_2 = Project(uuid=self.project_2_uuid, version=self.version)
+        project_0 = Project(uuid=project_0_uuid, version=self.version)
+        project_1 = Project(uuid=project_1_uuid, version=self.version)
+        project_2 = Project(uuid=project_2_uuid, version=self.version)
 
-        bundle_0 = Bundle(uuid=self.bundle_0_uuid, version=self.version)
+        bundle_0 = Bundle(uuid=bundle_0_uuid, version=self.version)
         bundle_1 = Bundle(uuid=self.bundle_1_uuid, version=self.version)
-        bundle_1_v2 = Bundle(uuid=self.bundle_1_uuid, version=self.version_2)
+        bundle_1_v2 = Bundle(uuid=self.bundle_1_uuid, version=version_2)
 
-        file_0 = File(uuid=self.file_0_uuid, version=self.version)
+        file_0 = File(uuid=file_0_uuid, version=self.version)
         file_1 = File(uuid=self.file_1_uuid, version=self.version)
         file_2 = File(uuid=self.file_2_uuid, version=self.version)
-        file_1_v2 = File(uuid=self.file_1_uuid, version=self.version_2)
+        file_1_v2 = File(uuid=self.file_1_uuid, version=version_2)
 
         project_file_link_0 = ProjectFileLink(project=project_0, file=file_0)
         project_file_link_1 = ProjectFileLink(project=project_1, file=file_1)
@@ -93,42 +92,24 @@ class BundleDeletion(unittest.TestCase):
         bundle_fqid = self.bundle_1_uuid + '.' + self.version
         self.assertEqual(Bundle.select_bundle(bundle_fqid).fqid, bundle_fqid)
 
-        file_0_fqid = self.file_0_uuid + '.' + self.version
         file_1_fqid = self.file_1_uuid + '.' + self.version
         file_2_fqid = self.file_2_uuid + '.' + self.version
-        self.assertEqual(File.select_file(file_0_fqid).fqid, file_0_fqid)
-        self.assertEqual(File.select_file(file_1_fqid).fqid, file_1_fqid)
-        self.assertEqual(File.select_file(file_2_fqid).fqid, file_2_fqid)
-
+        self.assertEqual(File.select_file(file_1_fqid).fqid, file_1_fqid
+        import pdb
+        pdb.set_trace()
+        assert 1 == 0
         drop_one_bundle(self.bundle_1_uuid, self.version)
-        config.db_session.flush()
 
-        # check files only in that bundle are gone
-        self.assertEqual(File.select_file(file_1_fqid), None)
-        self.assertEqual(File.select_file(file_0_fqid).fqid, file_0_fqid)
-        self.assertEqual(File.select_file(file_2_fqid).fqid, file_2_fqid)
+
 
     def test_bundle_deletion_cascades_to_projects(self):
-        project_0_fqid = self.project_0_uuid + '.' + self.version
-        project_1_fqid = self.project_1_uuid + '.' + self.version
-        project_2_fqid = self.project_2_uuid + '.' + self.version
+        pass
 
-        self.assertIsNotNone(Project.select_one(project_0_fqid))
-        self.assertIsNotNone(Project.select_one(project_1_fqid))
-        self.assertIsNotNone(Project.select_one(project_2_fqid))
-        config.readonly_db = False
+    def test_bundle_deletion_does_not_cascade_to_files_linked_to_other_bundles(self):
+        pass
 
-        drop_one_bundle(self.bundle_0_uuid, self.version)
-        config.db_session.flush()
-        self.assertIsNone(Project.select_one(project_0_fqid))
-        self.assertIsNotNone(Project.select_one(project_1_fqid))
-        self.assertIsNotNone(Project.select_one(project_2_fqid))
+    def test_bundle_deletion_does_not_cascade_to_projects_linked_to_exsisting_files(self):
+        pass
 
-    def test_bundle_deletion_and_cascade_is_version_specific(self):
-        bundle_1_v2_fqid = self.bundle_1_uuid + '.' + self.version_2
-        project_1_fqid = self.project_1_uuid + '.' + self.version
-        file_1_v2_fqid = self.file_1_uuid + '.' + self.version_2
-        drop_one_bundle(self.bundle_1_uuid, self.version)
-        self.assertIsNotNone(Bundle.select_bundle(bundle_1_v2_fqid))
-        self.assertIsNotNone(Project.select_one(project_1_fqid))
-        self.assertIsNotNone(File.select_file(file_1_v2_fqid))
+    def test_bundle_deletion_is_version_specific(self):
+        pass

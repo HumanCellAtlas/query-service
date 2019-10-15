@@ -3,6 +3,13 @@ import logging
 import typing
 from typing import List
 
+<<<<<<< HEAD
+=======
+from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, Integer, Enum, UniqueConstraint
+import typing
+from typing import List
+
+>>>>>>> add schema type
 from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, UniqueConstraint, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -59,20 +66,16 @@ class Project(DCPQueryModelHelper, SQLAlchemyBase):
     fqid = Column(String, primary_key=True, index=True)
     uuid = Column(UUID, nullable=False, index=True)
     version = Column(DateTime, nullable=False, index=True)
-    files = relationship("File", secondary="project_file_links")
+    files = relationship("File", secondary="project_file_join_table")
 
     @classmethod
     def delete_many(cls, project_fqids):
-        if len(project_fqids) > 0:
-            config.db_session.execute(
-                "DELETE FROM projects_all_versions WHERE fqid IN :project_fqid_list;",
-                {"project_fqid_list": tuple(project_fqids)})
-            config.db_session.commit()
+        delete_q = cls.__table__.delete().where(cls.fqid.in_(project_fqids))
+        config.db_session.execute(delete_q)
 
     @classmethod
     def select_one(cls, project_fqid):
         return config.db_session.query(cls).filter(cls.fqid == project_fqid).one_or_none()
-
 
 class File(DCPQueryModelHelper, SQLAlchemyBase):
     __tablename__ = 'files_all_versions'
@@ -88,7 +91,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     schema_major_version = Column(Integer, index=True)
     schema_minor_version = Column(Integer, index=True)
     bundles = relationship("Bundle", secondary='bundle_file_links')
-    projects = relationship("Project", secondary="project_file_links")
+    projects = relationship("Project", secondary="project_file_join_table")
 
     @classmethod
     def select_file(cls, file_fqid):
@@ -105,7 +108,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
 
 
 class ProjectFileLink(SQLAlchemyBase):
-    __tablename__ = 'project_file_links'
+    __tablename__ = 'project_file_join_table'
     project_fqid = Column(String, ForeignKey('projects_all_versions.fqid'), primary_key=True, index=True)
     file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True, index=True)
     project = relationship(Project)
@@ -120,19 +123,13 @@ class ProjectFileLink(SQLAlchemyBase):
 
     @classmethod
     def delete_links_for_files(cls, file_fqids: List[str]):
-        if len(file_fqids) > 0:
-            config.db_session.execute("""
-            DELETE FROM project_file_links WHERE file_fqid IN :file_fqid_list;
-            """, {"file_fqid_list": tuple(file_fqids)})
-            config.db_session.commit()
+        delete_q = cls.__table__.delete().where(cls.file_fqid.in_(file_fqids))
+        config.db_session.execute(delete_q)
 
     @classmethod
     def select_links_for_project_fqids(cls, project_fqids: List[str]):
-        if len(project_fqids) > 0:
-            return config.db_session.execute("""
-                  SELECT project_fqid, file_fqid FROM project_file_links WHERE project_fqid IN :project_fqid_list;
-                    """, {"project_fqid_list": tuple(project_fqids)}).fetchall()
-        return []
+        links = cls.__table__.select().where(cls.project_fqid.in_(project_fqids))
+        return config.db_session.execute(links)
 
 
 class BundleFileLink(SQLAlchemyBase):

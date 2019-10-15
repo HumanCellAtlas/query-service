@@ -9,7 +9,13 @@ class TestFiles(unittest.TestCase):
     project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
     process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
 
-    def test_select_file(self):
+    def test_insert_select_file(self):
+        # insert files
+        config.db_session.rollback()
+        config.db_session.add_all([self.project_file, self.process_file])
+        config.db_session.commit()
+
+        # select files
         result = File.select_file(file_fqid=self.project_file.fqid)
 
         self.assertEqual(result.uuid, self.project_file.uuid)
