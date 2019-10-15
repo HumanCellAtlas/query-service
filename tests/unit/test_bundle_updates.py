@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from dcpquery import config
-from dcpquery.db import Bundle
+from dcpquery.db.models import Bundle
 from dcpquery.etl import drop_one_bundle, process_bundle_event
 from tests import mock_bundle_deletion_event
 

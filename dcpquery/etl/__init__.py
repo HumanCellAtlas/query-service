@@ -5,8 +5,8 @@ from contextlib import contextmanager
 from dcplib.etl import DSSExtractor
 
 from .. import config
-from ..db import Bundle, File, BundleFileLink, ProcessFileLink, Process, ProcessProcessLink, DCPMetadataSchemaType, \
-    Project, ProjectFileLink
+from dcpquery.db.models import Bundle, DCPMetadataSchemaType, Project, File, ProjectFileLink, BundleFileLink, Process, \
+    ProcessFileLink, ProcessProcessLink
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +80,10 @@ class BundleLoader:
 
     def load_bundle(self, bundle, extractor=None, transformer=None):
         bf_links = []
+        project_file_links = []
+        project = None
+        schema_minor_version = None
+        schema_major_version = None
         bundle_row = Bundle(uuid=bundle["uuid"],
                             version=bundle["version"],
                             manifest=bundle["manifest"],
@@ -89,8 +93,16 @@ class BundleLoader:
             file_extension = get_file_extension(filename)
             if file_data['body']:
                 schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
+                try:
+                    schema_major_version = file_data['body']['provenance']['schema_major_version']
+                    schema_minor_version = file_data['body']['provenance']['schema_minor_version']
+                # some analysis files dont have schema versions, but some do
+                except KeyError:
+                    pass
+
             else:
                 schema_type = 'data_file'
+
             self.register_dcp_metadata_schema_type(schema_type)
 
             if schema_type == "links":
@@ -110,14 +122,15 @@ class BundleLoader:
                 size=file_data['size'],
                 extension=str(file_extension),
                 body=file_data['body'],
-                dcp_schema_type_name=schema_type
+                dcp_schema_type_name=schema_type,
+                schema_major_version=schema_major_version,
+                schema_minor_version=schema_minor_version
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
-        assert project is not None
-        project_file_links = []
-        for link in bf_links:
-            project_file_links.append(ProjectFileLink(project=project, file=link.file))
+        if project:
+            for link in bf_links:
+                project_file_links.append(ProjectFileLink(project=project, file=link.file))
         config.db_session.add_all(bf_links)
         config.db_session.add_all(project_file_links)
 
@@ -294,6 +307,11 @@ def drop_one_bundle(bundle_uuid, bundle_version):
     files_to_keep = [link[1] for link in BundleFileLink.select_links_for_file_fqids(file_fqids)]
     files_to_delete = list(set(file_fqids) - set(files_to_keep))
     # TODO @madison once processes link to file versions cascade file deletions to associated processes
+    import pdb
+    pdb.set_trace()
+    project_fqids = [link[1] for link in ProjectFileLink.select_links_for_file_fqids([files_to_delete])]
+    ProjectFileLink.delete_links_for_files([files_to_delete])
+    Project.delete_many(project_fqids)
     File.delete_files(files_to_delete)
     Bundle.delete_bundles([bundle_fqid])
     config.db_session.commit()

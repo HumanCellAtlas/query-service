@@ -3,7 +3,7 @@ import json, unittest, secrets
 from unittest.mock import patch
 
 from dcpquery import config
-from dcpquery.db import Bundle, DCPMetadataSchemaType
+from dcpquery.db.models import Bundle, DCPMetadataSchemaType
 
 from tests import (vx_bundle, vx_bundle_uuid, vx_bundle_version, vx_bundle_manifest, vx_bundle_aggregate_md, mock_links,
                    load_fixture)
