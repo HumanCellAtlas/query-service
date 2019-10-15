@@ -1,9 +1,11 @@
+import datetime
 import unittest
+import uuid
 from unittest.mock import patch
 
 from dcpquery import config
-from dcpquery.db.models import Bundle
-from dcpquery.etl import drop_one_bundle, process_bundle_event
+from dcpquery.db.models import Bundle, Project, File, ProjectFileLink, BundleFileLink
+from dcpquery.dss_subscription_event_handling import drop_one_bundle, process_bundle_event
 from tests import mock_bundle_deletion_event
 
 
@@ -31,7 +33,83 @@ class BundleUpdateEvents(unittest.TestCase):
 
         self.assertLessEqual(post_deletion_file_count, file_count)
 
-    @patch('dcpquery.etl.drop_one_bundle')
+    @patch('dcpquery.dss_subscription_event_handling.drop_one_bundle')
     def test_process_bundle_event_handles_deletions(self, mock_bundle_drop):
         process_bundle_event(mock_bundle_deletion_event)
         mock_bundle_drop.assert_called_once()
+
+
+class BundleDeletion(unittest.TestCase):
+    def setUp(self):
+        self.version = str(datetime.datetime.utcnow())
+        version_2 = str(datetime.datetime.utcnow() + datetime.timedelta(0, 60))
+        project_0_uuid = str(uuid.uuid4())
+        project_1_uuid = str(uuid.uuid4())
+        project_2_uuid = str(uuid.uuid4())
+
+        bundle_0_uuid = str(uuid.uuid4())
+        self.bundle_1_uuid = str(uuid.uuid4())
+
+        file_0_uuid = str(uuid.uuid4())
+        self.file_1_uuid = str(uuid.uuid4())
+        self.file_2_uuid = str(uuid.uuid4())
+
+        project_0 = Project(uuid=project_0_uuid, version=self.version)
+        project_1 = Project(uuid=project_1_uuid, version=self.version)
+        project_2 = Project(uuid=project_2_uuid, version=self.version)
+
+        bundle_0 = Bundle(uuid=bundle_0_uuid, version=self.version)
+        bundle_1 = Bundle(uuid=self.bundle_1_uuid, version=self.version)
+        bundle_1_v2 = Bundle(uuid=self.bundle_1_uuid, version=version_2)
+
+        file_0 = File(uuid=file_0_uuid, version=self.version)
+        file_1 = File(uuid=self.file_1_uuid, version=self.version)
+        file_2 = File(uuid=self.file_2_uuid, version=self.version)
+        file_1_v2 = File(uuid=self.file_1_uuid, version=version_2)
+
+        project_file_link_0 = ProjectFileLink(project=project_0, file=file_0)
+        project_file_link_1 = ProjectFileLink(project=project_1, file=file_1)
+        project_file_link_2 = ProjectFileLink(project=project_2, file=file_2)
+
+        project_file_link_3 = ProjectFileLink(project=project_1, file=file_1_v2)
+
+        bundle_file_link_0 = BundleFileLink(bundle=bundle_0, file=file_0, name="file_0")
+        bundle_file_link_1 = BundleFileLink(bundle=bundle_1, file=file_1, name="file_1")
+        bundle_file_link_2 = BundleFileLink(bundle=bundle_0, file=file_2, name="file_2")
+        bundle_file_link_3 = BundleFileLink(bundle=bundle_1, file=file_2, name="file_2")
+
+        bundle_file_link_4 = BundleFileLink(bundle=bundle_1_v2, file=file_1_v2, name="file_1")
+        bundle_file_link_5 = BundleFileLink(bundle=bundle_1_v2, file=file_2, name="file_1")
+
+        config.db_session.add_all(
+            [project_file_link_0, project_file_link_1, project_file_link_2, project_file_link_3, bundle_file_link_0,
+             bundle_file_link_1, bundle_file_link_2, bundle_file_link_3, bundle_file_link_4, bundle_file_link_5])
+
+        config.db_session.commit()
+
+    def test_bundle_deletion_cascades_to_files(self):
+        # check bundle and files exist
+        bundle_fqid = self.bundle_1_uuid + '.' + self.version
+        self.assertEqual(Bundle.select_bundle(bundle_fqid).fqid, bundle_fqid)
+
+        file_1_fqid = self.file_1_uuid + '.' + self.version
+        file_2_fqid = self.file_2_uuid + '.' + self.version
+        self.assertEqual(File.select_file(file_1_fqid).fqid, file_1_fqid
+        import pdb
+        pdb.set_trace()
+        assert 1 == 0
+        drop_one_bundle(self.bundle_1_uuid, self.version)
+
+
+
+    def test_bundle_deletion_cascades_to_projects(self):
+        pass
+
+    def test_bundle_deletion_does_not_cascade_to_files_linked_to_other_bundles(self):
+        pass
+
+    def test_bundle_deletion_does_not_cascade_to_projects_linked_to_exsisting_files(self):
+        pass
+
+    def test_bundle_deletion_is_version_specific(self):
+        pass

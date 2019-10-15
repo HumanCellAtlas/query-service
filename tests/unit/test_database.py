@@ -18,7 +18,7 @@ class TestReadOnlyTransactions(unittest.TestCase):
 
         row = next(config.db.execute("SELECT * FROM FILES;"))
         expected_column_names = ['fqid', 'uuid', 'version', 'dcp_schema_type_name', 'body', 'content_type', 'size',
-                                 'extension']
+                                 'extension', 'schema_major_version', 'schema_minor_version']
 
         self.assertEqual(list(dict(row).keys()), expected_column_names)
 

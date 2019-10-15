@@ -4,7 +4,7 @@ import requests
 from requests.models import Response
 
 import dcpquery, dcplib.etl
-from dcpquery.etl import process_bundle_event
+from dcpquery.dss_subscription_event_handling import process_bundle_event
 
 files = [
     {

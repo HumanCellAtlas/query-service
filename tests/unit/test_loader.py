@@ -3,9 +3,9 @@ import json, unittest, secrets
 from unittest.mock import patch
 
 from dcpquery import config
-from dcpquery.db.models import Bundle
 from dcpquery.etl import BundleLoader
 from dcpquery.etl.load import create_process_file_links
+from dcpquery.db.models import Bundle
 
 from tests import vx_bundle, vx_bundle_uuid, vx_bundle_version, vx_bundle_manifest, vx_bundle_aggregate_md, load_fixture
 
