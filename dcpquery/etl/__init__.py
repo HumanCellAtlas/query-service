@@ -307,8 +307,6 @@ def drop_one_bundle(bundle_uuid, bundle_version):
     files_to_keep = [link[1] for link in BundleFileLink.select_links_for_file_fqids(file_fqids)]
     files_to_delete = list(set(file_fqids) - set(files_to_keep))
     # TODO @madison once processes link to file versions cascade file deletions to associated processes
-    import pdb
-    pdb.set_trace()
     project_fqids = [link[1] for link in ProjectFileLink.select_links_for_file_fqids([files_to_delete])]
     ProjectFileLink.delete_links_for_files([files_to_delete])
     Project.delete_many(project_fqids)
