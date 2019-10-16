@@ -35,7 +35,7 @@ class TestCreateAsyncQuery(unittest.TestCase):
         )
 
     @patch("dcpquery.api.query_jobs.set_job_status")
-    def xtest_process_async_query_with_invalid_query(self, set_job_status):
+    def test_process_async_query_with_invalid_query(self, set_job_status):
         config.db_statement_timeout_seconds = 880
         body = json.dumps(dict(query="SELECT * FROM NONEXISTENT_TABLE", params={}))
         process_async_query(dict(self.mock_event_record, body=body))
