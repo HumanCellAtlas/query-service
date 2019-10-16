@@ -98,7 +98,9 @@ class BundleLoader:
                     schema_minor_version = file_data['body']['provenance']['schema_minor_version']
                 # some analysis files dont have schema versions, but some do
                 except KeyError:
-                    pass
+                    version = file_data['body'].get('describedBy', '').split('/')[-2]
+                    schema_major_version = int(version.split('.')[0])
+                    schema_minor_version = int(version.split('.')[1])
 
             else:
                 schema_type = 'data_file'
