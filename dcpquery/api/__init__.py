@@ -14,6 +14,7 @@ class JSONEncoder(json.JSONEncoder):
 
     Unlike the default JSON encoder, it knows how to serialize datetime, UUID, and SQLAlchemy RowProxy objects.
     """
+
     def default(self, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo:
@@ -43,6 +44,7 @@ class ChaliceWithConnexion(chalice.Chalice):
     """
     Subclasses Chalice to host a Connexion app, route and proxy requests to it.
     """
+
     def __init__(self, swagger_spec_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.swagger_spec_path = swagger_spec_path
@@ -99,9 +101,10 @@ class ChaliceWithRequestLogging(chalice.Chalice):
         source_ip = self.current_request.context['identity']['sourceIp']
         content_length = self.current_request.headers.get('content-length', '-')
         user_agent = self.current_request.headers.get('user-agent')
-        self.log.info('[req] "%s %s" %s %s "%s" %s', method, path, source_ip, content_length, user_agent, query_params)
+        # assumes that all exceptions are handled in the _get_view_function_response function
         res = super()._get_view_function_response(view_function, function_args)
-        self.log.info('[res] %s', res.status_code)
+        self.log.info('"%s %s" %s %s "%s" %s %s', method, path, source_ip, content_length, user_agent,
+                      query_params, res.status_code)
         return res
 
 
