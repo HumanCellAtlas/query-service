@@ -1,0 +1,1 @@
+aws rds-data execute-statement --resource-arn "arn:aws:rds:us-east-1:861229788715:cluster:dcpquery-dev20191008215005658900000001" --sql "SELECT * FROM files limit 1000;" --secret-arn arn:aws:secretsmanager:us-east-1:861229788715:secret:dcpquery/dev/postgresql/credentials-cX8fzH

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -euo pipefail
+
+aws sqs receive-message --queue-url $(aws sqs list-queues --queue-name-prefix ${APP_NAME}-${STAGE}-dlq | jq -r .QueueUrls[0]) --max-number-of-messages 10 | jq -r .Messages[].Body

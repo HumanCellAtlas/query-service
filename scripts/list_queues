@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -euo pipefail
+
+aws sqs list-queues --queue-name-prefix ${APP_NAME}-${STAGE} | jq -r .QueueUrls[] | xargs -n 1 -P 8 -I % aws sqs get-queue-attributes --queue-url % --attribute-names All | jq .Attributes
