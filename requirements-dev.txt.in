@@ -7,6 +7,7 @@ coverage
 furl
 flake8
 mypy
+psycopg2-binary
 recommonmark
 sqlalchemy-utils
 sphinx

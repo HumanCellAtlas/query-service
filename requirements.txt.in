@@ -1,5 +1,4 @@
-psycopg2-binary
-sqlalchemy
+sqlalchemy-aurora-data-api
 requests-http-signature
 connexion[swagger-ui]
 brotli

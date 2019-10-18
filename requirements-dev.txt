@@ -1,11 +1,12 @@
 # You should not edit this file directly.  Instead, you should edit requirements-dev.txt.in.
-aegea==2.7.9
+aegea==2.8.3
 alabaster==0.7.12
 alembic==1.2.1
 argcomplete==1.10.0
-asn1crypto==1.1.0
+asn1crypto==1.2.0
 atomicwrites==1.3.0
-attrs==19.2.0
+attrs==19.3.0
+aurora-data-api==0.0.4
 aws-sam-translator==1.11.0
 awscli==1.16.52
 Babel==2.7.0
@@ -15,14 +16,14 @@ botocore==1.12.42
 Brotli==1.0.7
 cachetools==3.1.1
 certifi==2019.9.11
-cffi==1.12.3
-chalice==1.11.1
+cffi==1.13.0
+chalice==1.12.0
 chardet==3.0.4
 Click==7.0
 clickclick==1.2.2
 colorama==0.3.9
 commonmark==0.9.1
-connexion==2.3.0
+connexion==2.4.0
 coverage==4.5.4
 crc32c==1.7
 cryptography==2.3.1
@@ -50,8 +51,8 @@ keymaker==1.0.9
 Mako==1.1.0
 MarkupSafe==1.1.1
 mccabe==0.6.1
-mypy==0.730
-mypy-extensions==0.4.2
+mypy==0.740
+mypy-extensions==0.4.3
 oauthlib==3.1.0
 openapi-spec-validator==0.2.8
 orderedmultidict==1.0.1
@@ -88,6 +89,7 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.2
 sphinxcontrib-serializinghtml==1.1.3
 SQLAlchemy==1.3.10
+sqlalchemy-aurora-data-api==0.0.1
 SQLAlchemy-Utils==0.34.2
 swagger-ui-bundle==0.0.5
 tenacity==5.0.4
