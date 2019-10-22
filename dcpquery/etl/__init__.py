@@ -84,11 +84,13 @@ class BundleLoader:
         project = None
         schema_minor_version = None
         schema_major_version = None
+        # Todo remove aggregage metadata to allow for file deletion
         bundle_row = Bundle(uuid=bundle["uuid"],
                             version=bundle["version"],
                             manifest=bundle["manifest"],
                             aggregate_metadata=bundle["aggregate_metadata"])
         for file_data in bundle["files"]:
+            flat_data_body = {}
             filename = file_data.pop("name")
             file_extension = get_file_extension(filename)
             if file_data['body']:
@@ -117,6 +119,15 @@ class BundleLoader:
                     version=file_data['version']
                 )
                 config.db_session.add(project)
+            else:
+                try:
+                    if file_data['body']:
+                        flat_data_body = create_flat_file_body('TOP', file_data['body'])
+                except Exception as e:
+                    import pdb
+                    pdb.set_trace()
+                    print(e)
+            self.register_dcp_metadata_schema_type(schema_type)
             file_row = File(
                 uuid=file_data['uuid'],
                 version=file_data['version'],
@@ -127,6 +138,8 @@ class BundleLoader:
                 dcp_schema_type_name=schema_type,
                 schema_major_version=schema_major_version,
                 schema_minor_version=schema_minor_version
+                flat_body=flat_data_body,
+                dcp_schema_type_name=schema_type
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
@@ -135,6 +148,25 @@ class BundleLoader:
                 project_file_links.append(ProjectFileLink(project=project, file=link.file))
         config.db_session.add_all(bf_links)
         config.db_session.add_all(project_file_links)
+
+
+def create_flat_file_body(level_name, data_body, flat_data_body={}):
+    for key, value in data_body.items():
+        if level_name != 'TOP':
+            key = level_name + '.' + key
+        if type(value) is dict:
+            flat_data_body = create_flat_file_body(key, value, flat_data_body)
+        elif type(value) is list:
+            count = 0
+            hold = []
+            for a in value:
+                key = key + '.' + str(count)
+                hold.append(create_flat_file_body('TOP', {key: a}))
+            for a in hold:
+                flat_data_body = {**flat_data_body, **a}
+        else:
+            flat_data_body[key] = value
+    return flat_data_body
 
 
 def update_process_join_table():
