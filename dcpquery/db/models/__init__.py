@@ -70,6 +70,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     dcp_schema_type_name = Column(String, ForeignKey("dcp_metadata_schema_types.name"))
     dcp_schema_type = relationship(DCPMetadataSchemaType, back_populates="files")
     body = Column(MutableDict.as_mutable(JSONB))
+    flat_body = Column(MutableDict.as_mutable(JSONB))
     content_type = Column(String)
     size = Column(BigInteger)
     extension = Column(String)

@@ -137,9 +137,8 @@ class BundleLoader:
                 body=file_data['body'],
                 dcp_schema_type_name=schema_type,
                 schema_major_version=schema_major_version,
-                schema_minor_version=schema_minor_version
+                schema_minor_version=schema_minor_version,
                 flat_body=flat_data_body,
-                dcp_schema_type_name=schema_type
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
