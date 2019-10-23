@@ -112,13 +112,6 @@ class BundleLoader:
             if schema_type == "links":
                 links = file_data['body']['links']
                 load_links(links, bundle['uuid'])
-
-            if schema_type == "project":
-                project = Project(
-                    uuid=file_data['uuid'],
-                    version=file_data['version']
-                )
-                config.db_session.add(project)
             else:
                 try:
                     if file_data['body']:
@@ -127,6 +120,13 @@ class BundleLoader:
                     import pdb
                     pdb.set_trace()
                     print(e)
+            if schema_type == "project":
+                project = Project(
+                    uuid=file_data['uuid'],
+                    version=file_data['version']
+                )
+                config.db_session.add(project)
+
             self.register_dcp_metadata_schema_type(schema_type)
             file_row = File(
                 uuid=file_data['uuid'],
