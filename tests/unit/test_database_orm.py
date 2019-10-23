@@ -2,7 +2,8 @@ import time
 import unittest
 
 from dcpquery.db import Bundle, BundleFileLink, Process, File
-from dcpquery.etl import load_links, update_process_join_table
+from dcpquery.etl import update_process_join_table
+from dcpquery.etl.load import load_links
 from tests import vx_bundle, vx_bf_links, vx_bundle_aggregate_md, mock_links
 
 from dcpquery import config

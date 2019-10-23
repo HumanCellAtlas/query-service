@@ -15,11 +15,16 @@ apt-get install -qqy --no-install-suggests --no-install-recommends jq moreutils 
 
 virtualenv --python=python3 .venv
 source .venv/bin/activate
-[[ -d query-service/.git ]] || git clone --depth 1 https://github.com/HumanCellAtlas/query-service.git
+if [ ! -d query-service ]; then
+git clone https://github.com/HumanCellAtlas/query-service.git
+fi
 cd query-service
+#git fetch # uncomment out to use a branch other than master
+#git checkout dunitz-json-flattening # uncomment out to use a branch other than master
 pip install --quiet -r requirements-dev.txt
 
-source environment
+source environment # set to env scripts/launch_etl_job.sh called in
+#export DSS_HOST='manually set url"
 S3_CACHE_URL=s3://${SERVICE_S3_BUCKET}/etl/cache.xz
 aws s3 cp $S3_CACHE_URL - | tar -xJ || true
 scripts/db_ctl load --db remote

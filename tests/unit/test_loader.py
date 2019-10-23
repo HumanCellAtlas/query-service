@@ -3,11 +3,11 @@ import json, unittest, secrets
 from unittest.mock import patch
 
 from dcpquery import config
-from dcpquery.db import Bundle, DCPMetadataSchemaType
+from dcpquery.db import Bundle
+from dcpquery.etl import BundleLoader
+from dcpquery.etl.load import create_process_file_links
 
-from tests import (vx_bundle, vx_bundle_uuid, vx_bundle_version, vx_bundle_manifest, vx_bundle_aggregate_md, mock_links,
-                   load_fixture)
-from dcpquery.etl import load_links, create_process_file_links, BundleLoader, dcpquery_etl_finalizer
+from tests import vx_bundle, vx_bundle_uuid, vx_bundle_version, vx_bundle_manifest, vx_bundle_aggregate_md, load_fixture
 
 
 class TestPostgresLoader(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestPostgresLoader(unittest.TestCase):
         self.assertDictEqual(result[0].aggregate_metadata, vx_bundle_aggregate_md)
 
     @patch('dcpquery.config.db_session.add_all')
-    @patch('dcpquery.etl.ProcessFileLink', )
+    @patch('dcpquery.etl.load.ProcessFileLink', )
     def test_create_processes_calls_insert_correct_number_times(self, mock_process_file_link, mock_add_all):
         mock_process = {'process_uuid': 'a0000006-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                         'input_file_uuids': ["b0000011-aaaa-aaaa-aaaa-aaaaaaaaaaaa",

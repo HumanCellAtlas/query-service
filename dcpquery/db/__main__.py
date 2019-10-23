@@ -8,7 +8,9 @@ from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
 
 from .. import config
-from ..etl import transform_bundle, BundleLoader, dcpquery_etl_finalizer, commit_to_db
+from ..etl import dcpquery_etl_finalizer
+from dcpquery.db import commit_to_db
+from dcpquery.etl import transform_bundle, BundleLoader
 
 from . import init_db, drop_db, migrate_db
 

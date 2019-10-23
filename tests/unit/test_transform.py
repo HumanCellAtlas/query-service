@@ -1,7 +1,8 @@
 import os, sys, json, copy, shutil, unittest
 from tempfile import TemporaryDirectory
 
-from dcpquery.etl import transform_bundle, format_process_info, get_file_extension
+from dcpquery.etl import transform_bundle
+from dcpquery.etl.load import get_file_extension, format_process_info
 from tests import vx_bundle, load_fixture, mock_links, vx_bundle_uuid, vx_bundle_version
 
 
