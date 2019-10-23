@@ -15,9 +15,12 @@ apt-get install -qqy --no-install-suggests --no-install-recommends jq moreutils 
 
 virtualenv --python=python3 .venv
 source .venv/bin/activate
-cd query-service || git clone --depth 1 https://github.com/HumanCellAtlas/query-service.git cd query-service
-git fetch
-git checkout dunitz-json-flattening # uncomment out to use a branch other than master
+if [ ! -d query-service ]; then
+git clone https://github.com/HumanCellAtlas/query-service.git
+fi
+cd query-service
+#git fetch # uncomment out to use a branch other than master
+#git checkout dunitz-json-flattening # uncomment out to use a branch other than master
 pip install --quiet -r requirements-dev.txt
 
 source environment # set to env scripts/launch_etl_job.sh called in
