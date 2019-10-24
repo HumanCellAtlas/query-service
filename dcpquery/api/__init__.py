@@ -1,10 +1,11 @@
-import os, sys, re, json, collections, logging, datetime, uuid, gzip
+import os, sys, re, json, collections, logging, datetime, uuid, gzip, traceback
 from decimal import Decimal
 
 import requests, connexion, chalice, brotli
 from sqlalchemy.engine.result import RowProxy
 from connexion.resolver import RestyResolver
 from connexion.lifecycle import ConnexionResponse
+from connexion.exceptions import ProblemException
 from werkzeug.http import parse_accept_header
 
 
@@ -59,11 +60,20 @@ class ChaliceWithConnexion(chalice.Chalice):
         for route, methods in routes.items():
             self.route(route, methods=list(set(methods) - {"OPTIONS"}), cors=True)(self.dispatch)
 
+    def render_internal_error(self, error):
+        self.log.error(traceback.format_exc())
+        return self.connexion_app.common_error_handler(ProblemException(
+            status=requests.codes.internal_server_error,
+            title=repr(error),
+            detail=traceback.format_exc() if self.debug else None
+        ))
+
     def create_connexion_app(self):
         app = connexion.App(self.app_name)
         app.app.json_encoder = JSONEncoder
         resolver = RestyResolver(self.app_name + '.api', collection_endpoint_name="list")
         app.add_api(self.swagger_spec_path, resolver=resolver, validate_responses=True, arguments=os.environ)
+        app.add_error_handler(Exception, self.render_internal_error)
         return app
 
     def dispatch(self, *args, **kwargs):
