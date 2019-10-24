@@ -29,7 +29,7 @@ class BundleLoader:
             schema_type = None
             if file_data['body']:
                 schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
-            if filename == "links.json":
+            if filename == "links.json" and file_data["body"]:
                 links = file_data['body']['links']
                 load_links(links, bundle['uuid'])
 
