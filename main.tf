@@ -1,11 +1,11 @@
 terraform {
-  required_version = ">= 0.12.0"
+  required_version = ">= 0.12.12"
   backend "s3" {
   }
 }
 
 provider "aws" {
-  version = "~> 2.27"
+  version = "~> 2.33"
 }
 
 provider "external" {

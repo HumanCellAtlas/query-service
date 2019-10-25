@@ -21,7 +21,7 @@ env:
   global:
   - AWS_DEFAULT_REGION=us-east-1
   - AWS_DEFAULT_OUTPUT=json
-  - TERRAFORM_VERSION=0.12.0
+  - TERRAFORM_VERSION=0.12.12
 
 install:
   - curl -Os https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
