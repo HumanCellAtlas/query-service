@@ -181,8 +181,7 @@ to be deployed.
 
 ### Monitoring your app
 
-To get logs for the last 5 minutes from the app, install [Aegea](https://github.com/kislyuk/aegea) using
-`pip install aegea`, then type `make get_logs` in this directory.
+To get logs for the last 5 minutes from the app, type `make get_logs` in this directory.
 
 Lambda is automatically set up to emit logs
 to [CloudWatch Logs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html), which you can
