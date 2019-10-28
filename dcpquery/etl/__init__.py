@@ -7,7 +7,7 @@ from dcpquery.etl.load import BundleLoader
 from dcpquery.etl.transform import transform_bundle
 
 from .. import config
-from ..db import Bundle, File, BundleFileLink
+from dcpquery.db.models import Bundle, File, BundleFileLink
 
 logger = logging.getLogger(__name__)
 

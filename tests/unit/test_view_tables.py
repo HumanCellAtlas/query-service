@@ -2,7 +2,7 @@ import json
 import unittest
 
 from dcpquery import config
-from dcpquery.db import BundleFileLink, File, Bundle, DCPMetadataSchemaType
+from dcpquery.db.models import Bundle, DCPMetadataSchemaType, File, BundleFileLink
 from dcpquery.etl import dcpquery_etl_finalizer
 from tests import load_fixture
 

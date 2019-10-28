@@ -3,7 +3,7 @@ import json, unittest, secrets
 from unittest.mock import patch
 
 from dcpquery import config
-from dcpquery.db import Bundle
+from dcpquery.db.models import Bundle
 from dcpquery.etl import BundleLoader
 from dcpquery.etl.load import create_process_file_links
 

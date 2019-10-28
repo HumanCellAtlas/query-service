@@ -2,7 +2,8 @@ import logging
 import re
 
 from dcpquery import config
-from dcpquery.db import DCPMetadataSchemaType, Bundle, File, BundleFileLink, Process, ProcessFileLink
+from dcpquery.db.models import Bundle, DCPMetadataSchemaType, File, BundleFileLink, Process, ProcessFileLink
+
 logger = logging.getLogger(__name__)
 
 

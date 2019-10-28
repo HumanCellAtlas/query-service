@@ -5,7 +5,8 @@ import sqlalchemy
 import unittest
 
 from dcpquery import config
-from dcpquery.db import File, Bundle, Process, ProcessFileLink, drop_db, init_db, BundleFileLink
+from dcpquery.db import drop_db, init_db
+from dcpquery.db.models import Bundle, File, BundleFileLink, Process, ProcessFileLink
 from tests import vx_bf_links
 
 

@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from dcpquery import config
-from dcpquery.db import Bundle
+from dcpquery.db.models import Bundle
 from dcpquery.etl import drop_one_bundle, process_bundle_event
 from tests import mock_bundle_deletion_event
 
@@ -29,7 +29,7 @@ class BundleUpdateEvents(unittest.TestCase):
         post_deletion_file_count = config.db_session.execute(
             "SELECT COUNT(*) from files_all_versions;").fetchall()[0][0]
 
-        self.assertLess(post_deletion_file_count, file_count)
+        self.assertLessEqual(post_deletion_file_count, file_count)
 
     @patch('dcpquery.etl.drop_one_bundle')
     def test_process_bundle_event_handles_deletions(self, mock_bundle_drop):
