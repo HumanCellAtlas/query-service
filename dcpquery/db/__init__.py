@@ -117,13 +117,25 @@ class Process(SQLAlchemyBase):
     process_uuid = Column(UUID, primary_key=True)
 
     @classmethod
-    def list_all_child_processes(cls, process_uuid):
-        child_process_uuids = config.db_session.execute(f"SELECT * FROM get_all_children('{process_uuid}')").fetchall()
+    def process_subtree(cls, process_uuid):
+        child_process_uuids = config.db_session.execute(
+            f"SELECT * FROM process_subtree('{process_uuid}')").fetchall()
         return [str(child_process[0]) for child_process in child_process_uuids]
 
     @classmethod
-    def list_all_parent_processes(cls, process_uuid):
-        parent_process_uuids = config.db_session.execute(f"SELECT * FROM get_all_parents('{process_uuid}')").fetchall()
+    def process_ancestors(cls, process_uuid):
+        parent_process_uuids = config.db_session.execute(
+            f"SELECT * FROM process_ancestors('{process_uuid}')").fetchall()
+        return [str(parent_process[0]) for parent_process in parent_process_uuids]
+
+    @classmethod
+    def file_subtree(cls, process_uuid):
+        child_process_uuids = config.db_session.execute(f"SELECT * FROM file_subtree('{process_uuid}')").fetchall()
+        return [str(child_process[0]) for child_process in child_process_uuids]
+
+    @classmethod
+    def file_ancestors(cls, process_uuid):
+        parent_process_uuids = config.db_session.execute(f"SELECT * FROM file_ancestors('{process_uuid}')").fetchall()
         return [str(parent_process[0]) for parent_process in parent_process_uuids]
 
     @classmethod

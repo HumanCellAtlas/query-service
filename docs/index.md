@@ -135,41 +135,34 @@ WHERE p.body @> '{"contributors": [{"contact_name": "Aviv,,Regev"}]}'
 ```
 
 ## Querying the experimental graph
-If you have a FASTQ file and you are curious about its inputs, you can use a custom SQL function `get_all_parents` to get all of the processes that led to its creation. For example:
+Experiments are represented in HCA's metadata as a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAG). Material entities--either `Project`, `File`, `Biomaterial`--are linked by immaterial entities--`Process` edges that implement a `Protocol`. For more see [this documentation](https://github.com/HumanCellAtlas/metadata-schema/blob/master/docs/structure.md#structure-overview).
 
-If your sequence file has a uuid of `8c823b32-42dc-4163-aa96-168dce981ee5` you can run: 
-```postgresql
-SELECT * FROM process_file_join_table 
-WHERE file_uuid = '8c823b32-42dc-4163-aa96-168dce981ee5';
+### Traversing the graph of material entities
+
+Using the `file_subtree` and `file_ancestors` postgres methods, you can find the child nodes and parent nodes of a given material entity in the experimental DAG respectively.
+
+Let's say you have a FASTQ file and you are curious about the donor organism from which it was derived. If `6eeadcee-dd1a-4153-97db-db5778e830d7` is the UUID of a donor file, you can run:
+
+```sql
+SELECT file_ancestors('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865');
 ```
-This should return a list of all the processes the file is associated with. Find a row that says `OUTPUT_ENTITY` and copy the `process_uuid`.
 
-Then run the following to get a list of all of its parent processes:
-```postgresql
-SELECT * FROM  get_all_parents('4028ba54-e09f-4c16-9b4e-4f0781e80c46')
+The results are the uuids of files represent parent material entities in the DAG for this sequence file. In other words, `file_ancestors` returns all of the inputs that went into making the file with the given UUID.
+
+If we want to get the donor organism from which this file was derived from, we simply join with the files table and filter:
+
+```sql
+SELECT * FROM files
+WHERE
+  uuid IN (SELECT file_ancestors('b7ae6dcb-b8fd-48d0-a7c7-252f8089c865')) AND
+  dcp_schema_type_name = 'donor_organism';
 ```
-Things to note about the query above:
-- Direct parents are processes whose output becomes the input for the current process
-- `get_all_parents` grabs the processes whose output was the input for the current process and then gets the processes whose output was the input for the parent process and then goes all the way up to the initial file (typically a `donor_organism` file)
-- You can also use the `get_all_children` function to go the opposite way
-- This allows us to represent graphical data in a relational database
 
-`donor_organism` files are typically at the top of the graph. If you have a `file_uuid` for a `donor_organism` and you'd like to get all of the `sequence_files` that came from that donor, you can run the following substituting in the `file_uuid` of your `donor_organism`.
-```postgresql
-SELECT *
-FROM (SELECT file_uuid
-      FROM process_file_join_table
-      WHERE process_uuid IN (SELECT get_all_children(process_uuid)
-                             FROM process_file_join_table
-                             WHERE file_uuid = '79a7c087-886b-47a7-8044-76a227d963ba')) AS temp_table
-       JOIN files ON temp_table.file_uuid = files.uuid
-WHERE files.dcp_schema_type_name = 'sequence_file';
+Conversely, you could use the UUID of the donor organism to find the sequencing files derived from it:
+
+```sql
+SELECT * FROM files
+WHERE
+  uuid IN (SELECT file_subtree('2107cab5-4f14-4008-bc82-4df8637c05a9')) AND
+  dcp_schema_type_name = 'sequence_file';
 ```
-Further notes on the above query:
-
-- To get all file types, leave off the final `WHERE` clause
-- To retrieve files higher in the graph, replace `get_all_children` with `get_all_parents` 
-
-If you are trying to get all of the files in a graph, it is necessary to specifically retrieve:
-- Any input files and protocol files for a process when running `get_all_children` 
-- Any output files and protocol files for a process when running `get_all_parents`
