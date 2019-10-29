@@ -1,5 +1,5 @@
 from dcpquery import config
-from dcpquery.db import DCPMetadataSchemaType
+from dcpquery.db.models import DCPMetadataSchemaType
 
 
 def update_bundles_materialized_view():

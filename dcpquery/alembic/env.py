@@ -12,7 +12,7 @@ from alembic import context
 # this line is necessary to allow for imports from dcpquery
 sys.path.insert(0, os.getcwd())
 
-from dcpquery.db import SQLAlchemyBase  # noqa
+from dcpquery.db.models import SQLAlchemyBase  # noqa
 from dcpquery import config as dcpquery_config  # noqa
 
 # this is the Alembic Config object, which provides

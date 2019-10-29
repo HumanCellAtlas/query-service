@@ -11,7 +11,7 @@ from uuid import UUID
 from psycopg2 import sql
 
 from dcplib.etl import DSSExtractor
-from dcpquery.db import Bundle, File, BundleFileLink
+from dcpquery.db.models import Bundle, File, BundleFileLink
 from dcpquery import config
 
 config.configure_logging()
