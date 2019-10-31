@@ -2,7 +2,8 @@ import unittest
 
 from dcpquery import config
 from dcpquery.db.models import Process
-from dcpquery.etl import load_links, update_process_join_table
+from dcpquery.etl import update_process_join_table
+from dcpquery.etl.load import load_links
 from tests import mock_links
 
 

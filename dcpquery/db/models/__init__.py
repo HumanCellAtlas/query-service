@@ -3,10 +3,6 @@ import logging
 import typing
 from typing import List
 
-from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, Integer, Enum, UniqueConstraint
-import typing
-from typing import List
-
 from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, UniqueConstraint, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -42,8 +38,10 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
 
     @classmethod
     def delete_bundles(cls, bundle_fqids):
-        delete_q = cls.__table__.delete().where(cls.fqid.in_(bundle_fqids))
-        config.db_session.execute(delete_q)
+        config.db_session.execute("""
+                                DELETE FROM bundles_all_versions WHERE fqid IN :bundle_fqid_list;
+                                """, {"bundle_fqid_list": tuple(bundle_fqids)})
+        config.db_session.commit()
 
     @classmethod
     def select_bundle(cls, bundle_fqid):
@@ -65,8 +63,15 @@ class Project(DCPQueryModelHelper, SQLAlchemyBase):
 
     @classmethod
     def delete_many(cls, project_fqids):
-        delete_q = cls.__table__.delete().where(cls.fqid.in_(project_fqids))
-        config.db_session.execute(delete_q)
+        if len(project_fqids) > 0:
+            config.db_session.execute(
+                "DELETE FROM projects_all_versions WHERE fqid IN :project_fqid_list;",
+                {"project_fqid_list": tuple(project_fqids)})
+            config.db_session.commit()
+
+    @classmethod
+    def select_one(cls, project_fqid):
+        return config.db_session.query(cls).filter(cls.fqid == project_fqid).one_or_none()
 
 
 class File(DCPQueryModelHelper, SQLAlchemyBase):
@@ -91,9 +96,12 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
 
     @classmethod
     def delete_files(cls, file_fqids):
-        ProjectFileLink.delete_links_for_files(file_fqids)
-        delete_q = cls.__table__.delete().where(cls.fqid.in_(file_fqids))
-        config.db_session.execute(delete_q)
+        if len(file_fqids) > 0:
+            ProjectFileLink.delete_links_for_files(file_fqids)
+            config.db_session.execute(
+                "DELETE FROM files_all_versions WHERE fqid IN :file_fqid_list;",
+                {"file_fqid_list": tuple(file_fqids)})
+            config.db_session.commit()
 
 
 class ProjectFileLink(SQLAlchemyBase):
@@ -112,13 +120,19 @@ class ProjectFileLink(SQLAlchemyBase):
 
     @classmethod
     def delete_links_for_files(cls, file_fqids: List[str]):
-        delete_q = cls.__table__.delete().where(cls.file_fqid.in_(file_fqids))
-        config.db_session.execute(delete_q)
+        if len(file_fqids) > 0:
+            config.db_session.execute("""
+            DELETE FROM project_file_join_table WHERE file_fqid IN :file_fqid_list;
+            """, {"file_fqid_list": tuple(file_fqids)})
+            config.db_session.commit()
 
     @classmethod
     def select_links_for_project_fqids(cls, project_fqids: List[str]):
-        links = cls.__table__.select().where(cls.project_fqid.in_(project_fqids))
-        return config.db_session.execute(links)
+        if len(project_fqids) > 0:
+            return config.db_session.execute("""
+                  SELECT project_fqid, file_fqid FROM project_file_join_table WHERE project_fqid IN :project_fqid_list;
+                    """, {"project_fqid_list": tuple(project_fqids)}).fetchall()
+        return []
 
 
 class BundleFileLink(SQLAlchemyBase):
@@ -131,13 +145,19 @@ class BundleFileLink(SQLAlchemyBase):
 
     @classmethod
     def delete_links_for_bundles(cls, bundle_fqids: List[str]):
-        delete_q = cls.__table__.delete().where(cls.bundle_fqid.in_(bundle_fqids))
-        config.db_session.execute(delete_q)
+        if len(bundle_fqids) > 0:
+            config.db_session.execute("""
+                    DELETE FROM bundle_file_links WHERE bundle_fqid IN :bundle_fqid_list;
+                    """, {"bundle_fqid_list": tuple(bundle_fqids)})
+            config.db_session.commit()
 
     @classmethod
     def delete_links_for_files(cls, file_fqids: List[str]):
-        delete_q = cls.__table__.delete().where(cls.file_fqid.in_(file_fqids))
-        config.db_session.execute(delete_q)
+        if len(file_fqids) > 0:
+            config.db_session.execute("""
+                            DELETE FROM bundle_file_links WHERE file_fqid IN :file_fqid_list;
+                            """, {"file_fqid_list": tuple(file_fqids)})
+            config.db_session.commit()
 
     @classmethod
     def select_links_for_bundle_fqids(cls, bundle_fqids: List[str]):
