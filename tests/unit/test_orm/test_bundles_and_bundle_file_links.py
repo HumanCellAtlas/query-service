@@ -6,10 +6,7 @@ from tests import vx_bundle, vx_bundle_aggregate_md, vx_bf_links
 
 
 class TestBundles(unittest.TestCase):
-    def test_insert_select_bundle(self):
-        config.db_session.add(vx_bundle)
-        config.db_session.commit()
-        # select bundle
+    def test_select_bundle(self):
         bundle = Bundle.select_bundle(vx_bundle.fqid)
         res = config.db_session.query(Bundle).filter(Bundle.uuid == vx_bundle.uuid,
                                                      Bundle.version == vx_bundle.version).all()
@@ -40,12 +37,7 @@ class TestBundleFileLinks(unittest.TestCase):
     project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
     process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
 
-    def test_insert_select_bundle_file_link(self):
-        # insert bundle-file links
-        config.db_session.add_all(vx_bf_links)
-        config.db_session.commit()
-
-        # select bundle-file links
+    def test_select_bundle_file_link(self):
         res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid,
                                                              BundleFileLink.file_fqid == self.process_file.fqid)
         result = list(res)
