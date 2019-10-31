@@ -3,13 +3,6 @@ import logging
 import typing
 from typing import List
 
-<<<<<<< HEAD
-=======
-from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, Integer, Enum, UniqueConstraint
-import typing
-from typing import List
-
->>>>>>> add schema type
 from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, UniqueConstraint, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -70,8 +63,15 @@ class Project(DCPQueryModelHelper, SQLAlchemyBase):
 
     @classmethod
     def delete_many(cls, project_fqids):
-        delete_q = cls.__table__.delete().where(cls.fqid.in_(project_fqids))
-        config.db_session.execute(delete_q)
+        if len(project_fqids) > 0:
+            config.db_session.execute(
+                "DELETE FROM projects_all_versions WHERE fqid IN :project_fqid_list;",
+                {"project_fqid_list": tuple(project_fqids)})
+            config.db_session.commit()
+
+    @classmethod
+    def select_one(cls, project_fqid):
+        return config.db_session.query(cls).filter(cls.fqid == project_fqid).one_or_none()
 
     @classmethod
     def select_one(cls, project_fqid):
@@ -123,13 +123,19 @@ class ProjectFileLink(SQLAlchemyBase):
 
     @classmethod
     def delete_links_for_files(cls, file_fqids: List[str]):
-        delete_q = cls.__table__.delete().where(cls.file_fqid.in_(file_fqids))
-        config.db_session.execute(delete_q)
+        if len(file_fqids) > 0:
+            config.db_session.execute("""
+            DELETE FROM project_file_join_table WHERE file_fqid IN :file_fqid_list;
+            """, {"file_fqid_list": tuple(file_fqids)})
+            config.db_session.commit()
 
     @classmethod
     def select_links_for_project_fqids(cls, project_fqids: List[str]):
-        links = cls.__table__.select().where(cls.project_fqid.in_(project_fqids))
-        return config.db_session.execute(links)
+        if len(project_fqids) > 0:
+            return config.db_session.execute("""
+                  SELECT project_fqid, file_fqid FROM project_file_join_table WHERE project_fqid IN :project_fqid_list;
+                    """, {"project_fqid_list": tuple(project_fqids)}).fetchall()
+        return []
 
 
 class BundleFileLink(SQLAlchemyBase):
