@@ -10,6 +10,7 @@ from .. import config
 
 logger = logging.getLogger(__name__)
 
+
 def update_process_join_table():
     config.db_session.execute(
         """
@@ -60,5 +61,3 @@ def etl_one_bundle(bundle_uuid, bundle_version):
     tb = transform_bundle(bundle_uuid=bundle_uuid, bundle_version=bundle_version, bundle_path=bundle_path,
                           bundle_manifest_path=bundle_manifest_path, extractor=extractor)
     BundleLoader().load_bundle(extractor=extractor, transformer=transform_bundle, bundle=tb)
-
-
