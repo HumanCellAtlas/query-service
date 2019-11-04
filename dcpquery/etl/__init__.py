@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def update_process_join_table():
+    logger.info("Updating process join table")
     config.db_session.execute(
         """
         Insert INTO process_join_table (child_process_uuid, parent_process_uuid)
@@ -44,8 +45,10 @@ def update_process_join_table():
 
 
 def dcpquery_etl_finalizer(extractor):
+    logger.info("Calling Finalizer")
     create_materialized_view_tables()
     update_process_join_table()
+    logger.info("Finalizer succeeded")
 
 
 def etl_one_bundle(bundle_uuid, bundle_version):
