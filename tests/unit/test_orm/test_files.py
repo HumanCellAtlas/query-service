@@ -2,6 +2,7 @@ import unittest
 
 from dcpquery import config
 from dcpquery.db.models import File, BundleFileLink
+from dcpquery.exceptions import DCPFileNotFoundError
 from tests import vx_bf_links
 
 
@@ -27,6 +28,21 @@ class TestFiles(unittest.TestCase):
 
         for file_fqid in file_fqids:
             self.assertEqual(File.select_file(file_fqid=file_fqid), None)
+
+    def test_select_files_for_uuid(self):
+        file_uuid = config.db_session.execute("SELECT uuid from files_all_versions limit 1;").fetchall()[0][0]
+        expected_files = config.db_session.execute("SELECT * FROM files_all_versions where uuid = :file_uuid",
+                                                   {"file_uuid": file_uuid}).fetchall()
+        files = File.select_files_for_uuid(str(file_uuid))
+        self.assertEqual(len(expected_files), len(files))
+
+        # check fqids match
+        self.assertEqual(sorted([x[0] for x in expected_files]), sorted([x.fqid for x in files]))
+
+    def test_select_files_for_non_existent_uuid(self):
+        file_uuid = 'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA'
+        with self.assertRaises(DCPFileNotFoundError):
+            File.select_files_for_uuid(file_uuid)
 
 
 if __name__ == '__main__':

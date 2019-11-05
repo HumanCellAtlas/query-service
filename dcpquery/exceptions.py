@@ -15,3 +15,7 @@ class QueryTimeoutError(DatabaseError):
 
 class QuerySizeError(DatabaseError):
     pass
+
+
+class DCPFileNotFoundError(ProblemException):
+    pass

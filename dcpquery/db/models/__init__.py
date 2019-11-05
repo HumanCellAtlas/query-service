@@ -10,6 +10,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
 
 from dcpquery import config
+from dcpquery.exceptions import DCPFileNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +54,17 @@ class DCPMetadataSchemaType(SQLAlchemyBase):
     name = Column(String, primary_key=True, nullable=False)
     files = relationship("File", back_populates='dcp_schema_type')
 
+    @classmethod
+    def get_schema_type(cls, schema_type_name):
+        return config.db_session.query(cls).filter(cls.name == schema_type_name).one_or_none()
+
 
 class Project(DCPQueryModelHelper, SQLAlchemyBase):
     __tablename__ = 'projects_all_versions'
     fqid = Column(String, primary_key=True, index=True)
     uuid = Column(UUID, nullable=False, index=True)
     version = Column(DateTime, nullable=False, index=True)
-    files = relationship("File", secondary="project_file_join_table")
+    files = relationship("File", secondary="project_file_links")
 
     @classmethod
     def delete_many(cls, project_fqids):
@@ -77,6 +82,7 @@ class Project(DCPQueryModelHelper, SQLAlchemyBase):
     def select_one(cls, project_fqid):
         return config.db_session.query(cls).filter(cls.fqid == project_fqid).one_or_none()
 
+
 class File(DCPQueryModelHelper, SQLAlchemyBase):
     __tablename__ = 'files_all_versions'
     fqid = Column(String, primary_key=True, unique=True, nullable=False, index=True)
@@ -91,11 +97,18 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     schema_major_version = Column(Integer, index=True)
     schema_minor_version = Column(Integer, index=True)
     bundles = relationship("Bundle", secondary='bundle_file_links')
-    projects = relationship("Project", secondary="project_file_join_table")
+    projects = relationship("Project", secondary="project_file_links")
 
     @classmethod
     def select_file(cls, file_fqid):
         return config.db_session.query(cls).filter(cls.fqid == file_fqid).one_or_none()
+
+    @classmethod
+    def select_files_for_uuid(cls, file_uuid):
+        files = config.db_session.query(cls).filter(cls.uuid == file_uuid).all()
+        if len(files) == 0:
+            raise DCPFileNotFoundError
+        return files
 
     @classmethod
     def delete_files(cls, file_fqids):
@@ -108,7 +121,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
 
 
 class ProjectFileLink(SQLAlchemyBase):
-    __tablename__ = 'project_file_join_table'
+    __tablename__ = 'project_file_links'
     project_fqid = Column(String, ForeignKey('projects_all_versions.fqid'), primary_key=True, index=True)
     file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True, index=True)
     project = relationship(Project)
@@ -125,7 +138,7 @@ class ProjectFileLink(SQLAlchemyBase):
     def delete_links_for_files(cls, file_fqids: List[str]):
         if len(file_fqids) > 0:
             config.db_session.execute("""
-            DELETE FROM project_file_join_table WHERE file_fqid IN :file_fqid_list;
+            DELETE FROM project_file_links WHERE file_fqid IN :file_fqid_list;
             """, {"file_fqid_list": tuple(file_fqids)})
             config.db_session.commit()
 
@@ -133,7 +146,7 @@ class ProjectFileLink(SQLAlchemyBase):
     def select_links_for_project_fqids(cls, project_fqids: List[str]):
         if len(project_fqids) > 0:
             return config.db_session.execute("""
-                  SELECT project_fqid, file_fqid FROM project_file_join_table WHERE project_fqid IN :project_fqid_list;
+                  SELECT project_fqid, file_fqid FROM project_file_links WHERE project_fqid IN :project_fqid_list;
                     """, {"project_fqid_list": tuple(project_fqids)}).fetchall()
         return []
 
