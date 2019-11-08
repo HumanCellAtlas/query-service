@@ -20,7 +20,8 @@ class TestETLHelpers(unittest.TestCase):
     @patch.object(BundleLoader, 'load_bundle')
     @patch('dcpquery.etl.config')
     @patch('dcpquery.etl.DSSExtractor')
-    def test_etl_one_bundle_calls_commit(self, mock_extractor, mock_config, mock_loader, mock_transform_bundle, mock_os):
+    def test_etl_one_bundle_calls_load_transform_and_commit(self, mock_extractor, mock_config, mock_loader,
+                                                            mock_transform_bundle, mock_os):
         mock_extractor.return_value.get_files_to_fetch_for_bundle.return_value = 0, 0, []
         mock_bundle_version = datetime.datetime.utcnow()
         mock_bundle_uuid = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
