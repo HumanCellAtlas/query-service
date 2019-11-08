@@ -57,7 +57,7 @@ def upgrade():
             ON INSERT TO project_file_links
                 WHERE EXISTS (
                   SELECT 1
-                FROM project_file_linkse
+                FROM project_file_links
                 WHERE project_fqid = NEW.project_fqid
                 AND file_fqid=NEW.file_fqid
             )
