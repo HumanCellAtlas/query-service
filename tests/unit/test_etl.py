@@ -2,9 +2,6 @@ import datetime
 import unittest
 from unittest.mock import patch
 
-import mock
-from dcplib.etl import DSSExtractor
-
 from dcpquery.etl import etl_one_bundle
 from dcpquery.etl.load import load_links, BundleLoader
 
