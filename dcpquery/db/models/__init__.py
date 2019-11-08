@@ -59,7 +59,7 @@ class Project(DCPQueryModelHelper, SQLAlchemyBase):
     fqid = Column(String, primary_key=True, index=True)
     uuid = Column(UUID, nullable=False, index=True)
     version = Column(DateTime, nullable=False, index=True)
-    files = relationship("File", secondary="project_file_join_table")
+    files = relationship("File", secondary="project_file_links")
 
     @classmethod
     def delete_many(cls, project_fqids):
@@ -88,7 +88,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     schema_major_version = Column(Integer, index=True)
     schema_minor_version = Column(Integer, index=True)
     bundles = relationship("Bundle", secondary='bundle_file_links')
-    projects = relationship("Project", secondary="project_file_join_table")
+    projects = relationship("Project", secondary="project_file_links")
 
     @classmethod
     def select_file(cls, file_fqid):
@@ -105,7 +105,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
 
 
 class ProjectFileLink(SQLAlchemyBase):
-    __tablename__ = 'project_file_join_table'
+    __tablename__ = 'project_file_links'
     project_fqid = Column(String, ForeignKey('projects_all_versions.fqid'), primary_key=True, index=True)
     file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True, index=True)
     project = relationship(Project)
@@ -122,7 +122,7 @@ class ProjectFileLink(SQLAlchemyBase):
     def delete_links_for_files(cls, file_fqids: List[str]):
         if len(file_fqids) > 0:
             config.db_session.execute("""
-            DELETE FROM project_file_join_table WHERE file_fqid IN :file_fqid_list;
+            DELETE FROM project_file_links WHERE file_fqid IN :file_fqid_list;
             """, {"file_fqid_list": tuple(file_fqids)})
             config.db_session.commit()
 
@@ -130,7 +130,7 @@ class ProjectFileLink(SQLAlchemyBase):
     def select_links_for_project_fqids(cls, project_fqids: List[str]):
         if len(project_fqids) > 0:
             return config.db_session.execute("""
-                  SELECT project_fqid, file_fqid FROM project_file_join_table WHERE project_fqid IN :project_fqid_list;
+                  SELECT project_fqid, file_fqid FROM project_file_links WHERE project_fqid IN :project_fqid_list;
                     """, {"project_fqid_list": tuple(project_fqids)}).fetchall()
         return []
 
