@@ -1,20 +1,12 @@
-import time
 import unittest
 
-from dcpquery.db.models import Bundle, File, BundleFileLink, Process
-from dcpquery.etl import update_process_join_table
-from dcpquery.etl.load import load_links
-from tests import vx_bundle, vx_bf_links, vx_bundle_aggregate_md, mock_links
-
 from dcpquery import config
+from dcpquery.db.models import Bundle, BundleFileLink
+from tests import vx_bundle, vx_bundle_aggregate_md, vx_bf_links
 
 
 class TestBundles(unittest.TestCase):
-    def test_insert_select_bundle(self):
-        config.db_session.add(vx_bundle)
-        config.db_session.commit()
-
-        # select bundle
+    def test_select_bundle(self):
         bundle = Bundle.select_bundle(vx_bundle.fqid)
         res = config.db_session.query(Bundle).filter(Bundle.uuid == vx_bundle.uuid,
                                                      Bundle.version == vx_bundle.version).all()
@@ -45,12 +37,7 @@ class TestBundleFileLinks(unittest.TestCase):
     project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
     process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
 
-    def test_insert_select_bundle_file_link(self):
-        # insert bundle-file links
-        config.db_session.add_all(vx_bf_links)
-        config.db_session.commit()
-
-        # select bundle-file links
+    def test_select_bundle_file_link(self):
         res = config.db_session.query(BundleFileLink).filter(BundleFileLink.bundle_fqid == vx_bundle.fqid,
                                                              BundleFileLink.file_fqid == self.process_file.fqid)
         result = list(res)
@@ -111,55 +98,6 @@ class TestBundleFileLinks(unittest.TestCase):
         config.db_session.expire_all()
         actual_bundle_file_links = BundleFileLink.select_links_for_bundle_fqids([bundle_fqid]).fetchall()
         self.assertCountEqual(expected_bundle_file_links, actual_bundle_file_links)
-
-
-class TestProcesses(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        load_links(mock_links['links'], 'mock_bundle_uuid')
-        config.db_session.commit()
-        update_process_join_table()
-
-    def test_get_all_parents(self):
-        parent_processes = Process.list_all_parent_processes('a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-        expected_parents = ['a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000004-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
-        self.assertCountEqual(expected_parents, parent_processes)
-
-    def test_get_all_children(self):
-        child_processes = Process.list_all_child_processes('a0000003-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
-        expected_children = ['a0000000-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'a0000001-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                             'a0000002-aaaa-aaaa-aaaa-aaaaaaaaaaaa']
-        self.assertCountEqual(expected_children, child_processes)
-
-
-class TestFiles(unittest.TestCase):
-    project_file = next(l.file for l in vx_bf_links if l.name == 'project_0.json')
-    process_file = next(l.file for l in vx_bf_links if l.name == 'process_0.json')
-
-    def test_insert_select_file(self):
-        # insert files
-        config.db_session.rollback()
-        config.db_session.add_all([self.project_file, self.process_file])
-        config.db_session.commit()
-
-        # select files
-        result = File.select_file(file_fqid=self.project_file.fqid)
-
-        self.assertEqual(result.uuid, self.project_file.uuid)
-        self.assertEqual(result.version, self.project_file.version)
-        expect_version = self.project_file.version.strftime("%Y-%m-%dT%H%M%S.%fZ")
-        self.assertEqual(result.fqid, f"{self.project_file.uuid}.{expect_version}")
-        self.assertEqual(result.body, self.project_file.body)
-
-    def test_delete_files(self):
-        file_fqids = [file[0] for file in config.db_session.query("fqid FROM files LIMIT 3;").all()]
-        # Need to delete bundle_file_links with fk to file prior to deleting the file
-        BundleFileLink.delete_links_for_files(file_fqids)
-
-        File.delete_files(file_fqids)
-
-        for file_fqid in file_fqids:
-            self.assertEqual(File.select_file(file_fqid=file_fqid), None)
 
 
 if __name__ == '__main__':

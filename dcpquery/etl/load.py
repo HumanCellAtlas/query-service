@@ -28,9 +28,14 @@ class BundleLoader:
             filename = file_data.pop("name")
             file_extension = get_file_extension(filename)
             schema_type = None
+            major_version = None
+            minor_version = None
             if file_data['body']:
                 schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
-            if filename == "links.json" and file_data["body"]:
+                schema_version = file_data['body'].get('describedBy', '').split('/')[-2]
+                major_version = schema_version.split('.')[0]
+                minor_version = schema_version.split('.')[1]
+            if schema_type == 'links' and file_data["body"]:
                 links = file_data['body']['links']
                 load_links(links, bundle['uuid'])
 
@@ -42,7 +47,10 @@ class BundleLoader:
                 size=file_data['size'],
                 extension=str(file_extension),
                 body=file_data['body'],
-                dcp_schema_type_name=schema_type
+                dcp_schema_type_name=schema_type,
+                schema_major_version=major_version,
+                schema_minor_version=minor_version
+
             )
 
             bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))

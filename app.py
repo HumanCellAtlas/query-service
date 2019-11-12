@@ -8,7 +8,7 @@ from dcplib import aws
 import dcpquery
 from dcpquery import api, ui, config
 from dcpquery.api.query_jobs import process_async_query, set_job_status
-from dcpquery.etl import process_bundle_event
+from dcpquery.dss_subscription_event_handling import process_bundle_event
 
 swagger_spec_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), f'{os.environ["APP_NAME"]}-api.yml')
 app = api.DCPQueryServer(app_name=os.environ["APP_NAME"], swagger_spec_path=swagger_spec_path)
