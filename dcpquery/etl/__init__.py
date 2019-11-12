@@ -62,4 +62,3 @@ def etl_one_bundle(bundle_uuid, bundle_version):
                           bundle_manifest_path=bundle_manifest_path, extractor=extractor)
     BundleLoader().load_bundle(extractor=extractor, transformer=transform_bundle, bundle=tb)
     config.db_session.commit()
-
