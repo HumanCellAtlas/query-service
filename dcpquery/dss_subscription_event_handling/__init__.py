@@ -1,6 +1,6 @@
 from dcpquery import config
 from dcpquery.db.models import Bundle, BundleFileLink, File, ProjectFileLink, Project
-from dcpquery.etl import etl_one_bundle, logger
+from dcpquery.etl import etl_one_bundle, logger, dcpquery_etl_finalizer
 
 
 def drop_one_bundle(bundle_uuid, bundle_version):
@@ -52,3 +52,4 @@ def process_bundle_event(dss_event):
         drop_one_bundle(**dss_event["match"])
     else:
         logger.error("Ignoring unknown event type %s", dss_event["event_type"])
+    dcpquery_etl_finalizer()
