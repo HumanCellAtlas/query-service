@@ -31,8 +31,6 @@ def delete_projects_and_project_file_links_for_file_deletion(file_fqids):
     # get all projects associated with files marked for deletion link[0] is project_fqid, link[1] is file_fqid
     project_fqids = [link[0] for link in ProjectFileLink.select_links_for_file_fqids(file_fqids)]
 
-    # config.db_session.close()
-
     # delete file specific project file links
     ProjectFileLink.delete_links_for_files(file_fqids)
     config.db_session.flush()

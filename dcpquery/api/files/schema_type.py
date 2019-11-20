@@ -5,12 +5,12 @@ from dcpquery import config
 from dcpquery.db.models import File, DCPMetadataSchemaType
 
 
-def get(schema_type, version=None):
+def get(schema_type, version):
     """
-
+    Function called by /files/{schema_type} endpoint
     :param schema_type: Name of the dcp metadata schema type
-    :param version:
-    :return:
+    :param version: String of the Major and Minor version numbers of the schema type
+    :return: a list of fqids for all files of that specific schema type/version
     """
     major = version.split('.')[0]
     minor = version.split('.')[1]

@@ -78,10 +78,6 @@ class Project(DCPQueryModelHelper, SQLAlchemyBase):
     def select_one(cls, project_fqid):
         return config.db_session.query(cls).filter(cls.fqid == project_fqid).one_or_none()
 
-    @classmethod
-    def select_one(cls, project_fqid):
-        return config.db_session.query(cls).filter(cls.fqid == project_fqid).one_or_none()
-
 
 class File(DCPQueryModelHelper, SQLAlchemyBase):
     __tablename__ = 'files_all_versions'
