@@ -10,6 +10,7 @@ import requests
 from requests_http_signature import HTTPSignatureAuth
 
 from dcpquery import config
+from dcpquery.api.files.schema_type import get_file_fqids_for_schema_type_version
 from tests import fast_query_mock_result, fast_query_expected_results
 from tests.unit import TestChaliceApp, DCPAssertMixin, DCPQueryUnitTest
 
@@ -112,6 +113,79 @@ class TestEndpoints(TestChaliceApp, DCPQueryUnitTest):
             'job_id': self.uuid,
             'status': 'COMPLETE',
             'presigned_url': 'www.ThisUrlShouldWork.com'})
+
+    def test_get_file_fqids_for_schema_type_version(self):
+        file_info = config.db_session.execute("""
+                                              SELECT dcp_schema_type_name, schema_major_version, schema_minor_version
+                                              FROM files LIMIT 1;
+                                              """).fetchall()[0]
+        schema_type = file_info[0]
+        major = file_info[1]
+        minor = file_info[2]
+        expected_file_fqids = [x[0] for x in config.db_session.execute("""
+          SELECT fqid
+          FROM files_all_versions
+          WHERE dcp_schema_type_name=:schema_type
+          AND schema_major_version=:major_version
+          AND schema_minor_version=:minor_version
+          """, {"schema_type": schema_type, "major_version": major, "minor_version": minor}).fetchall()]
+        file_fqids = get_file_fqids_for_schema_type_version(schema_type=schema_type, major=major, minor=minor)
+        self.assertCountEqual(file_fqids, expected_file_fqids)
+
+    def test_get_bundle_fqids_for_file_endpoint(self):
+        file_uuid = str(config.db_session.execute("SELECT uuid from files limit 1").fetchall()[0][0])
+        expected_bundle_fqids = [x[0] for x in config.db_session.execute(f"""
+          SELECT bundle_fqid FROM bundle_file_links WHERE file_fqid in (
+          SELECT fqid from files_all_versions where uuid='{file_uuid}')
+          """).fetchall()]
+        response = self.assertResponse(
+            "GET",
+            f"/v1/files/{file_uuid}/bundles?check_events=false",
+            requests.codes.ok,
+        )
+
+        self.assertEqual(sorted(expected_bundle_fqids), sorted(response.json['bundle_fqids']))
+
+    def test_get_bundle_fqids_for_file_that_doesnt_exist(self):
+        file_uuid = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+        self.assertResponse(
+            "GET",
+            f"/v1/files/{file_uuid}/bundles?check_events=false",
+            requests.codes.not_found,
+        )
+
+    def test_get_file_fqids_for_schema_type_that_doesnt_exist(self):
+        schema_type = 'non_existent'
+        major = 0
+        minor = 0
+        self.assertResponse(
+            "GET",
+            f"/v1/files/schema/{schema_type}?version={str(major)}.{str(minor)}",
+            requests.codes.not_found,
+        )
+
+    def test_get_file_fqids_for_schema_type_endpoint(self):
+        schema_information = config.db_session.execute(
+            "SELECT dcp_schema_type_name, schema_major_version, schema_minor_version FROM files LIMIT 1;"
+        ).fetchall()[0]
+        schema_type = schema_information[0]
+        major = schema_information[1]
+        minor = schema_information[2]
+
+        expected_file_fqids = [x[0] for x in config.db_session.execute("""
+                  SELECT fqid
+                  FROM files_all_versions
+                  WHERE dcp_schema_type_name=:schema_type
+                  AND schema_major_version=:major_version
+                  AND schema_minor_version=:minor_version
+                  """, {"schema_type": schema_type, "major_version": major, "minor_version": minor}).fetchall()]
+
+        response = self.assertResponse(
+            "GET",
+            f"/v1/files/schema/{schema_type}?version={str(major)}.{str(minor)}",
+            requests.codes.ok,
+        )
+        self.assertEqual(sorted(expected_file_fqids), sorted(response.json['file_fqids']))
 
 
 @contextmanager

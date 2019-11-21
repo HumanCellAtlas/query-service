@@ -10,6 +10,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
 
 from dcpquery import config
+from dcpquery.exceptions import DCPFileNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,10 @@ class DCPMetadataSchemaType(SQLAlchemyBase):
     name = Column(String, primary_key=True, nullable=False)
     files = relationship("File", back_populates='dcp_schema_type')
 
+    @classmethod
+    def get_schema_type(cls, schema_type_name):
+        return config.db_session.query(cls).filter(cls.name == schema_type_name).one_or_none()
+
 
 class Project(DCPQueryModelHelper, SQLAlchemyBase):
     __tablename__ = 'projects_all_versions'
@@ -93,6 +98,13 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
     @classmethod
     def select_file(cls, file_fqid):
         return config.db_session.query(cls).filter(cls.fqid == file_fqid).one_or_none()
+
+    @classmethod
+    def select_files_for_uuid(cls, file_uuid):
+        files = config.db_session.query(cls).filter(cls.uuid == file_uuid).all()
+        if len(files) == 0:
+            raise DCPFileNotFoundError
+        return files
 
     @classmethod
     def delete_files(cls, file_fqids):

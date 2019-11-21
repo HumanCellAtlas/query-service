@@ -148,6 +148,89 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /files/{file_uuid}/bundles:
+      get:
+        operationId: dcpquery.api.files.bundle.get
+        summary: Get list of bundle_fqids for a given file_uuid
+        description: >
+          Given the UUID of a file, returns a list of bundle_fqids belonging to all the bundles the file is a part of.
+        parameters:
+          - name: file_uuid
+            in: path
+            description: Job identifier in RFC4122-compliant UUID format
+            required: true
+            schema:
+              type: string
+              pattern: "[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"
+          - name: check_events
+            in: query
+            description: >
+              If set, will check for any recent dss events and check if the file is a part of any unindexed bundles.
+            schema:
+              type: boolean
+        responses:
+          200:
+            description: Bundles found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/BundleList"
+
+          404:
+            description: file not found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+  /files/schema/{schema_type}:
+      get:
+        operationId: dcpquery.api.files.schema_type.get
+        summary: Get list of files for a given schema type and version
+        description: >
+          Given a schema type, and major and minor versions, returns a list of file_fqids that have a
+          json body based on the schema defined by the given values
+        parameters:
+          - name: schema_type
+            in: path
+            description: Job identifier in RFC4122-compliant UUID format
+            required: true
+            schema:
+              type: string
+              pattern: "[A-Za-z0-9]+"
+
+          - name: version
+            in: query
+            description: >
+              Set to the major and minor versions of the schema
+            schema:
+              type: string
+              pattern: "[0-9]+[.][0-9]+"
+
+        responses:
+          200:
+            description: Matching Files Found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/FileList"
+          404:
+            description: Schema type not found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
 components:
   schemas:
     Query:
@@ -197,6 +280,38 @@ components:
         - query
         - params
         - results
+
+    BundleList:
+      type: object
+      description: List of bundle fqids
+      properties:
+        file_uuid:
+          type: string
+          description: Submitted file_uuid
+        bundle_fqids:
+          type: array
+          description: List of bundle fqids
+      required:
+        - file_uuid
+        - bundle_fqids
+
+    FileList:
+      type: object
+      description: List of file fqids
+      properties:
+        schema_type:
+          type: string
+          description: Submitted schema type
+        schema_version:
+          type: string
+          description: Submitted schema version
+        file_fqids:
+          type: array
+          description: List of file fqids
+      required:
+        - schema_type
+        - schema_version
+        - file_fqids
 
     Error:
       type: object
