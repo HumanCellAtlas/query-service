@@ -165,7 +165,7 @@ paths:
           - name: check_events
             in: query
             description: >
-              If set, will check for any recent dss events and check if the file is a part of any unloaded bundles.
+              If set, will check for any recent dss events and check if the file is a part of any unindexed bundles.
             schema:
               type: boolean
         responses:
@@ -202,12 +202,16 @@ paths:
             required: true
             schema:
               type: string
+              pattern: "[A-Za-z0-9]+"
+
           - name: version
             in: query
             description: >
               Set to the major and minor versions of the schema
             schema:
               type: string
+              pattern: "[0-9]+[.][0-9]+"
+
         responses:
           200:
             description: Matching Files Found
