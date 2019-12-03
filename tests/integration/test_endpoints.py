@@ -82,14 +82,12 @@ class TestQueryService(unittest.TestCase, DCPAssertMixin):
         logger.warning("Check files/{file_uuid}/bundles endpoint")
         file_uuid = str(config.db_session.execute("SELECT uuid from files limit 1").fetchall()[0][0])
 
-
         response = self.assertGetResponse(
             f"{self.api_url}/v1/files/{file_uuid}/bundles",
             params=dict(check_events=False),
             expected_code=requests.codes.ok
         )
         self.assertGreater(len(response.json['bundle_fqids']), 0)
-
 
     def test_get_file_fqids_for_schema_type_endpoint(self):
         logger.warning("Check files/schema/{schema_type} endpoint")
