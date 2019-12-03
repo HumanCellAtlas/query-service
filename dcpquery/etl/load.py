@@ -2,7 +2,8 @@ import logging
 import re
 
 from dcpquery import config
-from dcpquery.db.models import Bundle, DCPMetadataSchemaType, File, BundleFileLink, Process, ProcessFileLink
+from dcpquery.db.models import Bundle, DCPMetadataSchemaType, File, BundleFileLink, Process, ProcessFileLink, Project, \
+    ProjectFileLink
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,16 @@ class BundleLoader:
             config.db_session.add(schema)
             self.schema_types.append(schema_type)
 
+    def create_project(self, files):
+        for file in files:
+            if file['body']:
+                if file['body'].get('describedBy', '').split('/')[-1] == 'project':
+                    return Project(uuid=file['uuid'], version=file['version'])
+
     def load_bundle(self, bundle, extractor=None, transformer=None):
-        bf_links = []
+        bundle_file_links = []
+        project_file_links = []
+        project = self.create_project(bundle['files'])
         bundle_row = Bundle(uuid=bundle["uuid"],
                             version=bundle["version"],
                             manifest=bundle["manifest"],
@@ -53,8 +62,11 @@ class BundleLoader:
 
             )
 
-            bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
-        config.db_session.add_all(bf_links)
+            bundle_file_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
+            if project:
+                project_file_links.append(ProjectFileLink(project=project, file=file_row))
+        config.db_session.add_all(bundle_file_links)
+        config.db_session.add_all(project_file_links)
 
 
 def get_file_extension(filename):
