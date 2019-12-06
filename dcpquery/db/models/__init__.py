@@ -28,7 +28,7 @@ class DCPQueryModelHelper:
         super().__init__(*args, **kwargs)
 
 
-class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
+class Bundle(DCPQueryModelHelper):
     __tablename__ = 'bundles_all_versions'
     fqid = Column(String, primary_key=True, unique=True, nullable=False, index=True)
     uuid = Column(UUID, nullable=False, index=True)
@@ -49,7 +49,7 @@ class Bundle(DCPQueryModelHelper, SQLAlchemyBase):
         return config.db_session.query(cls).filter(cls.fqid == bundle_fqid).one_or_none()
 
 
-class DCPMetadataSchemaType(SQLAlchemyBase):
+class DCPMetadataSchemaType:
     __tablename__ = 'dcp_metadata_schema_types'
     name = Column(String, primary_key=True, nullable=False)
     files = relationship("File", back_populates='dcp_schema_type')
@@ -59,7 +59,7 @@ class DCPMetadataSchemaType(SQLAlchemyBase):
         return config.db_session.query(cls).filter(cls.name == schema_type_name).one_or_none()
 
 
-class Project(DCPQueryModelHelper, SQLAlchemyBase):
+class Project(DCPQueryModelHelper):
     __tablename__ = 'projects_all_versions'
     fqid = Column(String, primary_key=True, index=True)
     uuid = Column(UUID, nullable=False, index=True)
@@ -79,7 +79,7 @@ class Project(DCPQueryModelHelper, SQLAlchemyBase):
         return config.db_session.query(cls).filter(cls.fqid == project_fqid).one_or_none()
 
 
-class File(DCPQueryModelHelper, SQLAlchemyBase):
+class File(DCPQueryModelHelper):
     __tablename__ = 'files_all_versions'
     fqid = Column(String, primary_key=True, unique=True, nullable=False, index=True)
     uuid = Column(UUID, nullable=False, index=True)
@@ -116,7 +116,7 @@ class File(DCPQueryModelHelper, SQLAlchemyBase):
             config.db_session.commit()
 
 
-class ProjectFileLink(SQLAlchemyBase):
+class ProjectFileLink:
     __tablename__ = 'project_file_links'
     project_fqid = Column(String, ForeignKey('projects_all_versions.fqid'), primary_key=True, index=True)
     file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True, index=True)
@@ -147,7 +147,7 @@ class ProjectFileLink(SQLAlchemyBase):
         return []
 
 
-class BundleFileLink(SQLAlchemyBase):
+class BundleFileLink:
     __tablename__ = 'bundle_file_links'
     bundle_fqid = Column(String, ForeignKey('bundles_all_versions.fqid'), primary_key=True, index=True)
     file_fqid = Column(String, ForeignKey('files_all_versions.fqid'), primary_key=True, index=True)
@@ -188,7 +188,7 @@ class ConnectionTypeEnum(enum.Enum):
     PROTOCOL_ENTITY = 'PROTOCOL_ENTITY'
 
 
-class Process(SQLAlchemyBase):
+class Process:
     __tablename__ = 'processes_for_graph'
     process_uuid = Column(UUID, primary_key=True)
 
@@ -213,7 +213,7 @@ class Process(SQLAlchemyBase):
             ProcessProcessLink.child_process_uuid == process_uuid).all()
 
 
-class ProcessFileLink(SQLAlchemyBase):
+class ProcessFileLink:
     __tablename__ = 'process_file_join_table'
     id = Column(Integer, primary_key=True)
     process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"), index=True)
@@ -228,7 +228,7 @@ class ProcessFileLink(SQLAlchemyBase):
         return config.db_session.query(File).filter(File.uuid == self.file_uuid).order_by(File.version.desc()).first()
 
 
-class ProcessProcessLink(SQLAlchemyBase):
+class ProcessProcessLink:
     __tablename__ = 'process_join_table'
     id = Column(Integer, primary_key=True)
     child_process_uuid = Column(UUID, ForeignKey("processes_for_graph.process_uuid"), index=True)

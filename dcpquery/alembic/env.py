@@ -4,15 +4,23 @@ import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
 
 # this line is necessary to allow for imports from dcpquery
+
 sys.path.insert(0, os.getcwd())
 
 from dcpquery.db.models import SQLAlchemyBase  # noqa
+from dcpquery.db.models.admin import * # noqa
+from dcpquery.db.models.biomaterial import * # noqa
+from dcpquery.db.models.cell import * # noqa
+from dcpquery.db.models.data_file import * # noqa
+from dcpquery.db.models.modules import * # noqa
+from dcpquery.db.models.process import * # noqa
+from dcpquery.db.models.project import * # noqa
+from dcpquery.db.models.protocol import * # noqa
+
+
 from dcpquery import config as dcpquery_config  # noqa
 
 # this is the Alembic Config object, which provides
