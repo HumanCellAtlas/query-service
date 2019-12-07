@@ -20,17 +20,12 @@ class Contributor(DCPModelMixin, SQLAlchemyBase):
 
 class Publication(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "publications"
-    authors = relationship("User", secondary="publication_author_join_table")
+    authors = Column(String)
+    # authors = relationship("User", secondary="publication_author_join_table")
     title = Column(String)
     doi = Column(Integer)
     url = relationship("Link")
     projects = relationship("Project", secondary="project_publication_join_table")
-
-
-class PublicationAuthorJoinTable(DCPModelMixin, SQLAlchemyBase):
-    __tablename__ = "publication_author_join_table"
-    publication = relationship(Publication)
-    user = relationship("User")
 
 
 class Link(DCPModelMixin, SQLAlchemyBase):
@@ -57,20 +52,11 @@ class Accession(DCPModelMixin, SQLAlchemyBase):
     id = Column(String)
 
 
-class OntologyTypeEnum(enum.Enum):
-    pass
-
-
-class OntologySourceEnum(enum.Enum):
-    pass
-
-
 class Ontology(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "ontologies"
-    type = Column(Enum(OntologyTypeEnum))
-    id = Column(String)
-    source = Column(Enum(OntologySourceEnum))
-    name = Column(String)
+    text = Column(String)
+    ontology = Column(String)
+    ontology_label = Column(String)
 
 
 class AnnotationTypeEnum(enum.Enum):
@@ -136,7 +122,7 @@ class MedicalHistory(DCPModelMixin, SQLAlchemyBase):
     treatment = Column(String)
 
 
-## Best way to model families?
+# TODO QX - Best way to model families?
 class FamilialRelationship(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "familial_relationships"
     parents = relationship("DonorOrganism", secondary="donor_parent_join_table")

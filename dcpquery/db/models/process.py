@@ -25,7 +25,8 @@ class Process(DCPModelMixin, SQLAlchemyBase):
     name = Column(String)
     description = Column(String)
     location = Column(String)
-    operators = relationship("Operators")  # ????
+    # todo figure out what operators are
+    # operators = relationship("Operators")  # ????
     start_time = Column(DateTime)
     end_time = Column(DateTime)
     type = relationship(Ontology)

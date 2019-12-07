@@ -18,6 +18,12 @@ class BundleLoader:
             config.db_session.add(schema)
             self.schema_types.append(schema_type)
 
+    def create_project(self, files):
+        for file in files:
+            if file['body']:
+                if file['body'].get('describedBy', '').split('/')[-1] == 'project':
+                    return Project(uuid=file['uuid'], version=file['version'])
+
     def load_bundle(self, bundle, extractor=None, transformer=None):
         bf_links = []
         bundle_row = Bundle(uuid=bundle["uuid"],
@@ -35,6 +41,14 @@ class BundleLoader:
                 schema_version = file_data['body'].get('describedBy', '').split('/')[-2]
                 major_version = schema_version.split('.')[0]
                 minor_version = schema_version.split('.')[1]
+            if schema_type == 'links' and file_data["body"]:
+                links = file_data['body']['links']
+                load_links(links, bundle['uuid'])
+
+            if schema_type == 'links' and file_data["body"]:
+                links = file_data['body']['links']
+                load_links(links, bundle['uuid'])
+
             if schema_type == 'links' and file_data["body"]:
                 links = file_data['body']['links']
                 load_links(links, bundle['uuid'])
@@ -122,3 +136,5 @@ def create_process_file_links(process):
         )
 
     config.db_session.add_all(process_file_links)
+
+

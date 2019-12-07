@@ -13,11 +13,13 @@ from dcpquery.db.models.modules import PurchasedReagent, Ontology, TenX, Barcode
 class Protocol(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "protocols"
     discriminator = Column('type', String(50))
+    protocol_id = Column(String)
     body = Column(MutableDict.as_mutable(JSONB))
     name = Column(String)
     description = Column(String)
     publication_doi = Column(String)
     protocols_io_doi = Column(String)
+    method = relationship("Ontology")
     reagents = relationship("PurchasedReagent", secondary="protocol_reagent_join_table")
     processes = relationship("Process", secondary="process_protocol_join_table")
     __mapper_args__ = {'polymorphic_on': discriminator}
@@ -68,7 +70,7 @@ class EndBiasEnum(enum.Enum):
 class LibraryPreparationProtocol(Protocol, SQLAlchemyBase):
     __tablename__ = "library_prep_protocols"
     id = Column(UUID, ForeignKey('protocols.uuid'), primary_key=True)
-    library_construction_methoc = relationship(Ontology)
+    library_construction_method = relationship(Ontology)
     nucleic_acid_source = Column(Enum(NucleicAcidSourceEnum))
     end_bias = Column(Enum(EndBiasEnum))
     strand = Column(String)

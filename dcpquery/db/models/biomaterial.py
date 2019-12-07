@@ -16,13 +16,13 @@ class Biomaterial(DCPModelMixin, SQLAlchemyBase):
     ncbi_taxon_id = Column(String)
     discriminator = Column('type', String(50))
     accessions = relationship(Accession, secondary="biomaterial_accession_join_table")
+    biomaterial_id = Column(String)
     name = Column(String)
     description = Column(String)
     genotype = Column(String)
     body = Column(MutableDict.as_mutable(JSONB))
     processes = relationship("Process", secondary="biomaterial_process_join_table")
     __mapper_args__ = {'polymorphic_on': discriminator}
-
 
 
 class BiomaterialProcessJoinTable(DCPModelMixin, SQLAlchemyBase):
@@ -50,7 +50,7 @@ class CellLine(Biomaterial, SQLAlchemyBase):
     publications = relationship(Publication, secondary="cell_line_publication_join_table")
     cell_cycle = relationship(Ontology)
     cell_morphology = relationship(CellMorphology)
-    growth_conditions = relationship(GrowthCondition)
+    growth_condition = relationship(GrowthCondition)
     tissue = relationship(Ontology)
     disease = relationship(Ontology)  # should this be m2m?
     genus_species = relationship(Ontology)
@@ -82,7 +82,6 @@ class CellSuspension(Biomaterial, SQLAlchemyBase):
     __mapper_args__ = {'polymorphic_identity': 'cell_suspension'}
 
 
-
 class CellSuspensionCellTypeOntologyJoinTable(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "cell_suspension_cell_type_ontology_join_table"
     cell_suspension = relationship(CellSuspension)
@@ -107,6 +106,7 @@ class DonorOrganism(Biomaterial, SQLAlchemyBase):
     is_living = Column(Enum(IsLivingEnum))
     development_stage = relationship(Ontology)
     sex = Column(Enum(SexEnum))
+    # todo make many to many
     strain = relationship(Ontology)  # null if human
     bmi = Column(Integer)  # null if mouse
     ethnicity = relationship(Ontology)  # null if mouse
@@ -115,11 +115,10 @@ class DonorOrganism(Biomaterial, SQLAlchemyBase):
     organism_age_unit = relationship(Ontology)
     diseases = relationship(DiseaseOntology, secondary="donor_organism_disease_ontology_join_table")
     cause_of_death = relationship(CauseOfDeath)
-    familial_relationships = relationship(FamilialRelationship)
+    familial_relationship = relationship(FamilialRelationship)
     medical_history = relationship(MedicalHistory)
     time_course = relationship(TimeCourse)
     __mapper_args__ = {'polymorphic_identity': 'donor_organism'}
-
 
 
 class DonorOrganismDiseaseOntologyJoinTable(DCPModelMixin, SQLAlchemyBase):
@@ -133,13 +132,12 @@ class SpecimenFromOrganism(Biomaterial, SQLAlchemyBase):
     id = Column(UUID, ForeignKey('biomaterials.uuid'), primary_key=True)
     organ = relationship(Ontology)
     genus_species = relationship(Ontology)
-    organ_parts = relationship(Ontology)
+    organ_parts = relationship(Ontology) # TODO Qx should this be m2m?
     diseases = relationship(DiseaseOntology, secondary="specimen_from_organism_disease_ontology_join_table")
     state_of_specimen = relationship(StateOfSpecimen)
     preservation_storage = relationship(PreservationStorage)
     collection_time = Column(DateTime)
     __mapper_args__ = {'polymorphic_identity': 'specimen_from_organism'}
-
 
 
 class SpecimenFromOrganismDiseaseOntologyJoinTable(DCPModelMixin, SQLAlchemyBase):
@@ -157,4 +155,3 @@ class Organoid(Biomaterial, SQLAlchemyBase):
     age = Column(Integer)
     age_unit = relationship(Ontology)
     __mapper_args__ = {'polymorphic_identity': 'organoid'}
-
