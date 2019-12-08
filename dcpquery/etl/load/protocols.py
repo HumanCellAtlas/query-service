@@ -1,14 +1,16 @@
 from dcpquery import config
 from dcpquery.db.models.protocol import Protocol, ProtocolReagentJoinTable, SequencingProtocol, \
     LibraryPreparationProtocol, EnrichmentProtocol, AnalysisProtocol, IPSCInductionProtocol, DifferentiationProtocol
+from dcpquery.etl.load.utils import check_data
 from dcpquery.etl.load.modules import get_or_create_ontology, get_or_create_reagent, get_or_create_ten_x, \
     get_or_create_barcode
 
 
+@check_data
 def create_protocol(data):
     reagents_list = []
     method = get_or_create_ontology(data.get('method'))
-    for reagent in data['reagents']:
+    for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
     config.db_session.add_all(reagents_list)
     protocol = Protocol(
@@ -25,10 +27,12 @@ def create_protocol(data):
     return protocol
 
 
+@check_data
 def create_differentiation_protocol(data):
     reagents_list = []
     method = get_or_create_ontology(data.get('method'))
-    for reagent in data['reagents']:
+    target_cell_yield= int(data.get('target_cell_yield')) if data.get('target_cell_yield') else None
+    for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
     config.db_session.add_all(reagents_list)
     differentiation_protocol = DifferentiationProtocol(
@@ -40,7 +44,7 @@ def create_differentiation_protocol(data):
         publication_doi=data.get('publication_doi'),
         media=data.get('media'),
         small_molecules=data.get('small_molecules'),
-        target_cell_yield=int(data.get('target_cell_yield')),
+        target_cell_yield=target_cell_yield,
         target_pathway=data.get('target_pathway'),
         validation_method=data.get('validation_method'),
         validation_result=data.get('validation_result')
@@ -51,6 +55,7 @@ def create_differentiation_protocol(data):
     return differentiation_protocol
 
 
+@check_data
 def create_library_preparation_protocol(data):
     reagents_list = []
     method = get_or_create_ontology(data.get('library_construction_method'))
@@ -61,7 +66,11 @@ def create_library_preparation_protocol(data):
     library_construction_kit = get_or_create_reagent(data.get('library_construction_kit'))
     nucleic_acid_conversion_kit = get_or_create_reagent(data.get('nucleic_acid_conversion_kit'))
     spike_in_kit = get_or_create_reagent(data.get('nucleic_acid_conversion_kit'))
-    for reagent in data['reagents']:
+    nominal_length = int(data.get('nominal_length')) if data.get('nominal_length') else None
+    nominal_sdev = int(data.get('nominal_sdev')) if data.get('nominal_sdev') else None
+    spike_in_dilution = int(data.get('spike_in_dilution')) if data.get('spike_in_dilution') else None
+
+    for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
     config.db_session.add_all(reagents_list)
     library_protocol = LibraryPreparationProtocol(
@@ -77,10 +86,10 @@ def create_library_preparation_protocol(data):
         cell_barcode=cell_barcode,
         umi_barcode=umi_barcode,
         primer=data.get('primer'),
-        nominal_length=int(data.get('nominal_length')),
+        nominal_length=nominal_length,
         # todo look up
-        nominal_sdev=int(data.get('nominal_sdev')),
-        spike_in_dilution=int(data.get('spike_in_dilution')),
+        nominal_sdev=nominal_sdev,
+        spike_in_dilution=spike_in_dilution,
         library_preamplification_method=library_preamplification_method,
         cdna_library_amplification_method=cdna_library_amplification_method,
         library_construction_kit=library_construction_kit,
@@ -93,10 +102,11 @@ def create_library_preparation_protocol(data):
     return library_protocol
 
 
+@check_data
 def create_sequencing_protocol(data):
     reagents_list = []
     method = get_or_create_ontology(data.get('method'))
-    for reagent in data.get('reagents'):
+    for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
 
     # Todo check syntax
@@ -120,10 +130,13 @@ def create_sequencing_protocol(data):
     config.db_session.add_all(reagents_list)
 
 
+@check_data
 def create_enrichment_protocol(data):
     reagents_list = []
     method = get_or_create_ontology(data.get('method'))
-    for reagent in data['reagents']:
+    minimum_size = int(data.get('minimum')) if data.get('minimum') else None
+    maximum_size = int(data.get('maximum')) if data.get('maximum') else None
+    for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
     config.db_session.add_all(reagents_list)
     enrichment_protocol = EnrichmentProtocol(
@@ -135,8 +148,8 @@ def create_enrichment_protocol(data):
         description=data.get('protocol_description'),
         publication_doi=data.get('publication_doi'),
         markers=data.get('markers'),
-        minimum_size=int(data.get('minimum')),
-        maximum_size=int(data.get('maximum'))
+        minimum_size=minimum_size,
+        maximum_size=maximum_size
     )
     for reagent in reagents_list:
         config.db_session.add(ProtocolReagentJoinTable(protocol=enrichment_protocol, reagent=reagent))
@@ -144,23 +157,26 @@ def create_enrichment_protocol(data):
     return enrichment_protocol
 
 
+@check_data
 def create_collection_protocol(data):
     protocol = create_protocol(data)
     protocol.discriminator = 'collection_protocol'
     return protocol
 
 
+@check_data
 def create_dissociation_protocol(data):
     protocol = create_protocol(data)
     protocol.discriminator = 'dissociation_protocol'
     return protocol
 
 
+@check_data
 def create_analysis_protocol(data):
     reagents_list = []
     method = get_or_create_ontology(data.get('method'))
     type = get_or_create_ontology(data.get('type'))
-    for reagent in data['reagents']:
+    for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
     config.db_session.add_all(reagents_list)
     analysis_protocol = AnalysisProtocol(
@@ -179,11 +195,14 @@ def create_analysis_protocol(data):
     return analysis_protocol
 
 
+@check_data
 def create_ipsc_induction_protocol(data):
     reagents_list = []
     method = get_or_create_ontology(data.get('method'))
+    percent_pluripotency = int(data.get('percent_pluripotency')) if data.get('percent_pluripotency') else None
+
     ipsc_induction_kit = get_or_create_reagent(data.get('ipsc_induction_kit'))
-    for reagent in data['reagents']:
+    for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
     config.db_session.add_all(reagents_list)
     ipsc_protocol = IPSCInductionProtocol(
@@ -196,7 +215,7 @@ def create_ipsc_induction_protocol(data):
         reprogramming_factors=data.get('reprogramming_factors'),
         ipsc_induction_kit=ipsc_induction_kit,
         pluripotency_test=data.get('pluripotency_test'),
-        percent_pluripotency=int(data.get('percent_pluripotency')),
+        percent_pluripotency=percent_pluripotency,
         pluripotency_vector_removed=data.get('pluripotency_vector_removed')
 
     )

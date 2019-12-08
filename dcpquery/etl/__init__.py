@@ -3,7 +3,7 @@ import os, tempfile, logging
 from dcplib.etl import DSSExtractor
 
 from dcpquery.db.materialized_views import create_materialized_view_tables
-from dcpquery.etl.load import BundleLoader
+from dcpquery.etl.old_load import BundleLoader
 from dcpquery.etl.transform import transform_bundle
 
 from .. import config
@@ -62,3 +62,5 @@ def etl_one_bundle(bundle_uuid, bundle_version):
                           bundle_manifest_path=bundle_manifest_path, extractor=extractor)
     BundleLoader().load_bundle(extractor=extractor, transformer=transform_bundle, bundle=tb)
     config.db_session.commit()
+
+

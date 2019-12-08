@@ -3,30 +3,34 @@ import logging
 from dcpquery import config
 from dcpquery.db.models.project import Project, ProjectContributorJoinTable, ProjectFunderJoinTable, \
     ProjectPublicationJoinTable, ProjectAccessionJoinTable, ProjectLinkJoinTable
-from dcpquery.etl.load.modules import create_funder, get_or_create_contributor, get_or_create_publication, get_or_create_url_link, \
+from dcpquery.etl.load.utils import check_data
+from dcpquery.etl.load.modules import create_funder, get_or_create_contributor, get_or_create_publication, \
+    get_or_create_url_link, \
     get_or_create_accession
+
 logger = logging.getLogger(__name__)
 
 
-def create_project(project_data):
-    logger.info(f"Create Project: {project_data['project_core']['project_short_name']}")
+@check_data
+def create_project(data):
+    logger.info(f"Create Project: {data.get('project_core', {}).get('project_short_name')}")
     funder_objects = []
     contributor_objects = []
     publication_objects = []
     link_objects = []
     accession_objects = []
-    uuid = project_data.get('provenance', {}).get('document_id')
-    body = project_data
-    title = project_data.get('project_core', {}).get("project_title")
-    short_name = project_data.get("project_core", {}).get("project_short_name")
-    description = project_data.get("project_core", {}).get("project_description")
-    funder_list = project_data.get('funders')
-    contributor_list = project_data.get('contributors')
-    publication_list = project_data.get("publications")
-    supplementary_links_list = project_data.get("supplementary_links")
-    geo_series_accession_list = project_data.get("geo_series_accessions")
-    insdc_study_accession_list = project_data.get("insdc_study_accessions")
-    insdc_project_accession_list = project_data.get("insdc_project_accessions")
+    uuid = data.get('provenance', {}).get('document_id')
+    body = data
+    title = data.get('project_core', {}).get("project_title")
+    short_name = data.get("project_core", {}).get("project_short_name")
+    description = data.get("project_core", {}).get("project_description")
+    funder_list = data.get('funders', [])
+    contributor_list = data.get('contributors', [])
+    publication_list = data.get("publications", [])
+    supplementary_links_list = data.get("supplementary_links", [])
+    geo_series_accession_list = data.get("geo_series_accessions", [])
+    insdc_study_accession_list = data.get("insdc_study_accessions", [])
+    insdc_project_accession_list = data.get("insdc_project_accessions", [])
     for publication in publication_list:
         publication_objects.append(get_or_create_publication(publication))
     for funder in funder_list:
@@ -43,9 +47,8 @@ def create_project(project_data):
         accession_objects.append(get_or_create_accession(accession, "insdc_project"))
     project = Project(uuid=uuid, short_name=short_name, title=title, description=description, body=body)
     config.db_session.add(project)
-    config.db_session.add_all(funder_objects, contributor_objects, publication_objects, link_objects)
     for funder in funder_objects:
-        config.db_session.add(create_project_funder_link(project, funder))
+        create_project_funder_link(project, funder)
 
     for contributor in contributor_objects:
         create_project_contributor_link(project, contributor)
@@ -78,4 +81,3 @@ def create_project_accession_link(project, accession):
 
 def create_project_url_link(project, link):
     config.db_session.add(ProjectLinkJoinTable(project, link))
-

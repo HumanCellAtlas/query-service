@@ -3,33 +3,31 @@ import re
 
 from dcpquery import config
 from dcpquery.db.models import Bundle, DCPMetadataSchemaType, File, BundleFileLink, Process, ProcessFileLink
+from dcpquery.etl.load import handle_all_schema_types
 
 logger = logging.getLogger(__name__)
 
 
 class BundleLoader:
     def __init__(self):
-        schema_types = config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()
-        self.schema_types = [schema[0] for schema in schema_types]
+        pass
+        # schema_types = config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()
+        # self.schema_types = [schema[0] for schema in schema_types]
 
-    def register_dcp_metadata_schema_type(self, schema_type):
-        if schema_type and schema_type not in self.schema_types:
-            schema = DCPMetadataSchemaType(name=schema_type)
-            config.db_session.add(schema)
-            self.schema_types.append(schema_type)
 
-    def create_project(self, files):
-        for file in files:
-            if file['body']:
-                if file['body'].get('describedBy', '').split('/')[-1] == 'project':
-                    return Project(uuid=file['uuid'], version=file['version'])
+    # def create_project(self, files):
+    #     for file in files:
+    #         if file['body']:
+    #             if file['body'].get('describedBy', '').split('/')[-1] == 'project':
+    #                 return Project(uuid=file['uuid'], version=file['version'])
+
 
     def load_bundle(self, bundle, extractor=None, transformer=None):
         bf_links = []
-        bundle_row = Bundle(uuid=bundle["uuid"],
-                            version=bundle["version"],
-                            manifest=bundle["manifest"],
-                            aggregate_metadata=bundle["aggregate_metadata"])
+        # bundle_row = Bundle(uuid=bundle["uuid"],
+        #                     version=bundle["version"],
+        #                     manifest=bundle["manifest"],
+        #                     aggregate_metadata=bundle["aggregate_metadata"])
         for file_data in bundle["files"]:
             filename = file_data.pop("name")
             file_extension = get_file_extension(filename)
@@ -41,34 +39,14 @@ class BundleLoader:
                 schema_version = file_data['body'].get('describedBy', '').split('/')[-2]
                 major_version = schema_version.split('.')[0]
                 minor_version = schema_version.split('.')[1]
-            if schema_type == 'links' and file_data["body"]:
-                links = file_data['body']['links']
-                load_links(links, bundle['uuid'])
+                handle_all_schema_types(schema_type, schema_version, file_data)
 
-            if schema_type == 'links' and file_data["body"]:
-                links = file_data['body']['links']
-                load_links(links, bundle['uuid'])
+            # if schema_type == 'links' and file_data["body"]:
+            #     links = file_data['body']['links']
+            #     load_links(links, bundle['uuid'])
 
-            if schema_type == 'links' and file_data["body"]:
-                links = file_data['body']['links']
-                load_links(links, bundle['uuid'])
-
-            self.register_dcp_metadata_schema_type(schema_type)
-            file_row = File(
-                uuid=file_data['uuid'],
-                version=file_data['version'],
-                content_type=file_data['content-type'],
-                size=file_data['size'],
-                extension=str(file_extension),
-                body=file_data['body'],
-                dcp_schema_type_name=schema_type,
-                schema_major_version=major_version,
-                schema_minor_version=minor_version
-
-            )
-
-            bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
-        config.db_session.add_all(bf_links)
+            # bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
+        # config.db_session.add_all(bf_links)
 
 
 def get_file_extension(filename):
@@ -136,5 +114,3 @@ def create_process_file_links(process):
         )
 
     config.db_session.add_all(process_file_links)
-
-

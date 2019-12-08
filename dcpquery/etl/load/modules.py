@@ -1,7 +1,12 @@
+import uuid
+from uuid import UUID
+
 from dcpquery import config
 from dcpquery.db.models.modules import Funder, Contributor, Accession, Ontology, Link, Publication, CauseOfDeath, \
     MedicalHistory, TimeCourse, GrowthCondition, CellMorphology, PlateBasedSequencing, PurchasedReagent, TenX, \
-    PreservationStorage, StateOfSpecimen, SpecimenFileJoinTable, Barcode
+    PreservationStorage, Barcode
+from dcpquery.etl.load.utils import check_data
+from dcpquery.etl.load.admins import get_or_create_user
 
 
 def get_or_create_accession(accession_id, type):
@@ -10,12 +15,19 @@ def get_or_create_accession(accession_id, type):
     return accession
 
 
+@check_data
 def get_or_create_ontology(data):
-    ontology = Ontology(text=data.get('text'), ontology=data.get('ontology'), ontology_label=data.get('ontology_label'))
+    try:
+        ontology = Ontology(text=data.get('text'), ontology=data.get('ontology'),
+                            ontology_label=data.get('ontology_label'))
+    except:
+        import pdb
+        pdb.set_trace()
     config.db_session.add(ontology)
     return ontology
 
 
+@check_data
 def create_funder(data):
     funder = Funder(
         grant_id=data.get('grant_id'), grant_title=data.get('grant_title'), organization=data.get('organization'))
@@ -23,16 +35,18 @@ def create_funder(data):
     return funder
 
 
+@check_data
 def get_or_create_contributor(data):
-    # TODO @madison
     user = get_or_create_user(data)
     project_role = get_or_create_ontology(data.get("project_role"))
     contributor = Contributor(user=user, institution=data.get("institution"), lab=data.get("laboratory"),
                               corresponding_contributor=data.get("corresponding_contributor"),
                               project_role=project_role)
     config.db_session.add(contributor)
+    return contributor
 
 
+@check_data
 def get_or_create_publication(data):
     authors = " ".join(data.get('authors'))
     publication_url = Link(url=data.get('url'))
@@ -41,12 +55,14 @@ def get_or_create_publication(data):
     return publication
 
 
+@check_data
 def get_or_create_url_link(data):
     link = Link(url=data)
     config.db_session.add(link)
     return link
 
 
+@check_data
 def get_or_create_cause_of_death(data):
     cod = CauseOfDeath(
         cause_of_death=data.get('cause_of_death'),
@@ -60,28 +76,35 @@ def get_or_create_cause_of_death(data):
 
 
 # Todo
+@check_data
 def get_or_create_family_relationship(data):
     return
 
 
+@check_data
 def get_or_create_medical_history(data):
-    medical_history = MedicalHistory(alcohol_history=data.get('alcohol_history'),
-                                     medication=data.get('medication'),
-                                     smoking_history=data.get('smoking_history'),
-                                     nutritional_state=data.get('nutritional_state'),
-                                     test_results=data.get('test_results'),
-                                     treatment=data.get('treatment'))
+    medical_history = MedicalHistory(
+        alcohol_history=data.get('alcohol_history'),
+        medication=data.get('medication'),
+        smoking_history=data.get('smoking_history'),
+        nutritional_state=data.get('nutritional_state'),
+        test_results=data.get('test_results'),
+        treatment=data.get('treatment'))
     config.db_session.add(medical_history)
     return medical_history
 
 
+@check_data
 def get_or_create_time_course(data):
     time_course = TimeCourse(value=data.get('value'), unit=data.get('unit'), relevance=data.get('relevance'))
     config.db_session.add(time_course)
     return time_course
 
 
+@check_data
 def get_or_create_growth_conditions(data):
+    if data is None:
+        return None
     growth_condition = GrowthCondition(
         passage_number=data.get('passage_number'),
         growth_medium=data.get('growth_medium'),
@@ -90,6 +113,7 @@ def get_or_create_growth_conditions(data):
     return growth_condition
 
 
+@check_data
 def get_or_create_cell_morphology(data):
     cell_size_unit = get_or_create_ontology(data.get('cell_size_unit'))
     cell_morph = CellMorphology(
@@ -105,6 +129,7 @@ def get_or_create_cell_morphology(data):
     return cell_morph
 
 
+@check_data
 def get_or_create_plate_based_sequencing(data):
     plate = PlateBasedSequencing(plate_label=data['plate_label'], well_label=data['well_label'],
                                  well_quality=data['well_quality'])
@@ -112,6 +137,7 @@ def get_or_create_plate_based_sequencing(data):
     return plate
 
 
+@check_data
 def get_or_create_reagent(data):
     purchased_reagent = PurchasedReagent(retail_name=data.get('retail_name'),
                                          catalog_number=data.get('catalog_number'),
@@ -123,6 +149,7 @@ def get_or_create_reagent(data):
     return purchased_reagent
 
 
+@check_data
 def get_or_create_ten_x(data):
     tenx = TenX(
         fastq_method=data.get('fastq'),
@@ -134,11 +161,14 @@ def get_or_create_ten_x(data):
     return tenx
 
 
+@check_data
 def get_or_create_preservation_storage(data):
     storage_time_unit = get_or_create_ontology(data.get('storage_time_unit'))
+    storage_time = int(data.get('storage_time')) if data.get('storage_time') else None
+
     preservation_storage = PreservationStorage(
         storage_method=data.get('storage_method'),
-        storage_time=int(data.get('storage_time')),
+        storage_time=storage_time,
         storage_time_unit=storage_time_unit,
         preservation_method=data.get('preservation_method')
     )
@@ -146,20 +176,36 @@ def get_or_create_preservation_storage(data):
     return preservation_storage
 
 
-def get_or_create_specimen_state(data):
-    image_list = []
-    # todo  get actual image file names
-    for file in data.get('images'):
-        image_list.append(get_or_create_file(file))
-    state_of_specimen = StateOfSpecimen(autolysis_score=data.get('autolysis_score'))
-    config.db_session.add(state_of_specimen)
-    for file in image_list:
-        config.db_session.add(SpecimenFileJoinTable(state_of_specimen=state_of_specimen, file=file))
-    return state_of_specimen
+# @check_data
+# def get_or_create_specimen_state(data):
+#     # circular import
+#     from dcpquery.etl.load import get_or_create_file
+#
+#     image_list = []
+#     # todo  get actual image file names
+#     for file in data.get('images', []):
+#         image_list.append(get_or_create_file(file))
+#     state_of_specimen = StateOfSpecimen(autolysis_score=data.get('autolysis_score'))
+#     config.db_session.add(state_of_specimen)
+#     for file in image_list:
+#         config.db_session.add(SpecimenFileJoinTable(state_of_specimen=state_of_specimen, file=file))
+#     return state_of_specimen
 
 
+@check_data
 def get_or_create_barcode(data):
     barcode = Barcode(barcode_offset=data.get('barcode_offset'), barcode_length=data.get('barcode_length'),
-                   barcode_read=data.get('barcode_read'), white_list_file=data.get('white_list_file'))
+                      barcode_read=data.get('barcode_read'), white_list_file=data.get('white_list_file'))
     config.db_session.add(barcode)
     return barcode
+
+
+# Todo implement
+@check_data
+def get_or_create_task(data):
+    return
+
+
+@check_data
+def get_or_create_parameter(data):
+    return

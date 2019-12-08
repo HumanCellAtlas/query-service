@@ -1,16 +1,22 @@
 from dcpquery import config
-from dcpquery.db.models.biomaterial import CellSuspension, DonorOrganism, DonorOrganismDiseaseOntologyJoinTable, \
-    Biomaterial, BiomaterialAccessionJoinTable, CellSuspensionCellTypeOntologyJoinTable, SpecimenFromOrganism, CellLine, \
-    CellLinePublicationJoinTable, Organoid
-from dcpquery.etl.load.modules import get_or_create_ontology, get_or_create_cause_of_death, \
-    get_or_create_family_relationship, get_or_create_medical_history, get_or_create_time_course, \
-    get_or_create_plate_based_sequencing, get_or_create_cell_morphology, get_or_create_growth_conditions, \
-    get_or_create_accession, get_or_create_specimen_state, get_or_create_preservation_storage, get_or_create_publication
+from dcpquery.db.models.biomaterial import (CellSuspension, DonorOrganism, Biomaterial, Specimen, CellLine,
+                                            Organoid)
+from dcpquery.db.models.join_tables import BiomaterialAccessionJoinTable, CellLinePublicationJoinTable, \
+    CellSuspensionCellTypeOntologyJoinTable, DonorOrganismDiseaseOntologyJoinTable
+from dcpquery.etl.load.utils import check_data
+from dcpquery.etl.load.modules import (get_or_create_ontology, get_or_create_cause_of_death,
+                                       get_or_create_family_relationship, get_or_create_medical_history,
+                                       get_or_create_time_course,
+                                       get_or_create_plate_based_sequencing, get_or_create_cell_morphology,
+                                       get_or_create_growth_conditions,
+                                       get_or_create_accession,
+                                       get_or_create_preservation_storage, get_or_create_publication)
 
 
+@check_data
 def create_biomaterial(data):
     accessions_list = []
-    for accession in data['accessions']:
+    for accession in data.get('accessions', []):
         accessions_list.append(get_or_create_accession(accession))
 
     biomaterial = Biomaterial(
@@ -29,13 +35,13 @@ def create_biomaterial(data):
 def create_cell_suspension(data):
     accessions_list = []
     selected_cells_list = []
-    for accession in data['accessions']:
+    for accession in data.get('accessions', []):
         accessions_list.append(get_or_create_accession(accession))
     growth_conditions = get_or_create_growth_conditions(data.get('growth_conditions'))
     cell_morphology = get_or_create_cell_morphology(data.get('cell_morphology'))
-    genus_species = get_or_create_ontology(data.get("genus_species")[0])
+    genus_species = get_or_create_ontology(data.get("genus_species", [None])[0])
     time_course = get_or_create_time_course(data.get('time_course'))
-    for cell in data.get('selected_cell_types'):
+    for cell in data.get('selected_cell_types', []):
         selected_cells_list.append(get_or_create_ontology(cell))
     plate_based_sequencing = get_or_create_plate_based_sequencing(data.get("plate_based_sequencing"))
     cell_suspension = CellSuspension(
@@ -65,18 +71,22 @@ def create_cell_suspension(data):
 def create_donor_organism(data):
     disease_list = []
     accessions_list = []
-    for accession in data['accessions']:
+    for accession in data.get('accessions', []):
         accessions_list.append(get_or_create_accession(accession))
+    try:
+        organism_age = int(data.get("organism_age"))
+    except:
+        organism_age = None
 
     development_stage = get_or_create_ontology(data.get("development_stage"))
-    genus_species = get_or_create_ontology(data["genus_species"][0])
-    organism_age_unit = get_or_create_ontology(data["organism_age_unit"])
-    cause_of_death = get_or_create_cause_of_death(data['cause_of_death'])
+    genus_species = get_or_create_ontology(data.get("genus_species", [None])[0])
+    organism_age_unit = get_or_create_ontology(data.get("organism_age_unit"))
+    cause_of_death = get_or_create_cause_of_death(data.get('cause_of_death'))
     # todo find and check med history, family, timecourse
-    medical_history = get_or_create_medical_history(data["medical_history"])
+    medical_history = get_or_create_medical_history(data.get("medical_history"))
     familial_relationship = get_or_create_family_relationship(data)
     time_course = get_or_create_time_course(data)
-    for disease in data['diseases']:
+    for disease in data.get('diseases', []):
         disease_list.append(get_or_create_ontology(disease))
     # todo handle mouse strain, bmi and ethnicity
     donor_organism = DonorOrganism(
@@ -87,11 +97,11 @@ def create_donor_organism(data):
         description=data.get('biomaterial_description'),
         genotype=data.get('genotype'),
         body=data,
-        is_living=data["is_living"],
+        is_living=data.get("is_living"),
         development_stage=development_stage,
-        sex=data['sex'],
+        sex=data.get('sex'),
         genus_species=genus_species,
-        # organism_age=int(data["organism_age"]),
+        organism_age=organism_age,
         organism_age_unit=organism_age_unit,
         cause_of_death=cause_of_death,
         familial_relationship=familial_relationship,
@@ -110,15 +120,16 @@ def create_specimen_from_organism(data):
     accessions_list = []
     disease_list = []
     organ = get_or_create_ontology(data.get('organ'))
-    organ_parts = get_or_create_ontology((data.get('organ_parts')))
-    state_of_specimen = get_or_create_specimen_state(data.get('state_of_specimen'))
+    # todo make this m2m?
+    organ_parts = get_or_create_ontology(data.get('organ_parts', [None])[0])
+    # state_of_specimen = get_or_create_specimen_state(data.get('state_of_specimen'))
     preservation_storage = get_or_create_preservation_storage(data.get('preservation_storage'))
-    genus_species = get_or_create_ontology(data["genus_species"][0])
-    for accession in data.get('accessions'):
+    genus_species = get_or_create_ontology(data.get("genus_species", [None])[0])
+    for accession in data.get('accessions', []):
         accessions_list.append(get_or_create_accession(accession))
-    for disease in data['diseases']:
+    for disease in data.get('diseases', []):
         disease_list.append(get_or_create_ontology(disease))
-    specimen = SpecimenFromOrganism(
+    specimen = Specimen(
         biomaterial_id=data.get('biomaterial_id'),
         discriminator='specimen_from_organism',
         ncbi_taxon_id=data.get('ncbi_taxon_id'),
@@ -129,10 +140,10 @@ def create_specimen_from_organism(data):
         organ=organ,
         genus_species=genus_species,
         organ_parts=organ_parts,
-        state_of_specimen=state_of_specimen,
+        # state_of_specimen=state_of_specimen,
         preservation_storage=preservation_storage,
         collection_time=data.get('collection_time')
-    ),
+    )
     config.db_session.add(specimen)
     for accession in accessions_list:
         config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=biomaterial))
@@ -142,18 +153,18 @@ def create_cell_line(data):
     accessions_list = []
     publications_list = []
     cell_type = get_or_create_ontology(data.get('cell_type'))
-    model_organ= get_or_create_ontology(data.get('model_organ'))
+    model_organ = get_or_create_ontology(data.get('model_organ'))
     cell_cycle = get_or_create_ontology(data.get('cell_cycle'))
     cell_morphology = get_or_create_cell_morphology(data.get('cell_morphology'))
     growth_condition = get_or_create_growth_conditions(data.get('growth_conditions'))
     tissue = get_or_create_ontology(data.get('tissue'))
     disease = get_or_create_ontology(data.get('disease'))
     genus_species = get_or_create_ontology(data.get('genus_species'))
-    time_course=get_or_create_time_course(data.get('timecourse'))
-    for accession in data['accessions']:
+    time_course = get_or_create_time_course(data.get('timecourse'))
+    for accession in data.get('accessions', []):
         accessions_list.append(get_or_create_accession(accession))
 
-    for publication in data['accessions']:
+    for publication in data.get('publications', []):
         publications_list.append(get_or_create_publication(publication))
 
     cell_line = CellLine(
@@ -186,10 +197,11 @@ def create_cell_line(data):
 def create_organoid(data):
     accessions_list = []
     model_organ = get_or_create_ontology(data.get('model_organ'))
+    age = int(data.get('age')) if data.get('age') else None
     genus_species = get_or_create_ontology(data.get('genus_species'))
     model_organ_part = get_or_create_ontology(data.get('model_organ_part'))
     age_unit = get_or_create_ontology(data.get('age_unit'))
-    for accession in data['accessions']:
+    for accession in data.get('accessions', []):
         accessions_list.append(get_or_create_accession(accession))
 
     biomaterial = Organoid(
@@ -209,4 +221,3 @@ def create_organoid(data):
     config.db_session.add(biomaterial)
     for accession in accessions_list:
         config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=biomaterial))
-
