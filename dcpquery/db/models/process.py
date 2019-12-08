@@ -9,7 +9,7 @@ from dcpquery.db.models.base import DCPModelMixin
 from dcpquery.db.models.biomaterial import Biomaterial
 from dcpquery.db.models.cell import Cell
 from dcpquery.db.models.enums import RunTypeEnum, ProcessConnectionTypeEnum
-from dcpquery.db.models.modules import Ontology, Accession
+from dcpquery.db.models.modules import Ontology, Accession, Task, Parameter
 from dcpquery.db.models.project import Project
 from dcpquery.db.models.protocol import Protocol
 
@@ -47,6 +47,30 @@ class Process(DCPModelMixin, SQLAlchemyBase):
     protocols = relationship("Protocol", secondary="process_protocol_join_table")
     biomaterials = relationship("Biomaterial", secondary="process_biomaterial_join_table")
 
+
+
+class ProcessParameterJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "process_parameter_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    process_uuid = Column(UUID, ForeignKey('processes.uuid'), primary_key=True)
+    parameter_uuid = Column(UUID, ForeignKey('parameters.uuid'), primary_key=True)
+    process = relationship(Process, foreign_keys=[process_uuid])
+    parameter = relationship(Parameter, foreign_keys=[parameter_uuid])
+
+
+class ProcessTaskJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "process_task_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    process_uuid = Column(UUID, ForeignKey('processes.uuid'), primary_key=True)
+    task_uuid = Column(UUID, ForeignKey('tasks.uuid'), primary_key=True)
+    process = relationship(Process, foreign_keys=[process_uuid])
+    task = relationship(Task, foreign_keys=[task_uuid])
 
 # join table keeping here for now to check on graph
 class ProcessJoinTable(DCPModelMixin, SQLAlchemyBase):

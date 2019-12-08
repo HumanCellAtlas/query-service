@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 
 from dcpquery.db.models import SQLAlchemyBase
 from dcpquery.db.models.base import DCPModelMixin
+from dcpquery.db.models.enums import ReadIndexEnum
 from dcpquery.db.models.modules import Ontology, Accession
 from dcpquery.db.models.process import Process
 

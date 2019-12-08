@@ -37,12 +37,13 @@ class ExpressionTypeEnum(enum.Enum):
 class FeatureTypeEnum(enum.Enum):
     pass
 
+
 class ReadIndexEnum(enum.Enum):
     pass
 
 
 class AccessionTypeEnum(enum.Enum):
-    PROCESS="PROCESS"
+    PROCESS = "PROCESS"
 
 
 class AnnotationTypeEnum(enum.Enum):
