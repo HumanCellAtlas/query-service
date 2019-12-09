@@ -48,11 +48,6 @@ def get_or_create_sequence_file(data):
     )
     for accession in accessions_list:
         accession_objects.append(get_or_create_accession(accession, "INSDC_RUN"))
-    config.db_session.add_all(accession_objects)
     for accession in accession_objects:
-        create_file_accession_link(file, accession)
+        SequenceFileAccessionJoinTable.create(sequence_file=file, accession=accession)
     return file
-
-
-def create_file_accession_link(file, accession):
-    config.db_session.add(SequenceFileAccessionJoinTable(sequence_file=file, accession=accession))

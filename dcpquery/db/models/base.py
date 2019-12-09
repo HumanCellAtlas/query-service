@@ -21,7 +21,7 @@ class MissingUUIDException(Exception):
 class DCPModelMixin(object):
     __tablename__ = 'dcp_base'
     # provenance.document_id
-    uuid = Column(UUID(as_uuid=True), nullable=False, index=True, primary_key=True, default=uuid4())
+    uuid = Column(UUID(as_uuid=True), nullable=False, index=True, primary_key=True)
     """"
     PROBLEM?
     Because the versioning feature relies upon comparison of the in memory record of an object, the feature only applies
@@ -100,10 +100,10 @@ currently by polymorphic_on and version_id_col; the declarative extension will r
                 raise MissingUUIDException
             else:
                 uuid = str(uuid4())
-        r = cls(uuid=uuid, **kw)
-        config.db_session.add(r)
+        row = cls(uuid=uuid, **kw)
+        config.db_session.add(row)
         config.db_session.commit()
-        return r
+        return row
 
     @classmethod
     def get_or_create(cls, uuid, **kw):

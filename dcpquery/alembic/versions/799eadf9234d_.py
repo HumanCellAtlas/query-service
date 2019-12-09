@@ -1,7 +1,7 @@
-"""empty message
+"""Create Rules
 
 Revision ID: 799eadf9234d
-Revises: e54465f09848
+Revises: 71aea67e842a
 Create Date: 2019-12-09 02:40:10.944907
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '799eadf9234d'
-down_revision = 'e54465f09848'
+down_revision = '71aea67e842a'
 branch_labels = None
 depends_on = None
 
@@ -136,18 +136,18 @@ def upgrade():
                         DO INSTEAD NOTHING
                     """
                )
-    op.execute("""
-
-                    CREATE OR REPLACE RULE links_ignore_duplicate_inserts AS
-                        ON INSERT TO links
-                            WHERE EXISTS (
-                                SELECT 1
-                            FROM links
-                            WHERE uuid = NEW.uuid
-                        )
-                        DO INSTEAD NOTHING
-                    """
-               )
+    # op.execute("""
+    #
+    #                 CREATE OR REPLACE RULE links_ignore_duplicate_inserts AS
+    #                     ON INSERT TO links
+    #                         WHERE EXISTS (
+    #                             SELECT 1
+    #                         FROM links
+    #                         WHERE uuid = NEW.uuid
+    #                     )
+    #                     DO INSTEAD NOTHING
+    #                 """
+    #            )
     op.execute("""
 
                     CREATE OR REPLACE RULE medical_histories_ignore_duplicate_inserts AS
@@ -263,7 +263,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM biomaterial_accession_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE accession_uuid = NEW.accession_uuid
+                            AND biomaterial_uuid = NEW.biomaterial_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -372,7 +373,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM project_access_group_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE project_uuid = NEW.project_uuid
+                            AND access_group_uuid = NEW.access_group_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -384,7 +386,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM project_accession_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE project_uuid = NEW.project_uuid
+                            AND accessions_uuid = NEW.accessions_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -396,7 +399,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM project_funder_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE project_uuid = NEW.project_uuid
+                            AND funder_uuid = NEW.funder_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -408,8 +412,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM project_link_join_table
-                            WHERE uuid = NEW.uuid
-                        )
+                            WHERE project_uuid = NEW.project_uuid
+                            AND link_uuid = NEW.link_uuid                        )
                         DO INSTEAD NOTHING
                     """
                )
@@ -468,7 +472,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM user_access_group_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE user_uuid = NEW.user_uuid
+                            AND access_group_uuid = NEW.access_group_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -600,7 +605,10 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM process_biomaterial_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE process_uuid = NEW.process_uuid
+                            AND connection_type=NEW.connection_type
+                            AND biomaterial_uuid=NEW.biomaterial_uuid
+                            AND project_uuid=NEW.project_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -612,7 +620,10 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM process_file_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE process_uuid = NEW.process_uuid
+                            AND connection_type=NEW.connection_type
+                            AND file_uuid=NEW.file_uuid
+                            AND project_uuid=NEW.project_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -624,11 +635,13 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM process_parameter_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE process_uuid = NEW.process_uuid
+                            AND parameter_uuid = NEW.parameter_uuid
                         )
                         DO INSTEAD NOTHING
                     """
                )
+    # TODO drop
     op.execute("""
 
                     CREATE OR REPLACE RULE process_project_join_table_ignore_duplicate_inserts AS
@@ -636,7 +649,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM process_project_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE process_uuid = NEW.process_uuid
+                            AND project_uuid = NEW.project_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -648,7 +662,10 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM process_protocol_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE process_uuid = NEW.process_uuid
+                            AND connection_type=NEW.connection_type
+                            AND protocol_uuid=NEW.protocol_uuid
+                            AND project_uuid=NEW.project_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -672,7 +689,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM process_task_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE process_uuid = NEW.process_uuid
+                            AND task_uuid = NEW.task_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -684,7 +702,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM project_contributor_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE project_uuid = NEW.project_uuid
+                            AND contributor_uuid = NEW.contributor_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -696,7 +715,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM project_publication_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE project_uuid = NEW.project_uuid
+                            AND publication_uuid = NEW.publication_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -708,7 +728,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM protocol_reagent_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE protocol_uuid = NEW.protocol_uuid
+                            AND reagent_uuid = NEW.reagent_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -720,7 +741,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM sequence_file_accession_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE sequence_file_uuid = NEW.sequence_file_uuid
+                            AND accession_uuid = NEW.accession_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -756,7 +778,8 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM cell_line_publication_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE cell_line_uuid = NEW.cell_line_uuid
+                            AND publication_uuid = NEW.publication_uuid
                         )
                         DO INSTEAD NOTHING
                     """
@@ -831,7 +854,10 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM process_cell_join_table
-                            WHERE uuid = NEW.uuid
+                            WHERE process_uuid = NEW.process_uuid
+                            AND connection_type=NEW.connection_type
+                            AND cell_uuid=NEW.cell_uuid
+                            AND project_uuid=NEW.project_uuid
                         )
                         DO INSTEAD NOTHING
                     """

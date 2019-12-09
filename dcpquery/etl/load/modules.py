@@ -6,7 +6,7 @@ from dcpquery.db.models.enums import StorageMethodEnum, PreservationMethodEnum, 
     BarcodeReadEnum, AccessionTypeEnum
 from dcpquery.db.models.modules import Funder, Contributor, Accession, Ontology, Link, Publication, CauseOfDeath, \
     MedicalHistory, TimeCourse, GrowthCondition, CellMorphology, PlateBasedSequencing, PurchasedReagent, TenX, \
-    PreservationStorage, Barcode, Task
+    PreservationStorage, Barcode, Task, Parameter
 from dcpquery.etl.load.utils import check_data
 from dcpquery.etl.load.admins import get_or_create_user
 
@@ -20,7 +20,7 @@ def get_or_create_accession(accession_id, type):
 def get_or_create_ontology(data):
     try:
         ontology = Ontology.get_or_create(text=data.get('text'), ontology=data.get('ontology'),
-                                      ontology_label=data.get('ontology_label'))
+                                          ontology_label=data.get('ontology_label'))
     except Exception as e:
         import pdb
         pdb.set_trace()
@@ -74,7 +74,7 @@ def get_or_create_cause_of_death(data):
 # Todo
 @check_data
 def get_or_create_family_relationship(data):
-    return
+    return None
 
 
 @check_data
@@ -213,4 +213,5 @@ def get_or_create_task(data):
 
 @check_data
 def get_or_create_parameter(data):
-    return
+    parameter = Parameter.create(name=data.get('parameter_name'), value=data.get('parameter_value'))
+    return parameter

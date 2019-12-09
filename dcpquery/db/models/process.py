@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Enum, Boolean, ForeignKey
+from sqlalchemy import Column, String, DateTime, Enum, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
@@ -17,7 +17,7 @@ from dcpquery.db.models.protocol import Protocol
 class Process(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "processes"
 
-    def __init__(self, uuid, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     analysis_run_type = Column(Enum(AnalysisRunTypeEnum))
@@ -49,7 +49,6 @@ class Process(DCPModelMixin, SQLAlchemyBase):
     biomaterials = relationship("Biomaterial", secondary="process_biomaterial_join_table")
 
 
-
 class ProcessParameterJoinTable(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "process_parameter_join_table"
 
@@ -73,6 +72,7 @@ class ProcessTaskJoinTable(DCPModelMixin, SQLAlchemyBase):
     process = relationship(Process, foreign_keys=[process_uuid])
     task = relationship(Task, foreign_keys=[task_uuid])
 
+
 # join table keeping here for now to check on graph
 class ProcessJoinTable(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "process_self_join_table"
@@ -93,11 +93,17 @@ class ProcessFileJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    uuid = Column(UUID(as_uuid=True), primary_key=True)
     connection_type = Column(Enum(ProcessConnectionTypeEnum))
-    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
-    file_uuid = Column(UUID(as_uuid=True), ForeignKey('files.uuid'), primary_key=True)
+    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), index=True)
+    file_uuid = Column(UUID(as_uuid=True), ForeignKey('files.uuid'), index=True)
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), index=True)
+    project = relationship(Project)
     process = relationship(Process)
     file = relationship("DCPFile")
+    __table_args__ = (UniqueConstraint(
+        'process_uuid', 'connection_type', 'file_uuid', 'project_uuid',
+        name='process_file_project_connection_type_uc'),)
 
 
 class ProcessBiomaterialJoinTable(DCPModelMixin, SQLAlchemyBase):
@@ -106,11 +112,17 @@ class ProcessBiomaterialJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    uuid = Column(UUID(as_uuid=True), primary_key=True)
     connection_type = Column(Enum(ProcessConnectionTypeEnum))
-    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
-    biomaterial_uuid = Column(UUID(as_uuid=True), ForeignKey('biomaterials.uuid'), primary_key=True)
+    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), index=True)
+    biomaterial_uuid = Column(UUID(as_uuid=True), ForeignKey('biomaterials.uuid'), index=True)
     process = relationship(Process, foreign_keys=[process_uuid])
     biomaterial = relationship(Biomaterial, foreign_keys=[biomaterial_uuid])
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), index=True)
+    project = relationship(Project)
+    __table_args__ = (UniqueConstraint(
+        'process_uuid', 'connection_type', 'biomaterial_uuid', 'project_uuid',
+        name='process_biomaterial_project_connection_type_uc'),)
 
 
 class ProcessProtocolJoinTable(DCPModelMixin, SQLAlchemyBase):
@@ -119,11 +131,17 @@ class ProcessProtocolJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    uuid = Column(UUID(as_uuid=True), primary_key=True)
     connection_type = Column(Enum(ProcessConnectionTypeEnum), default=ProcessConnectionTypeEnum.PROTOCOL)
-    protocol_uuid = Column(UUID(as_uuid=True), ForeignKey('protocols.uuid'), primary_key=True)
-    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
+    protocol_uuid = Column(UUID(as_uuid=True), ForeignKey('protocols.uuid'), index=True)
+    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), index=True)
     protocol = relationship(Protocol, foreign_keys=[protocol_uuid])
     process = relationship(Process, foreign_keys=[process_uuid])
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), index=True)
+    project = relationship(Project)
+    __table_args__ = (UniqueConstraint(
+        'process_uuid', 'connection_type', 'protocol_uuid', 'project_uuid',
+        name='process_protocol_project_connection_type_uc'),)
 
 
 class ProcessCellJoinTable(DCPModelMixin, SQLAlchemyBase):  # will need to update process process join table generation
@@ -132,13 +150,20 @@ class ProcessCellJoinTable(DCPModelMixin, SQLAlchemyBase):  # will need to updat
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    uuid = Column(UUID(as_uuid=True), primary_key=True)
     connection_type = Column(Enum(ProcessConnectionTypeEnum))
-    cell_uuid = Column(UUID(as_uuid=True), ForeignKey('cells.uuid'), primary_key=True)
-    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
+    cell_uuid = Column(UUID(as_uuid=True), ForeignKey('cells.uuid'), index=True)
+    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), index=True)
     process = relationship(Process, foreign_keys=[process_uuid])
     cell = relationship(Cell, foreign_keys=[cell_uuid])
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), index=True)
+    project = relationship(Project)
+    __table_args__ = (UniqueConstraint(
+        'process_uuid', 'connection_type', 'cell_uuid', 'project_uuid',
+        name='process_cell_project_connection_type_uc'),)
 
 
+# Todo drop this bc added project to processfilejointable?
 class ProcessProjectJoinTable(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = 'process_project_join_table'
 

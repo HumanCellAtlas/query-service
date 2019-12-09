@@ -39,7 +39,7 @@ def get_or_create_biomaterial(data):
         body=data,
     )
     for accession in accessions_list:
-        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=biomaterial))
+        BiomaterialAccessionJoinTable.create(accession=accession, biomaterial=biomaterial)
     return biomaterial
 
 
@@ -72,10 +72,9 @@ def get_or_create_cell_suspension(data):
         time_course=time_course
     )
     for accession in accessions_list:
-        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=cell_suspension))
+        BiomaterialAccessionJoinTable.create(accession=accession, biomaterial=cell_suspension)
     for cell in selected_cells_list:
-        config.db_session.add(
-            CellSuspensionCellTypeOntologyJoinTable(cell_type_ontology=cell, cell_suspension=cell_suspension))
+        CellSuspensionCellTypeOntologyJoinTable.create(cell_type_ontology=cell, cell_suspension=cell_suspension)
     return cell_suspension
 
 
@@ -120,18 +119,14 @@ def get_or_create_donor_organism(data):
         time_course=time_course
     )
     for disease in disease_list:
-        config.db_session.add(
-            DonorOrganismDiseaseOntologyJoinTable(donor_organism=donor_organism, disease_ontology=disease))
+        DonorOrganismDiseaseOntologyJoinTable.create(donor_organism=donor_organism, disease_ontology=disease)
     for accession in accessions_list:
-        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=donor_organism))
+        BiomaterialAccessionJoinTable.create(accession=accession, biomaterial=donor_organism)
     return donor_organism
 
 
 def get_or_create_specimen_from_organism(data):
     uuid = data.get('provenance', {}).get("document_id")
-    existing_object = Biomaterial.get(uuid)
-    if existing_object:
-        return existing_object
     accessions_list = get_accessions(data)
     disease_list = []
     organ = get_or_create_ontology(data.get('organ'))
@@ -158,7 +153,7 @@ def get_or_create_specimen_from_organism(data):
         collection_time=data.get('collection_time')
     )
     for accession in accessions_list:
-        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=biomaterial))
+        BiomaterialAccessionJoinTable.create(accession=accession, biomaterial=specimen)
     return specimen
 
 
@@ -201,9 +196,9 @@ def get_or_create_cell_line(data):
         time_course=time_course
     )
     for accession in accessions_list:
-        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=cell_line))
+        BiomaterialAccessionJoinTable.create(accession=accession, biomaterial=cell_line)
     for publication in publications_list:
-        config.db_session.add(CellLinePublicationJoinTable(cell_line=cell_line, publication=publication))
+        CellLinePublicationJoinTable.create(cell_line=cell_line, publication=publication)
     return cell_line
 
 
@@ -232,5 +227,5 @@ def get_or_create_organoid(data):
         age_unit=age_unit
     )
     for accession in accessions_list:
-        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=organioid))
+        BiomaterialAccessionJoinTable.create(accession=accession, biomaterial=organioid)
     return organioid

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: e54465f09848
+Revision ID: 71aea67e842a
 Revises: 000000000000
-Create Date: 2019-12-09 02:38:25.941817
+Create Date: 2019-12-09 11:48:45.763868
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'e54465f09848'
+revision = '71aea67e842a'
 down_revision = '000000000000'
 branch_labels = None
 depends_on = None
@@ -647,31 +647,41 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_table('process_biomaterial_join_table',
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('connection_type', sa.Enum('INPUT', 'OUTPUT', 'PROTOCOL', name='processconnectiontypeenum'), nullable=True),
-    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('biomaterial_uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('biomaterial_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=True),
     sa.ForeignKeyConstraint(['biomaterial_uuid'], ['biomaterials.uuid'], ),
     sa.ForeignKeyConstraint(['process_uuid'], ['processes.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'process_uuid', 'biomaterial_uuid')
+    sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
+    sa.PrimaryKeyConstraint('uuid'),
+    sa.UniqueConstraint('process_uuid', 'connection_type', 'biomaterial_uuid', 'project_uuid', name='process_biomaterial_project_connection_type_uc')
     )
-    op.create_index(op.f('ix_process_biomaterial_join_table_uuid'), 'process_biomaterial_join_table', ['uuid'], unique=False)
+    op.create_index(op.f('ix_process_biomaterial_join_table_biomaterial_uuid'), 'process_biomaterial_join_table', ['biomaterial_uuid'], unique=False)
+    op.create_index(op.f('ix_process_biomaterial_join_table_process_uuid'), 'process_biomaterial_join_table', ['process_uuid'], unique=False)
+    op.create_index(op.f('ix_process_biomaterial_join_table_project_uuid'), 'process_biomaterial_join_table', ['project_uuid'], unique=False)
     op.create_table('process_file_join_table',
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('connection_type', sa.Enum('INPUT', 'OUTPUT', 'PROTOCOL', name='processconnectiontypeenum'), nullable=True),
-    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('file_uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('file_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=True),
     sa.ForeignKeyConstraint(['file_uuid'], ['files.uuid'], ),
     sa.ForeignKeyConstraint(['process_uuid'], ['processes.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'process_uuid', 'file_uuid')
+    sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
+    sa.PrimaryKeyConstraint('uuid'),
+    sa.UniqueConstraint('process_uuid', 'connection_type', 'file_uuid', 'project_uuid', name='process_file_project_connection_type_uc')
     )
-    op.create_index(op.f('ix_process_file_join_table_uuid'), 'process_file_join_table', ['uuid'], unique=False)
+    op.create_index(op.f('ix_process_file_join_table_file_uuid'), 'process_file_join_table', ['file_uuid'], unique=False)
+    op.create_index(op.f('ix_process_file_join_table_process_uuid'), 'process_file_join_table', ['process_uuid'], unique=False)
+    op.create_index(op.f('ix_process_file_join_table_project_uuid'), 'process_file_join_table', ['project_uuid'], unique=False)
     op.create_table('process_parameter_join_table',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
@@ -697,18 +707,23 @@ def upgrade():
     )
     op.create_index(op.f('ix_process_project_join_table_uuid'), 'process_project_join_table', ['uuid'], unique=False)
     op.create_table('process_protocol_join_table',
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('connection_type', sa.Enum('INPUT', 'OUTPUT', 'PROTOCOL', name='processconnectiontypeenum'), nullable=True),
-    sa.Column('protocol_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('protocol_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=True),
     sa.ForeignKeyConstraint(['process_uuid'], ['processes.uuid'], ),
+    sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
     sa.ForeignKeyConstraint(['protocol_uuid'], ['protocols.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'protocol_uuid', 'process_uuid')
+    sa.PrimaryKeyConstraint('uuid'),
+    sa.UniqueConstraint('process_uuid', 'connection_type', 'protocol_uuid', 'project_uuid', name='process_protocol_project_connection_type_uc')
     )
-    op.create_index(op.f('ix_process_protocol_join_table_uuid'), 'process_protocol_join_table', ['uuid'], unique=False)
+    op.create_index(op.f('ix_process_protocol_join_table_process_uuid'), 'process_protocol_join_table', ['process_uuid'], unique=False)
+    op.create_index(op.f('ix_process_protocol_join_table_project_uuid'), 'process_protocol_join_table', ['project_uuid'], unique=False)
+    op.create_index(op.f('ix_process_protocol_join_table_protocol_uuid'), 'process_protocol_join_table', ['protocol_uuid'], unique=False)
     op.create_table('process_self_join_table',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
@@ -886,24 +901,31 @@ def upgrade():
     )
     op.create_index(op.f('ix_expressions_uuid'), 'expressions', ['uuid'], unique=False)
     op.create_table('process_cell_join_table',
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('connection_type', sa.Enum('INPUT', 'OUTPUT', 'PROTOCOL', name='processconnectiontypeenum'), nullable=True),
-    sa.Column('cell_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('cell_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=True),
     sa.ForeignKeyConstraint(['cell_uuid'], ['cells.uuid'], ),
     sa.ForeignKeyConstraint(['process_uuid'], ['processes.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'cell_uuid', 'process_uuid')
+    sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
+    sa.PrimaryKeyConstraint('uuid'),
+    sa.UniqueConstraint('process_uuid', 'connection_type', 'cell_uuid', 'project_uuid', name='process_cell_project_connection_type_uc')
     )
-    op.create_index(op.f('ix_process_cell_join_table_uuid'), 'process_cell_join_table', ['uuid'], unique=False)
+    op.create_index(op.f('ix_process_cell_join_table_cell_uuid'), 'process_cell_join_table', ['cell_uuid'], unique=False)
+    op.create_index(op.f('ix_process_cell_join_table_process_uuid'), 'process_cell_join_table', ['process_uuid'], unique=False)
+    op.create_index(op.f('ix_process_cell_join_table_project_uuid'), 'process_cell_join_table', ['project_uuid'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_index(op.f('ix_process_cell_join_table_uuid'), table_name='process_cell_join_table')
+    op.drop_index(op.f('ix_process_cell_join_table_project_uuid'), table_name='process_cell_join_table')
+    op.drop_index(op.f('ix_process_cell_join_table_process_uuid'), table_name='process_cell_join_table')
+    op.drop_index(op.f('ix_process_cell_join_table_cell_uuid'), table_name='process_cell_join_table')
     op.drop_table('process_cell_join_table')
     op.drop_index(op.f('ix_expressions_uuid'), table_name='expressions')
     op.drop_table('expressions')
@@ -931,15 +953,21 @@ def downgrade():
     op.drop_table('process_task_join_table')
     op.drop_index(op.f('ix_process_self_join_table_uuid'), table_name='process_self_join_table')
     op.drop_table('process_self_join_table')
-    op.drop_index(op.f('ix_process_protocol_join_table_uuid'), table_name='process_protocol_join_table')
+    op.drop_index(op.f('ix_process_protocol_join_table_protocol_uuid'), table_name='process_protocol_join_table')
+    op.drop_index(op.f('ix_process_protocol_join_table_project_uuid'), table_name='process_protocol_join_table')
+    op.drop_index(op.f('ix_process_protocol_join_table_process_uuid'), table_name='process_protocol_join_table')
     op.drop_table('process_protocol_join_table')
     op.drop_index(op.f('ix_process_project_join_table_uuid'), table_name='process_project_join_table')
     op.drop_table('process_project_join_table')
     op.drop_index(op.f('ix_process_parameter_join_table_uuid'), table_name='process_parameter_join_table')
     op.drop_table('process_parameter_join_table')
-    op.drop_index(op.f('ix_process_file_join_table_uuid'), table_name='process_file_join_table')
+    op.drop_index(op.f('ix_process_file_join_table_project_uuid'), table_name='process_file_join_table')
+    op.drop_index(op.f('ix_process_file_join_table_process_uuid'), table_name='process_file_join_table')
+    op.drop_index(op.f('ix_process_file_join_table_file_uuid'), table_name='process_file_join_table')
     op.drop_table('process_file_join_table')
-    op.drop_index(op.f('ix_process_biomaterial_join_table_uuid'), table_name='process_biomaterial_join_table')
+    op.drop_index(op.f('ix_process_biomaterial_join_table_project_uuid'), table_name='process_biomaterial_join_table')
+    op.drop_index(op.f('ix_process_biomaterial_join_table_process_uuid'), table_name='process_biomaterial_join_table')
+    op.drop_index(op.f('ix_process_biomaterial_join_table_biomaterial_uuid'), table_name='process_biomaterial_join_table')
     op.drop_table('process_biomaterial_join_table')
     op.drop_table('library_prep_protocols')
     op.drop_table('ipsc_induction_protocols')

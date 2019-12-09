@@ -64,20 +64,20 @@ def get_or_create_project(data):
 
 
 def create_project_funder_link(project, funder):
-    config.db_session.add(ProjectFunderJoinTable(project=project, funder=funder))
+    ProjectFunderJoinTable.create(project=project, funder=funder)
 
 
 def create_project_contributor_link(project, contributor):
-    config.db_session.add(ProjectContributorJoinTable(project=project, contributor=contributor))
+    ProjectContributorJoinTable.create(project=project, contributor=contributor)
 
 
 def create_project_publication_list(project, publication):
-    config.db_session.add(ProjectPublicationJoinTable(project_uuid=project.uuid, publication=publication))
+    ProjectPublicationJoinTable.create(project_uuid=project.uuid, publication=publication)
 
 
 def create_project_accession_link(project, accession):
-    config.db_session.add(ProjectAccessionJoinTable(project_uuid=project.uuid, accession=accession))
+    ProjectAccessionJoinTable.create(project_uuid=project.uuid, accession=accession)
 
 
 def create_project_url_link(project, link):
-    config.db_session.add(ProjectLinkJoinTable(project, link))
+    ProjectLinkJoinTable.create(project, link)

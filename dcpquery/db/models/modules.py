@@ -100,10 +100,10 @@ class Ontology(DCPModelMixin, SQLAlchemyBase):
     def create(cls, ontology=None, uuid=None, **kw):
         if not uuid:
             uuid = str(uuid4())
-        r = cls(uuid=uuid, ontology=ontology, **kw)
-        config.db_session.add(r)
+        row = cls(uuid=uuid, ontology=ontology, **kw)
+        config.db_session.add(row)
         config.db_session.commit()
-        return r
+        return row
 
     @classmethod
     def get_or_create(cls, ontology=None, **kw):

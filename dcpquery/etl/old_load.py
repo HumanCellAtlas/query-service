@@ -3,6 +3,8 @@ import re
 
 from dcpquery import config
 from dcpquery.db.models import Bundle, DCPMetadataSchemaType, File, BundleFileLink, Process, ProcessFileLink
+from dcpquery.db.models.enums import ProcessConnectionTypeEnum
+from dcpquery.db.models.process import ProcessBiomaterialJoinTable, ProcessFileJoinTable, ProcessProtocolJoinTable
 from dcpquery.etl.load import handle_all_schema_types
 
 logger = logging.getLogger(__name__)
@@ -14,13 +16,11 @@ class BundleLoader:
         # schema_types = config.db_session.query(DCPMetadataSchemaType).with_entities(DCPMetadataSchemaType.name).all()
         # self.schema_types = [schema[0] for schema in schema_types]
 
-
     # def create_project(self, files):
     #     for file in files:
     #         if file['body']:
     #             if file['body'].get('describedBy', '').split('/')[-1] == 'project':
     #                 return Project(uuid=file['uuid'], version=file['version'])
-
 
     def load_bundle(self, bundle, extractor=None, transformer=None):
         bf_links = []
@@ -28,25 +28,68 @@ class BundleLoader:
         #                     version=bundle["version"],
         #                     manifest=bundle["manifest"],
         #                     aggregate_metadata=bundle["aggregate_metadata"])
+        track_uuids = {}
+        links_data = {}
         for file_data in bundle["files"]:
             filename = file_data.pop("name")
-            file_extension = get_file_extension(filename)
+            # file_extension = get_file_extension(filename)
             schema_type = None
-            major_version = None
-            minor_version = None
+            # major_version = None
+            # minor_version = None
             if file_data['body']:
                 schema_type = file_data['body'].get('describedBy', '').split('/')[-1]
                 schema_version = file_data['body'].get('describedBy', '').split('/')[-2]
-                major_version = schema_version.split('.')[0]
-                minor_version = schema_version.split('.')[1]
-                handle_all_schema_types(schema_type, schema_version, file_data)
+                # major_version = schema_version.split('.')[0]
+                # minor_version = schema_version.split('.')[1]
 
-            # if schema_type == 'links' and file_data["body"]:
-            #     links = file_data['body']['links']
-            #     load_links(links, bundle['uuid'])
+                track_uuids, links_data = handle_all_schema_types(schema_type, schema_version, file_data, track_uuids,
+                                                                  links_data)
+        links = links_data['links']
+        project_uuid = track_uuids['project']
+        for link in links:
+            process_uuid = link['process']
+            inputs = link['inputs']
+            outputs = link['outputs']
+            protocols = link['protocols']
 
-            # bf_links.append(BundleFileLink(bundle=bundle_row, file=file_row, name=filename))
-        # config.db_session.add_all(bf_links)
+            for input in inputs:
+                if link['input_type'] == 'biomaterial':
+                    ProcessBiomaterialJoinTable(
+                        connection_type=ProcessConnectionTypeEnum('INPUT'),
+                        process_uuid=process_uuid,
+                        biomaterial_uuid=input,
+                        project_uuid=project_uuid
+                    )
+                if link['input_type'] == 'file':
+                    ProcessFileJoinTable(
+                        connection_type=ProcessConnectionTypeEnum('INPUT'),
+                        process_uuid=process_uuid,
+                        file_uuid=input,
+                        project_uuid=project_uuid
+                    )
+            for output in outputs:
+                if link['output_type'] == 'biomaterial':
+                    ProcessBiomaterialJoinTable.create(
+                        connection_type=ProcessConnectionTypeEnum('OUTPUT'),
+                        process_uuid=process_uuid,
+                        biomaterial_uuid=output,
+                        project_uuid=project_uuid
+                    )
+                if link['output_type'] == 'file':
+                    ProcessFileJoinTable.create(
+                        connection_type=ProcessConnectionTypeEnum('OUTPUT'),
+                        process_uuid=process_uuid,
+                        file_uuid=output,
+                        project_uuid=project_uuid
+                    )
+            for protocol in protocols:
+                ProcessProtocolJoinTable.create(
+                    connection_type=ProcessConnectionTypeEnum('PROTOCOL'),
+                    process_uuid=process_uuid,
+                    protocol_uuid=protocol['protocol_id'],
+                    project_uuid=project_uuid
+                )
+
 
 
 def get_file_extension(filename):
