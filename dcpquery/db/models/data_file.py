@@ -14,6 +14,7 @@ class DCPFile(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "files"
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
     discriminator = Column('type', String(50))
@@ -33,7 +34,7 @@ class SequenceFile(DCPFile, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    uuid = Column(UUID, ForeignKey('files.uuid'), primary_key=True)
+    uuid = Column(UUID(as_uuid=True), ForeignKey('files.uuid'), primary_key=True)
     discriminator = 'sequence_file'
     read_index = Column(Enum(ReadIndexEnum))
     libary_prep_id = Column(String)

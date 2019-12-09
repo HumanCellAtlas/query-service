@@ -1,12 +1,18 @@
+import enum
+import logging
+from uuid import uuid4
+
 from sqlalchemy import Column, String, Boolean, Integer, Enum, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+from dcpquery import config
 from dcpquery.db.models import SQLAlchemyBase
 from dcpquery.db.models.admin import User
 from dcpquery.db.models.base import DCPModelMixin
-from dcpquery.db.models.enums import AccessionTypeEnum, AnnotationTypeEnum, AnnotationSourceEnum, StorageMethodEnum, \
-    PreservationMethodEnum, NutritionalStateEnum, BarcodeReadEnum
+from dcpquery.db.models.enums import (AccessionTypeEnum, StorageMethodEnum,
+                                      PreservationMethodEnum, NutritionalStateEnum, BarcodeReadEnum, WellQualityEnum)
+logger = logging.getLogger(__name__)
 
 
 class Contributor(DCPModelMixin, SQLAlchemyBase):
@@ -18,9 +24,9 @@ class Contributor(DCPModelMixin, SQLAlchemyBase):
     institution = Column(String)  # make table or enum?
     lab = Column(String)  # make table?
     corresponding_contributor = Column(Boolean)
-    project_role_uuid = Column(UUID, ForeignKey('ontologies.uuid'))
+    project_role_id = Column(String, ForeignKey('ontologies.ontology'))
     project_role = relationship("Ontology")
-    user_uuid = Column(UUID, ForeignKey('users.uuid'))
+    user_uuid = Column(UUID(as_uuid=True), ForeignKey('users.uuid'))
     user = relationship(User)
     projects = relationship("Project", secondary="project_contributor_join_table")
 
@@ -36,7 +42,7 @@ class Publication(DCPModelMixin, SQLAlchemyBase):
     title = Column(String)
     doi = Column(Integer)
     url = relationship("Link")
-    url_uuid = Column(UUID, ForeignKey('links.uuid'))
+    url_uuid = Column(UUID(as_uuid=True), ForeignKey('links.uuid'))
     projects = relationship("Project", secondary="project_publication_join_table")
 
 
@@ -79,12 +85,44 @@ class Ontology(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+    uuid = Column(UUID, primary_key=False)
     text = Column(String)
-    ontology = Column(String)
+    ontology = Column(String, primary_key=True, index=True, unique=True, nullable=False)
     ontology_label = Column(String)
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
+
+    @classmethod
+    def get(cls, ontology):
+        return config.db_session.query(cls).filter(cls.ontology == ontology).one_or_none()
+
+    @classmethod
+    def create(cls, ontology=None, uuid=None, **kw):
+        if not uuid:
+            uuid = str(uuid4())
+        r = cls(uuid=uuid, ontology=ontology, **kw)
+        config.db_session.add(r)
+        config.db_session.commit()
+        return r
+
+    @classmethod
+    def get_or_create(cls, ontology=None, **kw):
+        existing_object = cls.get(ontology)
+        if existing_object:
+            return existing_object
+        try:
+            return cls.create(ontology=ontology, **kw)
+        except Exception as e:
+            logger.info(f"SOMETHING WENT WRONG: CLS: {cls}, uuid: {uuid}, exception: {e} ")
+            config.db_session.rollback()
+
+
+class AnnotationTypeEnum(enum.Enum):
+    pass
+
+
+class AnnotationSourceEnum(enum.Enum):
+    pass
 
 
 class Annotation(DCPModelMixin, SQLAlchemyBase):
@@ -134,7 +172,7 @@ class PreservationStorage(DCPModelMixin, SQLAlchemyBase):
     preservation_method = Column(Enum(PreservationMethodEnum))
     storage_time = Column(Integer)
     storage_time_unit = relationship(Ontology)
-    storage_time_unit_uuid = Column(UUID, ForeignKey('ontologies.uuid'))
+    storage_time_unit_id = Column(String, ForeignKey('ontologies.ontology'))
 
 
 class MedicalHistory(DCPModelMixin, SQLAlchemyBase):
@@ -187,7 +225,7 @@ class PlateBasedSequencing(DCPModelMixin, SQLAlchemyBase):
 
     plate_label = Column(String)
     well_label = Column(String)
-    well_quality = Column(String)
+    well_quality = Column(Enum(WellQualityEnum))
 
 
 class GrowthCondition(DCPModelMixin, SQLAlchemyBase):
@@ -214,7 +252,7 @@ class CellMorphology(DCPModelMixin, SQLAlchemyBase):
     percent_cell_viability = Column(Integer)
     percent_necrosis = Column(Integer)
     cell_size_unit = relationship(Ontology)
-    cell_size_unit_uuid = Column(UUID, ForeignKey('ontologies.uuid'))
+    cell_size_unit_id = Column(String, ForeignKey('ontologies.ontology'))
 
 
 class TimeCourse(DCPModelMixin, SQLAlchemyBase):
@@ -226,7 +264,7 @@ class TimeCourse(DCPModelMixin, SQLAlchemyBase):
     value = Column(String)
     relevance = Column(String)
     unit = relationship(Ontology)
-    unit_uuid = Column(UUID, ForeignKey('ontologies.uuid'))
+    unit_id = Column(String, ForeignKey('ontologies.ontology'))
 
 
 # Protocols ###################################################################################3
@@ -296,3 +334,4 @@ class Parameter(DCPModelMixin, SQLAlchemyBase):
     name = Column(String)
     value = Column(String)
     checksum = Column(String)
+

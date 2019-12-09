@@ -1,6 +1,7 @@
 from dcpquery import config
 from dcpquery.db.models.biomaterial import (CellSuspension, DonorOrganism, Biomaterial, Specimen, CellLine,
                                             Organoid)
+from dcpquery.db.models.enums import CellLineTypeEnum, IsLivingEnum, SexEnum
 from dcpquery.db.models.join_tables import BiomaterialAccessionJoinTable, CellLinePublicationJoinTable, \
     CellSuspensionCellTypeOntologyJoinTable, DonorOrganismDiseaseOntologyJoinTable
 from dcpquery.etl.load.utils import check_data
@@ -13,30 +14,41 @@ from dcpquery.etl.load.modules import (get_or_create_ontology, get_or_create_cau
                                        get_or_create_preservation_storage, get_or_create_publication)
 
 
-@check_data
-def create_biomaterial(data):
+def get_accessions(data):
     accessions_list = []
-    for accession in data.get('accessions', []):
+    for accession in data.get('biosamples_acessions', []):
         accessions_list.append(get_or_create_accession(accession))
+    for accession in data.get('insdc_sample_accession', []):
+        accessions_list.append(get_or_create_accession(accession))
+    for accession in data.get('HDBR_accession', []):
+        accessions_list.append(get_or_create_accession(accession))
+    return accessions_list
 
-    biomaterial = Biomaterial(
+
+@check_data
+def get_or_create_biomaterial(data):
+    accessions_list = get_accessions(data)
+
+    biomaterial = Biomaterial.get_or_create(
+        uuid=data.get('provenance', {}).get("document_id"),
         biomaterial_id=data.get('biomaterial_id'),
-        ncbi_taxon_id=data.get('ncbi_taxon_id'),
+        ncbi_taxon_id=data.get('ncbi_taxon_id', [None])[0],
         name=data.get('biomaterial_name'),
         description=data.get('biomaterial_description'),
         genotype=data.get('genotype'),
         body=data,
     )
-    config.db_session.add(biomaterial)
     for accession in accessions_list:
         config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=biomaterial))
+    return biomaterial
 
 
-def create_cell_suspension(data):
-    accessions_list = []
+def get_or_create_cell_suspension(data):
+    uuid = data.get('provenance', {}).get("document_id")
+
+    accessions_list = get_accessions(data)
     selected_cells_list = []
-    for accession in data.get('accessions', []):
-        accessions_list.append(get_or_create_accession(accession))
+
     growth_conditions = get_or_create_growth_conditions(data.get('growth_conditions'))
     cell_morphology = get_or_create_cell_morphology(data.get('cell_morphology'))
     genus_species = get_or_create_ontology(data.get("genus_species", [None])[0])
@@ -44,11 +56,10 @@ def create_cell_suspension(data):
     for cell in data.get('selected_cell_types', []):
         selected_cells_list.append(get_or_create_ontology(cell))
     plate_based_sequencing = get_or_create_plate_based_sequencing(data.get("plate_based_sequencing"))
-    cell_suspension = CellSuspension(
-        discriminator='cell_suspension',
-        uuid=data.get('provenance', {}).get("document_id"),
+    cell_suspension = CellSuspension.get_or_create(
+        uuid=uuid,
         biomaterial_id=data.get('biomaterial_id'),
-        ncbi_taxon_id=data.get('ncbi_taxon_id'),
+        ncbi_taxon_id=data.get('ncbi_taxon_id', [None])[0],
         name=data.get('biomaterial_name'),
         description=data.get('biomaterial_description'),
         genotype=data.get('genotype'),
@@ -60,19 +71,19 @@ def create_cell_suspension(data):
         plate_based_sequencing=plate_based_sequencing,
         time_course=time_course
     )
-    config.db_session.add(cell_suspension)
     for accession in accessions_list:
         config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=cell_suspension))
     for cell in selected_cells_list:
         config.db_session.add(
             CellSuspensionCellTypeOntologyJoinTable(cell_type_ontology=cell, cell_suspension=cell_suspension))
+    return cell_suspension
 
 
-def create_donor_organism(data):
+def get_or_create_donor_organism(data):
     disease_list = []
-    accessions_list = []
-    for accession in data.get('accessions', []):
-        accessions_list.append(get_or_create_accession(accession))
+    accessions_list = get_accessions(data)
+    uuid = data.get('provenance', {}).get("document_id")
+
     try:
         organism_age = int(data.get("organism_age"))
     except:
@@ -89,17 +100,17 @@ def create_donor_organism(data):
     for disease in data.get('diseases', []):
         disease_list.append(get_or_create_ontology(disease))
     # todo handle mouse strain, bmi and ethnicity
-    donor_organism = DonorOrganism(
-        discriminator='donor_organism',
+    donor_organism = DonorOrganism.get_or_create(
+        uuid=uuid,
         biomaterial_id=data.get('biomaterial_id'),
-        ncbi_taxon_id=data.get('ncbi_taxon_id'),
+        ncbi_taxon_id=data.get('ncbi_taxon_id', [None])[0],
         name=data.get('biomaterial_name'),
         description=data.get('biomaterial_description'),
         genotype=data.get('genotype'),
         body=data,
-        is_living=data.get("is_living"),
+        is_living=IsLivingEnum(data.get("is_living")),
         development_stage=development_stage,
-        sex=data.get('sex'),
+        sex=SexEnum(data.get('sex')),
         genus_species=genus_species,
         organism_age=organism_age,
         organism_age_unit=organism_age_unit,
@@ -108,16 +119,20 @@ def create_donor_organism(data):
         medical_history=medical_history,
         time_course=time_course
     )
-    config.db_session.add(donor_organism)
     for disease in disease_list:
         config.db_session.add(
             DonorOrganismDiseaseOntologyJoinTable(donor_organism=donor_organism, disease_ontology=disease))
     for accession in accessions_list:
         config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=donor_organism))
+    return donor_organism
 
 
-def create_specimen_from_organism(data):
-    accessions_list = []
+def get_or_create_specimen_from_organism(data):
+    uuid = data.get('provenance', {}).get("document_id")
+    existing_object = Biomaterial.get(uuid)
+    if existing_object:
+        return existing_object
+    accessions_list = get_accessions(data)
     disease_list = []
     organ = get_or_create_ontology(data.get('organ'))
     # todo make this m2m?
@@ -125,14 +140,12 @@ def create_specimen_from_organism(data):
     # state_of_specimen = get_or_create_specimen_state(data.get('state_of_specimen'))
     preservation_storage = get_or_create_preservation_storage(data.get('preservation_storage'))
     genus_species = get_or_create_ontology(data.get("genus_species", [None])[0])
-    for accession in data.get('accessions', []):
-        accessions_list.append(get_or_create_accession(accession))
     for disease in data.get('diseases', []):
         disease_list.append(get_or_create_ontology(disease))
-    specimen = Specimen(
+    specimen = Specimen.get_or_create(
         biomaterial_id=data.get('biomaterial_id'),
-        discriminator='specimen_from_organism',
-        ncbi_taxon_id=data.get('ncbi_taxon_id'),
+        uuid=uuid,
+        ncbi_taxon_id=data.get('ncbi_taxon_id', [None])[0],
         name=data.get('biomaterial_name'),
         description=data.get('biomaterial_description'),
         genotype=data.get('genotype'),
@@ -144,13 +157,15 @@ def create_specimen_from_organism(data):
         preservation_storage=preservation_storage,
         collection_time=data.get('collection_time')
     )
-    config.db_session.add(specimen)
     for accession in accessions_list:
         config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=biomaterial))
+    return specimen
 
 
-def create_cell_line(data):
-    accessions_list = []
+def get_or_create_cell_line(data):
+    uuid = data.get('provenance', {}).get("document_id")
+
+    accessions_list = get_accessions(data)
     publications_list = []
     cell_type = get_or_create_ontology(data.get('cell_type'))
     model_organ = get_or_create_ontology(data.get('model_organ'))
@@ -161,21 +176,20 @@ def create_cell_line(data):
     disease = get_or_create_ontology(data.get('disease'))
     genus_species = get_or_create_ontology(data.get('genus_species'))
     time_course = get_or_create_time_course(data.get('timecourse'))
-    for accession in data.get('accessions', []):
-        accessions_list.append(get_or_create_accession(accession))
 
     for publication in data.get('publications', []):
         publications_list.append(get_or_create_publication(publication))
 
-    cell_line = CellLine(
+    cell_line = CellLine.get_or_create(
         discriminator="cell_line",
+        uuid=uuid,
         biomaterial_id=data.get('biomaterial_id'),
-        ncbi_taxon_id=data.get('ncbi_taxon_id'),
+        ncbi_taxon_id=data.get('ncbi_taxon_id', [None])[0],
         name=data.get('biomaterial_name'),
         description=data.get('biomaterial_description'),
         genotype=data.get('genotype'),
         body=data,
-        type=data.get('type'),
+        type=CellLineTypeEnum(data.get('type')),
         cell_type=cell_type,
         model_organ=model_organ,
         cell_cycle=cell_cycle,
@@ -186,7 +200,6 @@ def create_cell_line(data):
         genus_species=genus_species,
         time_course=time_course
     )
-    config.db_session.add(cell_line)
     for accession in accessions_list:
         config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=cell_line))
     for publication in publications_list:
@@ -194,20 +207,20 @@ def create_cell_line(data):
     return cell_line
 
 
-def create_organoid(data):
-    accessions_list = []
+def get_or_create_organoid(data):
+    uuid = data.get('provenance', {}).get("document_id")
+
+    accessions_list = get_accessions(data)
     model_organ = get_or_create_ontology(data.get('model_organ'))
     age = int(data.get('age')) if data.get('age') else None
     genus_species = get_or_create_ontology(data.get('genus_species'))
     model_organ_part = get_or_create_ontology(data.get('model_organ_part'))
     age_unit = get_or_create_ontology(data.get('age_unit'))
-    for accession in data.get('accessions', []):
-        accessions_list.append(get_or_create_accession(accession))
 
-    biomaterial = Organoid(
-        discriminator='organoid',
+    organioid = Organoid.get_or_create(
+        uuid=uuid,
         biomaterial_id=data.get('biomaterial_id'),
-        ncbi_taxon_id=data.get('ncbi_taxon_id'),
+        ncbi_taxon_id=data.get('ncbi_taxon_id', [None])[0],
         name=data.get('biomaterial_name'),
         description=data.get('biomaterial_description'),
         genotype=data.get('genotype'),
@@ -218,6 +231,6 @@ def create_organoid(data):
         model_organ_part=model_organ_part,
         age_unit=age_unit
     )
-    config.db_session.add(biomaterial)
     for accession in accessions_list:
-        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=biomaterial))
+        config.db_session.add(BiomaterialAccessionJoinTable(accession=accession, biomaterial=organioid))
+    return organioid

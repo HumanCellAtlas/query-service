@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 @check_data
-def create_project(data):
+def get_or_create_project(data):
     logger.info(f"Create Project: {data.get('project_core', {}).get('project_short_name')}")
     funder_objects = []
     contributor_objects = []
@@ -40,13 +40,12 @@ def create_project(data):
     for link in supplementary_links_list:
         link_objects.append(get_or_create_url_link(link))
     for accession in geo_series_accession_list:
-        accession_objects.append(get_or_create_accession(accession, "geo_series"))
+        accession_objects.append(get_or_create_accession(accession, "GEO_SERIES"))
     for accession in insdc_study_accession_list:
-        accession_objects.append(get_or_create_accession(accession, "insdc_study"))
+        accession_objects.append(get_or_create_accession(accession, "INSDC_STUDY"))
     for accession in insdc_project_accession_list:
-        accession_objects.append(get_or_create_accession(accession, "insdc_project"))
-    project = Project(uuid=uuid, short_name=short_name, title=title, description=description, body=body)
-    config.db_session.add(project)
+        accession_objects.append(get_or_create_accession(accession, "INSDC_PROJECT"))
+    project = Project.get_or_create(uuid=uuid, short_name=short_name, title=title, description=description, body=body)
     for funder in funder_objects:
         create_project_funder_link(project, funder)
 
@@ -61,6 +60,7 @@ def create_project(data):
 
     for link in link_objects:
         create_project_url_link(project, link)
+    return project
 
 
 def create_project_funder_link(project, funder):
@@ -72,11 +72,11 @@ def create_project_contributor_link(project, contributor):
 
 
 def create_project_publication_list(project, publication):
-    config.db_session.add(ProjectPublicationJoinTable(project, publication))
+    config.db_session.add(ProjectPublicationJoinTable(project_uuid=project.uuid, publication=publication))
 
 
 def create_project_accession_link(project, accession):
-    config.db_session.add(ProjectAccessionJoinTable(project, accession))
+    config.db_session.add(ProjectAccessionJoinTable(project_uuid=project.uuid, accession=accession))
 
 
 def create_project_url_link(project, link):

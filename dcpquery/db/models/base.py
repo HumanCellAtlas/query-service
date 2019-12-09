@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-import uuid as uuid
+from uuid import uuid4
 from sqlalchemy import Column, Integer, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
@@ -14,10 +14,14 @@ logger = logging.getLogger(__name__)
 db = config.db_session
 
 
+class MissingUUIDException(Exception):
+    pass
+
+
 class DCPModelMixin(object):
     __tablename__ = 'dcp_base'
     # provenance.document_id
-    uuid = Column(UUID(as_uuid=True), nullable=False, index=True, primary_key=True, default=uuid.uuid4)
+    uuid = Column(UUID(as_uuid=True), nullable=False, index=True, primary_key=True, default=uuid4())
     """"
     PROBLEM?
     Because the versioning feature relies upon comparison of the in memory record of an object, the feature only applies
@@ -39,11 +43,11 @@ currently by polymorphic_on and version_id_col; the declarative extension will r
 
     """
 
-    version_id = Column(Integer, nullable=False)
+    version_id = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
-# TODO current bug -> Trying to redefine primary-key column 'uuid' as a non-primary-key column on table 'users'
+    # TODO current bug -> Trying to redefine primary-key column 'uuid' as a non-primary-key column on table 'users'
     # @declared_attr
     # def created_by_uuid(cls):
     #     return Column('uuid', ForeignKey('user.uuid'))
@@ -73,7 +77,8 @@ currently by polymorphic_on and version_id_col; the declarative extension will r
 
     @classmethod
     def get(cls, uuid):
-        return cls.query.get(uuid)
+        return config.db_session.query(cls).filter(cls.uuid == uuid).one_or_none()
+
     #
     # @classmethod
     # def get_by(cls, **kw):
@@ -88,11 +93,31 @@ currently by polymorphic_on and version_id_col; the declarative extension will r
     #
     #     return r
     #
-    # @classmethod
-    # def create(cls, **kw):
-    #     r = cls(**kw)
-    #     db.add(r)
-    #     return r
+    @classmethod
+    def create(cls, uuid=None, **kw):
+        if not uuid:
+            if cls in ('biomaterials', 'protocols', 'projects', 'files', 'processes'):
+                raise MissingUUIDException
+            else:
+                uuid = str(uuid4())
+        r = cls(uuid=uuid, **kw)
+        config.db_session.add(r)
+        config.db_session.commit()
+        return r
+
+    @classmethod
+    def get_or_create(cls, uuid, **kw):
+        existing_object = cls.get(uuid)
+        if existing_object:
+            return existing_object
+        try:
+            return cls.create(uuid=uuid, **kw)
+        except Exception as e:
+            import pdb
+            pdb.set_trace()
+            logger.info(f"SOMETHING WENT WRONG: CLS: {cls}, uuid: {uuid}, exception: {e} ")
+            config.db_session.rollback()
+
     #
     # def save(self):
     #     db.add(self)

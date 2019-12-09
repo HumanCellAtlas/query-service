@@ -32,8 +32,8 @@ class ProjectContributorJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    project_uuid = Column(UUID, ForeignKey('projects.uuid'), primary_key=True)
-    contributor_uuid = Column(UUID, ForeignKey('contributors.uuid'), primary_key=True)
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    contributor_uuid = Column(UUID(as_uuid=True), ForeignKey('contributors.uuid'), primary_key=True)
     project = relationship(Project, foreign_keys=[project_uuid])
     contributor = relationship("Contributor", foreign_keys=[contributor_uuid])
 
@@ -44,8 +44,8 @@ class ProjectPublicationJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    project_uuid = Column(UUID, ForeignKey('projects.uuid'), primary_key=True)
-    publication_uuid = Column(UUID, ForeignKey('publications.uuid'), primary_key=True)
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    publication_uuid = Column(UUID(as_uuid=True), ForeignKey('publications.uuid'), primary_key=True)
     publication = relationship("Publication", foreign_keys=[publication_uuid])
     project = relationship(Project, foreign_keys=[project_uuid])
 
@@ -56,8 +56,8 @@ class ProjectFunderJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    project_uuid = Column(UUID, ForeignKey('projects.uuid'), primary_key=True)
-    funder_uuid = Column(UUID, ForeignKey('funders.uuid'), primary_key=True)
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    funder_uuid = Column(UUID(as_uuid=True), ForeignKey('funders.uuid'), primary_key=True)
     project = relationship(Project, foreign_keys=[project_uuid])
     funder = relationship("Funder", foreign_keys=[funder_uuid])
 
@@ -68,8 +68,8 @@ class ProjectLinkJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    project_uuid = Column(UUID, ForeignKey('projects.uuid'), primary_key=True)
-    link_uuid = Column(UUID, ForeignKey('links.uuid'), primary_key=True)
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    link_uuid = Column(UUID(as_uuid=True), ForeignKey('links.uuid'), primary_key=True)
     project = relationship(Project, foreign_keys=[project_uuid])
     link = relationship("Link", foreign_keys=[link_uuid])
 
@@ -77,11 +77,11 @@ class ProjectLinkJoinTable(DCPModelMixin, SQLAlchemyBase):
 class ProjectAccessionJoinTable(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "project_accession_join_table"
 
-    def __init__(self, project, accession, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    project_uuid = Column(UUID, ForeignKey('projects.uuid'), primary_key=True)
-    accessions_uuid = Column(UUID, ForeignKey('accessions.uuid'), primary_key=True)
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    accessions_uuid = Column(UUID(as_uuid=True), ForeignKey('accessions.uuid'), primary_key=True)
     project = relationship(Project, foreign_keys=[project_uuid])
     accession = relationship("Accession", foreign_keys=[accessions_uuid])
 
@@ -92,7 +92,7 @@ class ProjectAccessGroupJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    project_uuid = Column(UUID, ForeignKey('projects.uuid'), primary_key=True)
-    access_group_uuid = Column(UUID, ForeignKey('access_groups.uuid'), primary_key=True)
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    access_group_uuid = Column(UUID(as_uuid=True), ForeignKey('access_groups.uuid'), primary_key=True)
     access_group = relationship("AccessGroup", foreign_keys=[access_group_uuid])
     project = relationship(Project, foreign_keys=[project_uuid])
