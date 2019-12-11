@@ -9,7 +9,7 @@ from dcpquery.db.models.base import DCPModelMixin
 from dcpquery.db.models.biomaterial import Biomaterial
 from dcpquery.db.models.cell import Cell
 from dcpquery.db.models.enums import AnalysisRunTypeEnum, ProcessConnectionTypeEnum
-from dcpquery.db.models.modules import Ontology, Accession, Task, Parameter
+from dcpquery.db.models.modules import Ontology, Accession
 from dcpquery.db.models.project import Project
 from dcpquery.db.models.protocol import Protocol
 
@@ -33,8 +33,8 @@ class Process(DCPModelMixin, SQLAlchemyBase):
     end_time = Column(DateTime)
     analysis = Column(Boolean)
     analysis_type = Column(String)
-    accession_uuid = Column(UUID(as_uuid=True), ForeignKey('accessions.uuid'))
-    accession = relationship(Accession, foreign_keys=[accession_uuid])
+    accession_id = Column(String, ForeignKey('accessions.id'))
+    accession = relationship(Accession, foreign_keys=[accession_id])
     type_id = Column(String, ForeignKey('ontologies.ontology'))
     type = relationship(Ontology, foreign_keys=[type_id])
     tasks = relationship("Task", secondary="process_task_join_table")
@@ -47,30 +47,6 @@ class Process(DCPModelMixin, SQLAlchemyBase):
     cells = relationship("Cell", secondary="process_cell_join_table")
     protocols = relationship("Protocol", secondary="process_protocol_join_table")
     biomaterials = relationship("Biomaterial", secondary="process_biomaterial_join_table")
-
-
-class ProcessParameterJoinTable(DCPModelMixin, SQLAlchemyBase):
-    __tablename__ = "process_parameter_join_table"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
-    parameter_uuid = Column(UUID(as_uuid=True), ForeignKey('parameters.uuid'), primary_key=True)
-    process = relationship(Process, foreign_keys=[process_uuid])
-    parameter = relationship(Parameter, foreign_keys=[parameter_uuid])
-
-
-class ProcessTaskJoinTable(DCPModelMixin, SQLAlchemyBase):
-    __tablename__ = "process_task_join_table"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
-    task_uuid = Column(UUID(as_uuid=True), ForeignKey('tasks.uuid'), primary_key=True)
-    process = relationship(Process, foreign_keys=[process_uuid])
-    task = relationship(Task, foreign_keys=[task_uuid])
 
 
 # join table keeping here for now to check on graph
@@ -86,7 +62,7 @@ class ProcessJoinTable(DCPModelMixin, SQLAlchemyBase):
     child_process = relationship(Process, foreign_keys=[child_process_uuid])
 
 
-## Todo triple check these tables for the graph -- combine into 1 table?
+# Todo triple check these tables for the graph -- combine into 1 table?
 class ProcessFileJoinTable(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "process_file_join_table"
 

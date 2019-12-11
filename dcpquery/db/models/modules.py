@@ -12,6 +12,7 @@ from dcpquery.db.models.admin import User
 from dcpquery.db.models.base import DCPModelMixin
 from dcpquery.db.models.enums import (AccessionTypeEnum, StorageMethodEnum,
                                       PreservationMethodEnum, NutritionalStateEnum, BarcodeReadEnum, WellQualityEnum)
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,19 +41,46 @@ class Publication(DCPModelMixin, SQLAlchemyBase):
     authors = Column(String)
     # authors = relationship("User", secondary="publication_author_join_table")
     title = Column(String)
-    doi = Column(Integer)
-    url = relationship("Link")
-    url_uuid = Column(UUID(as_uuid=True), ForeignKey('links.uuid'))
+    doi = Column(String)  # todo make an int?
+    url_name = Column(String, ForeignKey('urls.url'))
+    url = relationship("URL_Object", foreign_keys=[url_name])
     projects = relationship("Project", secondary="project_publication_join_table")
 
 
-class Link(DCPModelMixin, SQLAlchemyBase):
-    __tablename__ = "links"
+class URL_Object(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "urls"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    url = Column(String)
+    url = Column(String, unique=True, primary_key=True)
+
+    @classmethod
+    def get(cls, url):
+        return config.db_session.query(cls).filter(cls.url == url).one_or_none()
+
+    @classmethod
+    def create(cls, url, **kw):
+        uuid = str(uuid4())
+        row = cls(url=url, uuid=uuid, **kw)
+        try:
+            config.db_session.add(row)
+        except Exception as e:
+            logger.info(f"Issue {e} inserting {cls}, {uuid}, {kw}")
+            config.db_session.rollback()
+            pass
+        return row
+
+    @classmethod
+    def get_or_create(cls, url, **kw):
+        existing_object = cls.get(url)
+        if existing_object:
+            return existing_object
+        try:
+            return cls.create(url=url, **kw)
+        except Exception as e:
+            logger.info(f"SOMETHING WENT WRONG: URL_Object CLS: {cls}, uuid: {uuid}, exception: {e} ")
+            config.db_session.rollback()
 
 
 class Funder(DCPModelMixin, SQLAlchemyBase):
@@ -77,7 +105,35 @@ class Accession(DCPModelMixin, SQLAlchemyBase):
         super().__init__(*args, **kwargs)
 
     type = Column(Enum(AccessionTypeEnum))
-    id = Column(String)
+    id = Column(String, primary_key=True, index=True, unique=True)
+
+    @classmethod
+    def get(cls, id):
+        return config.db_session.query(cls).filter(cls.id == id).one_or_none()
+
+    @classmethod
+    def create(cls, id=None, uuid=None, **kw):
+        if not uuid:
+            uuid = str(uuid4())
+        row = cls(uuid=uuid, id=id, **kw)
+        try:
+            config.db_session.add(row)
+        except Exception as e:
+            logger.info(f"Issue {e} inserting {cls}, {uuid}, {kw}")
+            config.db_session.rollback()
+            pass
+        return row
+
+    @classmethod
+    def get_or_create(cls, id=None, **kw):
+        existing_object = cls.get(id)
+        if existing_object:
+            return existing_object
+        try:
+            return cls.create(id=id, **kw)
+        except Exception as e:
+            logger.info(f"SOMETHING WENT WRONG: CLS: {cls}, uuid: {uuid}, exception: {e} ")
+            config.db_session.rollback()
 
 
 class Ontology(DCPModelMixin, SQLAlchemyBase):
@@ -85,6 +141,7 @@ class Ontology(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
     uuid = Column(UUID, primary_key=False)
     text = Column(String)
     ontology = Column(String, primary_key=True, index=True, unique=True, nullable=False)
@@ -97,12 +154,20 @@ class Ontology(DCPModelMixin, SQLAlchemyBase):
         return config.db_session.query(cls).filter(cls.ontology == ontology).one_or_none()
 
     @classmethod
+    def get_by_label(cls, ontology_label):
+        return config.db_session.query(cls).filter(cls.ontology_label == ontology_label).one_or_none()
+
+    @classmethod
     def create(cls, ontology=None, uuid=None, **kw):
         if not uuid:
             uuid = str(uuid4())
         row = cls(uuid=uuid, ontology=ontology, **kw)
-        config.db_session.add(row)
-        config.db_session.commit()
+        try:
+            config.db_session.add(row)
+        except Exception as e:
+            logger.info(f"Issue {e} inserting {cls}, {uuid}, {kw}")
+            config.db_session.rollback()
+            pass
         return row
 
     @classmethod
@@ -248,7 +313,7 @@ class CellMorphology(DCPModelMixin, SQLAlchemyBase):
     cell_morphology = Column(String)
     cell_viability_method = Column(String)
     cell_viability_result = Column(String)
-    cell_size = Column(Integer)
+    cell_size = Column(String)
     percent_cell_viability = Column(Integer)
     percent_necrosis = Column(Integer)
     cell_size_unit = relationship(Ontology)
@@ -290,6 +355,38 @@ class Barcode(DCPModelMixin, SQLAlchemyBase):
     white_list_file = Column(String)
     barcode_offset = Column(Integer)
     barcode_length = Column(Integer)
+    barcode_string = Column(String)
+
+    @classmethod
+    def get_by_string(cls, barcode_string):
+        return config.db_session.query(cls).filter(cls.barcode_string == barcode_string).one_or_none()
+
+    @classmethod
+    def create_by_string(cls, barcode_string=None, uuid=None, **kw):
+        if not uuid:
+            uuid = str(uuid4())
+        row = cls(uuid=uuid, barcode_string=barcode_string, **kw)
+        try:
+            config.db_session.add(row)
+        except Exception as e:
+            logger.info(f"Issue {e} inserting {cls}, {uuid}, {kw}")
+            config.db_session.rollback()
+            pass
+        return row
+
+    @classmethod
+    def get_or_create_by_string(cls, barcode_string, **kw):
+        try:
+            existing_object = cls.get_by_string(barcode_string)
+            if existing_object:
+                return existing_object
+        except Exception as e:
+            print(f"what nowwww>?? {e}")
+        try:
+            return cls.create(barcode_string=barcode_string, **kw)
+        except Exception as e:
+            logger.info(f"SOMETHING WENT WRONG: CLS: {cls}, exception: {e} ")
+            config.db_session.rollback()
 
 
 class PurchasedReagent(DCPModelMixin, SQLAlchemyBase):
@@ -334,4 +431,3 @@ class Parameter(DCPModelMixin, SQLAlchemyBase):
     name = Column(String)
     value = Column(String)
     checksum = Column(String)
-

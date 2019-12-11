@@ -2,7 +2,8 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from dcpquery import config
 from dcpquery.db.models.enums import AnalysisRunTypeEnum
-from dcpquery.db.models.process import Process, ProcessTaskJoinTable, ProcessParameterJoinTable
+from dcpquery.db.models.process import Process
+from dcpquery.db.models.join_tables import ProcessParameterJoinTable, ProcessTaskJoinTable
 from dcpquery.etl.load.utils import check_data
 from dcpquery.etl.load.modules import get_or_create_ontology, get_or_create_accession, get_or_create_task, \
     get_or_create_parameter
@@ -22,9 +23,6 @@ def get_or_create_process(data, analysis):
     if not uuid:
         import pdb
         pdb.set_trace()
-
-    print(f"MADISONNNNN THIS PROCESS HAS AN UUID: {uuid}")
-
     analysis_type = data.get('type', {}).get('text')
     accession = get_or_create_accession(data.get('accession'), "PROCESS")
     analysis_run_type = AnalysisRunTypeEnum(data.get('analysis_run_type')) if data.get('analysis_run_type') else None

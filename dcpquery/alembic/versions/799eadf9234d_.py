@@ -1,7 +1,7 @@
 """Create Rules
 
 Revision ID: 799eadf9234d
-Revises: 71aea67e842a
+Revises: 93342c40c4a3
 Create Date: 2019-12-09 02:40:10.944907
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '799eadf9234d'
-down_revision = '71aea67e842a'
+down_revision = '93342c40c4a3'
 branch_labels = None
 depends_on = None
 
@@ -35,7 +35,7 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM accessions
-                            WHERE uuid = NEW.uuid
+                            WHERE id = NEW.id
                         )
                         DO INSTEAD NOTHING
                     """
@@ -136,18 +136,18 @@ def upgrade():
                         DO INSTEAD NOTHING
                     """
                )
-    # op.execute("""
-    #
-    #                 CREATE OR REPLACE RULE links_ignore_duplicate_inserts AS
-    #                     ON INSERT TO links
-    #                         WHERE EXISTS (
-    #                             SELECT 1
-    #                         FROM links
-    #                         WHERE uuid = NEW.uuid
-    #                     )
-    #                     DO INSTEAD NOTHING
-    #                 """
-    #            )
+    op.execute("""
+
+                    CREATE OR REPLACE RULE urls_ignore_duplicate_inserts AS
+                        ON INSERT TO urls
+                            WHERE EXISTS (
+                                SELECT 1
+                            FROM urls
+                            WHERE url = NEW.url
+                        )
+                        DO INSTEAD NOTHING
+                    """
+               )
     op.execute("""
 
                     CREATE OR REPLACE RULE medical_histories_ignore_duplicate_inserts AS
@@ -263,7 +263,7 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM biomaterial_accession_join_table
-                            WHERE accession_uuid = NEW.accession_uuid
+                            WHERE accession_id = NEW.accession_id
                             AND biomaterial_uuid = NEW.biomaterial_uuid
                         )
                         DO INSTEAD NOTHING
@@ -387,7 +387,7 @@ def upgrade():
                                 SELECT 1
                             FROM project_accession_join_table
                             WHERE project_uuid = NEW.project_uuid
-                            AND accessions_uuid = NEW.accessions_uuid
+                            AND accession_id = NEW.accession_id
                         )
                         DO INSTEAD NOTHING
                     """
@@ -407,13 +407,14 @@ def upgrade():
                )
     op.execute("""
 
-                    CREATE OR REPLACE RULE project_link_join_table_ignore_duplicate_inserts AS
-                        ON INSERT TO project_link_join_table
+                    CREATE OR REPLACE RULE project_url_join_table_ignore_duplicate_inserts AS
+                        ON INSERT TO project_url_join_table
                             WHERE EXISTS (
                                 SELECT 1
-                            FROM project_link_join_table
+                            FROM project_url_join_table
                             WHERE project_uuid = NEW.project_uuid
-                            AND link_uuid = NEW.link_uuid                        )
+                            AND url_name = NEW.url_name
+                        )
                         DO INSTEAD NOTHING
                     """
                )
@@ -742,7 +743,7 @@ def upgrade():
                                 SELECT 1
                             FROM sequence_file_accession_join_table
                             WHERE sequence_file_uuid = NEW.sequence_file_uuid
-                            AND accession_uuid = NEW.accession_uuid
+                            AND accession_id = NEW.accession_id
                         )
                         DO INSTEAD NOTHING
                     """

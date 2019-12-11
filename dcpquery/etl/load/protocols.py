@@ -1,8 +1,9 @@
 from dcpquery import config
 from dcpquery.db.models.enums import ISPCMethodEnum, VectorRemovalEnum
-from dcpquery.db.models.protocol import Protocol, ProtocolReagentJoinTable, SequencingProtocol, \
+from dcpquery.db.models.protocol import Protocol, SequencingProtocol, \
     LibraryPreparationProtocol, EnrichmentProtocol, AnalysisProtocol, IPSCInductionProtocol, DifferentiationProtocol, \
     DissociationProtocol, CollectionProtocol
+from dcpquery.db.models.join_tables import ProtocolReagentJoinTable
 from dcpquery.etl.load.utils import check_data
 from dcpquery.etl.load.modules import get_or_create_ontology, get_or_create_reagent, get_or_create_ten_x, \
     get_or_create_barcode
@@ -31,12 +32,12 @@ def get_or_create_protocol(data):
 @check_data
 def get_or_create_differentiation_protocol(data):
     reagents_list = []
-    method = get_or_create_ontology(data.get('method'))
+    # method = get_or_create_ontology(data.get('method'))
     target_cell_yield = int(data.get('target_cell_yield')) if data.get('target_cell_yield') else None
     for reagent in data.get('reagents', []):
         reagents_list.append(get_or_create_reagent(reagent))
     differentiation_protocol = DifferentiationProtocol.get_or_create(
-        method=method,
+        # method=method,
         protocol_id=data.get("protocol_core", {}).get("protocol_id"),
         uuid=data.get("provenance", {}).get("document_id"),
         body=data,

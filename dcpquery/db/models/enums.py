@@ -67,11 +67,17 @@ class ReadIndexEnum(enum.Enum):
     SINGLE_ENDED_NON_INDEXED = "single-end, non-indexed"
 
 
+class ExpressionTypeEnum(enum.Enum):
+    TPM = "TPM"
+    COUNT = "COUNT"
+
+
 class AccessionTypeEnum(enum.Enum):
     PROCESS = "PROCESS"
     INSDC_STUDY = "INSDC_STUDY"
     INSDC_PROJECT = "INSDC_PROJECT"
     INSDC_RUN = "INSDC_RUN"
+    GEO_SERIES = "GEO_SERIES"
 
 
 class AutolysisScoreEnum(enum.Enum):

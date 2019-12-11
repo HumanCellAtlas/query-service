@@ -7,7 +7,10 @@ from dcpquery.db.models.admin import User
 from dcpquery.db.models.base import DCPModelMixin
 from dcpquery.db.models.biomaterial import Biomaterial, CellLine, CellSuspension, DonorOrganism, Specimen
 from dcpquery.db.models.data_file import DCPFile, SequenceFile
-from dcpquery.db.models.modules import Accession, Publication, Ontology
+from dcpquery.db.models.modules import Accession, Publication, Ontology, PurchasedReagent, Parameter, Task
+from dcpquery.db.models.process import Process
+from dcpquery.db.models.project import Project
+from dcpquery.db.models.protocol import Protocol
 
 
 class UserAccessGroupJoinTable(DCPModelMixin, SQLAlchemyBase):
@@ -28,10 +31,10 @@ class BiomaterialAccessionJoinTable(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    accession_uuid = Column(UUID(as_uuid=True), ForeignKey('accessions.uuid'), primary_key=True)
+    accession_id = Column(String, ForeignKey('accessions.id'), primary_key=True)
     biomaterial_uuid = Column(UUID(as_uuid=True), ForeignKey('biomaterials.uuid'), primary_key=True)
-    accession = relationship(Accession)
-    biomaterial = relationship(Biomaterial)
+    accession = relationship(Accession, foreign_keys=[accession_id])
+    biomaterial = relationship(Biomaterial,  foreign_keys=[biomaterial_uuid])
 
 
 class CellLinePublicationJoinTable(DCPModelMixin, SQLAlchemyBase):
@@ -101,6 +104,114 @@ class SequenceFileAccessionJoinTable(DCPModelMixin, SQLAlchemyBase):
         super().__init__(*args, **kwargs)
 
     sequence_file_uuid = Column(UUID(as_uuid=True), ForeignKey('sequence_files.uuid'), primary_key=True)
-    accession_uuid = Column(UUID(as_uuid=True), ForeignKey('accessions.uuid'), primary_key=True)
-    accession = relationship(Accession, foreign_keys=[accession_uuid])
+    accession_id = Column(String, ForeignKey('accessions.id'), primary_key=True)
+    accession = relationship(Accession, foreign_keys=[accession_id])
     sequence_file = relationship(SequenceFile, foreign_keys=[sequence_file_uuid])
+
+
+class ProjectContributorJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "project_contributor_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    contributor_uuid = Column(UUID(as_uuid=True), ForeignKey('contributors.uuid'), primary_key=True)
+    project = relationship(Project, foreign_keys=[project_uuid])
+    contributor = relationship("Contributor", foreign_keys=[contributor_uuid])
+
+
+class ProjectPublicationJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "project_publication_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    publication_uuid = Column(UUID(as_uuid=True), ForeignKey('publications.uuid'), primary_key=True)
+    publication = relationship("Publication", foreign_keys=[publication_uuid])
+    project = relationship(Project, foreign_keys=[project_uuid])
+
+
+class ProjectURLJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "project_url_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    url_name = Column(String, ForeignKey('urls.url'), primary_key=True)
+    project = relationship(Project, foreign_keys=[project_uuid])
+    url = relationship("URL_Object", foreign_keys=[url_name])
+
+
+class ProjectFunderJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "project_funder_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    funder_uuid = Column(UUID(as_uuid=True), ForeignKey('funders.uuid'), primary_key=True)
+    project = relationship(Project, foreign_keys=[project_uuid])
+    funder = relationship("Funder", foreign_keys=[funder_uuid])
+
+
+class ProjectAccessionJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "project_accession_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    accession_id = Column(String, ForeignKey('accessions.id'), primary_key=True)
+    project = relationship(Project, foreign_keys=[project_uuid])
+    accession = relationship("Accession", foreign_keys=[accession_id])
+
+
+class ProjectAccessGroupJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "project_access_group_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), primary_key=True)
+    access_group_uuid = Column(UUID(as_uuid=True), ForeignKey('access_groups.uuid'), primary_key=True)
+    access_group = relationship("AccessGroup", foreign_keys=[access_group_uuid])
+    project = relationship(Project, foreign_keys=[project_uuid])
+
+
+class ProtocolReagentJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "protocol_reagent_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    protocol_uuid = Column(UUID(as_uuid=True), ForeignKey('protocols.uuid'), primary_key=True)
+    reagent_uuid = Column(UUID(as_uuid=True), ForeignKey('reagents.uuid'), primary_key=True)
+    protocol = relationship(Protocol, foreign_keys=[protocol_uuid])
+    reagent = relationship(PurchasedReagent, foreign_keys=[reagent_uuid])
+
+
+class ProcessParameterJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "process_parameter_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
+    parameter_uuid = Column(UUID(as_uuid=True), ForeignKey('parameters.uuid'), primary_key=True)
+    process = relationship(Process, foreign_keys=[process_uuid])
+    parameter = relationship(Parameter, foreign_keys=[parameter_uuid])
+
+
+class ProcessTaskJoinTable(DCPModelMixin, SQLAlchemyBase):
+    __tablename__ = "process_task_join_table"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), primary_key=True)
+    task_uuid = Column(UUID(as_uuid=True), ForeignKey('tasks.uuid'), primary_key=True)
+    process = relationship(Process, foreign_keys=[process_uuid])
+    task = relationship(Task, foreign_keys=[task_uuid])

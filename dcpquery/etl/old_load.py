@@ -45,7 +45,12 @@ class BundleLoader:
                 track_uuids, links_data = handle_all_schema_types(schema_type, schema_version, file_data, track_uuids,
                                                                   links_data)
         links = links_data['links']
-        project_uuid = track_uuids['project']
+        try:
+            project_uuid = track_uuids['project']
+        except Exception as e:
+            import pdb
+            pdb.set_trace()
+            print(f"no project for this bundle, {bundle['uuid']}, exception: {e}")
         for link in links:
             process_uuid = link['process']
             inputs = link['inputs']
@@ -54,14 +59,14 @@ class BundleLoader:
 
             for input in inputs:
                 if link['input_type'] == 'biomaterial':
-                    ProcessBiomaterialJoinTable(
+                    ProcessBiomaterialJoinTable.create(
                         connection_type=ProcessConnectionTypeEnum('INPUT'),
                         process_uuid=process_uuid,
                         biomaterial_uuid=input,
                         project_uuid=project_uuid
                     )
                 if link['input_type'] == 'file':
-                    ProcessFileJoinTable(
+                    ProcessFileJoinTable.create(
                         connection_type=ProcessConnectionTypeEnum('INPUT'),
                         process_uuid=process_uuid,
                         file_uuid=input,

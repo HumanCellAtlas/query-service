@@ -88,7 +88,7 @@ class DCPQueryConfig:
     @property
     def db_session(self):
         if self._db_session_factory is None:
-            self._db_session_factory = scoped_session(sessionmaker(bind=self.db))
+            self._db_session_factory = scoped_session(sessionmaker(bind=self.db, autoflush=False))
         session_id = id(self.app.current_request) if self.app else threading.get_ident()
         if session_id not in self._db_sessions:
             self._db_sessions.clear()

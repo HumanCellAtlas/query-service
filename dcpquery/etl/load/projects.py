@@ -1,11 +1,11 @@
 import logging
 
-from dcpquery import config
-from dcpquery.db.models.project import Project, ProjectContributorJoinTable, ProjectFunderJoinTable, \
-    ProjectPublicationJoinTable, ProjectAccessionJoinTable, ProjectLinkJoinTable
+from dcpquery.db.models.project import Project
+from dcpquery.db.models.join_tables import ProjectContributorJoinTable, ProjectPublicationJoinTable, \
+    ProjectURLJoinTable, ProjectFunderJoinTable, ProjectAccessionJoinTable
 from dcpquery.etl.load.utils import check_data
 from dcpquery.etl.load.modules import create_funder, get_or_create_contributor, get_or_create_publication, \
-    get_or_create_url_link, \
+    get_or_create_url, \
     get_or_create_accession
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ def get_or_create_project(data):
     funder_objects = []
     contributor_objects = []
     publication_objects = []
-    link_objects = []
+    url_objects = []
     accession_objects = []
     uuid = data.get('provenance', {}).get('document_id')
     body = data
@@ -37,8 +37,8 @@ def get_or_create_project(data):
         funder_objects.append(create_funder(funder))
     for contributor in contributor_list:
         contributor_objects.append(get_or_create_contributor(contributor))
-    for link in supplementary_links_list:
-        link_objects.append(get_or_create_url_link(link))
+    for url in supplementary_links_list:
+        url_objects.append(get_or_create_url(url))
     for accession in geo_series_accession_list:
         accession_objects.append(get_or_create_accession(accession, "GEO_SERIES"))
     for accession in insdc_study_accession_list:
@@ -47,37 +47,21 @@ def get_or_create_project(data):
         accession_objects.append(get_or_create_accession(accession, "INSDC_PROJECT"))
     project = Project.get_or_create(uuid=uuid, short_name=short_name, title=title, description=description, body=body)
     for funder in funder_objects:
-        create_project_funder_link(project, funder)
+        ProjectFunderJoinTable.create(project=project, funder=funder)
 
     for contributor in contributor_objects:
-        create_project_contributor_link(project, contributor)
+        ProjectContributorJoinTable.create(project=project, contributor=contributor)
 
     for publication in publication_objects:
-        create_project_publication_list(project, publication)
+        ProjectPublicationJoinTable.create(project_uuid=project.uuid, publication=publication)
 
     for accession in accession_objects:
-        create_project_accession_link(project, accession)
+        ProjectAccessionJoinTable.create(project_uuid=project.uuid, accession=accession)
 
-    for link in link_objects:
-        create_project_url_link(project, link)
+    for url in url_objects:
+        ProjectURLJoinTable.create(project_uuid=project.uuid, url_name=url.url)
+
     return project
 
 
-def create_project_funder_link(project, funder):
-    ProjectFunderJoinTable.create(project=project, funder=funder)
 
-
-def create_project_contributor_link(project, contributor):
-    ProjectContributorJoinTable.create(project=project, contributor=contributor)
-
-
-def create_project_publication_list(project, publication):
-    ProjectPublicationJoinTable.create(project_uuid=project.uuid, publication=publication)
-
-
-def create_project_accession_link(project, accession):
-    ProjectAccessionJoinTable.create(project_uuid=project.uuid, accession=accession)
-
-
-def create_project_url_link(project, link):
-    ProjectLinkJoinTable.create(project, link)

@@ -1,5 +1,3 @@
-import enum
-
 from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, Enum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.mutable import MutableDict
@@ -29,18 +27,6 @@ class Protocol(DCPModelMixin, SQLAlchemyBase):
     reagents = relationship("PurchasedReagent", secondary="protocol_reagent_join_table")
     processes = relationship("Process", secondary="process_protocol_join_table")
     __mapper_args__ = {'polymorphic_on': discriminator}
-
-
-class ProtocolReagentJoinTable(DCPModelMixin, SQLAlchemyBase):
-    __tablename__ = "protocol_reagent_join_table"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    protocol_uuid = Column(UUID(as_uuid=True), ForeignKey('protocols.uuid'), primary_key=True)
-    reagent_uuid = Column(UUID(as_uuid=True), ForeignKey('reagents.uuid'), primary_key=True)
-    protocol = relationship(Protocol, foreign_keys=[protocol_uuid])
-    reagent = relationship(PurchasedReagent, foreign_keys=[reagent_uuid])
 
 
 class DifferentiationProtocol(Protocol, SQLAlchemyBase):

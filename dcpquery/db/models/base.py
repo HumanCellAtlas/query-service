@@ -101,8 +101,13 @@ currently by polymorphic_on and version_id_col; the declarative extension will r
             else:
                 uuid = str(uuid4())
         row = cls(uuid=uuid, **kw)
-        config.db_session.add(row)
-        config.db_session.commit()
+        try:
+            config.db_session.add(row)
+            config.db_session.commit()
+        except Exception as e:
+            logger.info(f"Issue {e} inserting {cls}, {uuid}, {kw}")
+            config.db_session.rollback()
+            pass
         return row
 
     @classmethod
@@ -113,10 +118,9 @@ currently by polymorphic_on and version_id_col; the declarative extension will r
         try:
             return cls.create(uuid=uuid, **kw)
         except Exception as e:
-            import pdb
-            pdb.set_trace()
-            logger.info(f"SOMETHING WENT WRONG: CLS: {cls}, uuid: {uuid}, exception: {e} ")
+            logger.info(f"SOMETHING WENT WRONG: CLS: {cls}, uuid: {uuid}, exception: {e} {kw}")
             config.db_session.rollback()
+            pass
 
     #
     # def save(self):

@@ -1,3 +1,5 @@
+from sqlalchemy import DateTime
+
 from dcpquery import config
 from dcpquery.db.models.biomaterial import (CellSuspension, DonorOrganism, Biomaterial, Specimen, CellLine,
                                             Organoid)
@@ -94,8 +96,8 @@ def get_or_create_donor_organism(data):
     cause_of_death = get_or_create_cause_of_death(data.get('cause_of_death'))
     # todo find and check med history, family, timecourse
     medical_history = get_or_create_medical_history(data.get("medical_history"))
-    familial_relationship = get_or_create_family_relationship(data)
-    time_course = get_or_create_time_course(data)
+    familial_relationship = get_or_create_family_relationship(data.get('familial_relationships'))
+    time_course = get_or_create_time_course(data.get('timecourse'))
     for disease in data.get('diseases', []):
         disease_list.append(get_or_create_ontology(disease))
     # todo handle mouse strain, bmi and ethnicity
@@ -131,6 +133,10 @@ def get_or_create_specimen_from_organism(data):
     disease_list = []
     organ = get_or_create_ontology(data.get('organ'))
     # todo make this m2m?
+    collection_time = data.get('collection_time')
+    if collection_time and len(collection_time) < 10:
+        collection_time = None
+        print(f"FIX ME: collection_time on specimen_from_organsim {uuid}")
     organ_parts = get_or_create_ontology(data.get('organ_parts', [None])[0])
     # state_of_specimen = get_or_create_specimen_state(data.get('state_of_specimen'))
     preservation_storage = get_or_create_preservation_storage(data.get('preservation_storage'))
@@ -150,7 +156,7 @@ def get_or_create_specimen_from_organism(data):
         organ_parts=organ_parts,
         # state_of_specimen=state_of_specimen,
         preservation_storage=preservation_storage,
-        collection_time=data.get('collection_time')
+        collection_time=collection_time
     )
     for accession in accessions_list:
         BiomaterialAccessionJoinTable.create(accession=accession, biomaterial=specimen)
@@ -169,7 +175,7 @@ def get_or_create_cell_line(data):
     growth_condition = get_or_create_growth_conditions(data.get('growth_conditions'))
     tissue = get_or_create_ontology(data.get('tissue'))
     disease = get_or_create_ontology(data.get('disease'))
-    genus_species = get_or_create_ontology(data.get('genus_species'))
+    genus_species = get_or_create_ontology(data.get('genus_species', [None])[0])
     time_course = get_or_create_time_course(data.get('timecourse'))
 
     for publication in data.get('publications', []):

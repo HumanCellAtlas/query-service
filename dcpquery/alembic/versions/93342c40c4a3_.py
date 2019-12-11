@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 71aea67e842a
+Revision ID: 93342c40c4a3
 Revises: 000000000000
-Create Date: 2019-12-09 11:48:45.763868
+Create Date: 2019-12-10 13:03:35.096868
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '71aea67e842a'
+revision = '93342c40c4a3'
 down_revision = '000000000000'
 branch_labels = None
 depends_on = None
@@ -32,10 +32,11 @@ def upgrade():
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('type', sa.Enum('PROCESS', 'INSDC_STUDY', 'INSDC_PROJECT', 'INSDC_RUN', name='accessiontypeenum'), nullable=True),
-    sa.Column('id', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('uuid')
+    sa.Column('type', sa.Enum('PROCESS', 'INSDC_STUDY', 'INSDC_PROJECT', 'INSDC_RUN', 'GEO_SERIES', name='accessiontypeenum'), nullable=True),
+    sa.Column('id', sa.String(), nullable=False),
+    sa.PrimaryKeyConstraint('uuid', 'id')
     )
+    op.create_index(op.f('ix_accessions_id'), 'accessions', ['id'], unique=True)
     op.create_index(op.f('ix_accessions_uuid'), 'accessions', ['uuid'], unique=False)
     op.create_table('annotations',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
@@ -136,15 +137,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_growth_conditions_uuid'), 'growth_conditions', ['uuid'], unique=False)
-    op.create_table('links',
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('version_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('url', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('uuid')
-    )
-    op.create_index(op.f('ix_links_uuid'), 'links', ['uuid'], unique=False)
     op.create_table('medical_histories',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
@@ -251,6 +243,16 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_ten_x_uuid'), 'ten_x', ['uuid'], unique=False)
+    op.create_table('urls',
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('version_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('url', sa.String(), nullable=False),
+    sa.PrimaryKeyConstraint('uuid', 'url'),
+    sa.UniqueConstraint('url')
+    )
+    op.create_index(op.f('ix_urls_uuid'), 'urls', ['uuid'], unique=False)
     op.create_table('users',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
@@ -270,11 +272,11 @@ def upgrade():
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('accession_uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('accession_id', sa.String(), nullable=False),
     sa.Column('biomaterial_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.ForeignKeyConstraint(['accession_uuid'], ['accessions.uuid'], ),
+    sa.ForeignKeyConstraint(['accession_id'], ['accessions.id'], ),
     sa.ForeignKeyConstraint(['biomaterial_uuid'], ['biomaterials.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'accession_uuid', 'biomaterial_uuid')
+    sa.PrimaryKeyConstraint('uuid', 'accession_id', 'biomaterial_uuid')
     )
     op.create_index(op.f('ix_biomaterial_accession_join_table_uuid'), 'biomaterial_accession_join_table', ['uuid'], unique=False)
     op.create_table('cell_morphologies',
@@ -285,7 +287,7 @@ def upgrade():
     sa.Column('cell_morphology', sa.String(), nullable=True),
     sa.Column('cell_viability_method', sa.String(), nullable=True),
     sa.Column('cell_viability_result', sa.String(), nullable=True),
-    sa.Column('cell_size', sa.Integer(), nullable=True),
+    sa.Column('cell_size', sa.String(), nullable=True),
     sa.Column('percent_cell_viability', sa.Integer(), nullable=True),
     sa.Column('percent_necrosis', sa.Integer(), nullable=True),
     sa.Column('cell_size_unit_id', sa.String(), nullable=True),
@@ -384,9 +386,9 @@ def upgrade():
     sa.Column('end_time', sa.DateTime(), nullable=True),
     sa.Column('analysis', sa.Boolean(), nullable=True),
     sa.Column('analysis_type', sa.String(), nullable=True),
-    sa.Column('accession_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('accession_id', sa.String(), nullable=True),
     sa.Column('type_id', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['accession_uuid'], ['accessions.uuid'], ),
+    sa.ForeignKeyConstraint(['accession_id'], ['accessions.id'], ),
     sa.ForeignKeyConstraint(['type_id'], ['ontologies.ontology'], ),
     sa.PrimaryKeyConstraint('uuid')
     )
@@ -409,10 +411,10 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('accessions_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.ForeignKeyConstraint(['accessions_uuid'], ['accessions.uuid'], ),
+    sa.Column('accession_id', sa.String(), nullable=False),
+    sa.ForeignKeyConstraint(['accession_id'], ['accessions.id'], ),
     sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'project_uuid', 'accessions_uuid')
+    sa.PrimaryKeyConstraint('uuid', 'project_uuid', 'accession_id')
     )
     op.create_index(op.f('ix_project_accession_join_table_uuid'), 'project_accession_join_table', ['uuid'], unique=False)
     op.create_table('project_funder_join_table',
@@ -427,18 +429,18 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid', 'project_uuid', 'funder_uuid')
     )
     op.create_index(op.f('ix_project_funder_join_table_uuid'), 'project_funder_join_table', ['uuid'], unique=False)
-    op.create_table('project_link_join_table',
+    op.create_table('project_url_join_table',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('link_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.ForeignKeyConstraint(['link_uuid'], ['links.uuid'], ),
+    sa.Column('url_name', sa.String(), nullable=False),
     sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'project_uuid', 'link_uuid')
+    sa.ForeignKeyConstraint(['url_name'], ['urls.url'], ),
+    sa.PrimaryKeyConstraint('uuid', 'project_uuid', 'url_name')
     )
-    op.create_index(op.f('ix_project_link_join_table_uuid'), 'project_link_join_table', ['uuid'], unique=False)
+    op.create_index(op.f('ix_project_url_join_table_uuid'), 'project_url_join_table', ['uuid'], unique=False)
     op.create_table('protocols',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
@@ -463,9 +465,9 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('authors', sa.String(), nullable=True),
     sa.Column('title', sa.String(), nullable=True),
-    sa.Column('doi', sa.Integer(), nullable=True),
-    sa.Column('url_uuid', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.ForeignKeyConstraint(['url_uuid'], ['links.uuid'], ),
+    sa.Column('doi', sa.String(), nullable=True),
+    sa.Column('url_name', sa.String(), nullable=True),
+    sa.ForeignKeyConstraint(['url_name'], ['urls.url'], ),
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_publications_uuid'), 'publications', ['uuid'], unique=False)
@@ -790,10 +792,10 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('sequence_file_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('accession_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.ForeignKeyConstraint(['accession_uuid'], ['accessions.uuid'], ),
+    sa.Column('accession_id', sa.String(), nullable=False),
+    sa.ForeignKeyConstraint(['accession_id'], ['accessions.id'], ),
     sa.ForeignKeyConstraint(['sequence_file_uuid'], ['sequence_files.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'sequence_file_uuid', 'accession_uuid')
+    sa.PrimaryKeyConstraint('uuid', 'sequence_file_uuid', 'accession_id')
     )
     op.create_index(op.f('ix_sequence_file_accession_join_table_uuid'), 'sequence_file_accession_join_table', ['uuid'], unique=False)
     op.create_table('sequencing_protocols',
@@ -988,8 +990,8 @@ def downgrade():
     op.drop_table('publications')
     op.drop_index(op.f('ix_protocols_uuid'), table_name='protocols')
     op.drop_table('protocols')
-    op.drop_index(op.f('ix_project_link_join_table_uuid'), table_name='project_link_join_table')
-    op.drop_table('project_link_join_table')
+    op.drop_index(op.f('ix_project_url_join_table_uuid'), table_name='project_url_join_table')
+    op.drop_table('project_url_join_table')
     op.drop_index(op.f('ix_project_funder_join_table_uuid'), table_name='project_funder_join_table')
     op.drop_table('project_funder_join_table')
     op.drop_index(op.f('ix_project_accession_join_table_uuid'), table_name='project_accession_join_table')
@@ -1014,6 +1016,8 @@ def downgrade():
     op.drop_table('biomaterial_accession_join_table')
     op.drop_index(op.f('ix_users_uuid'), table_name='users')
     op.drop_table('users')
+    op.drop_index(op.f('ix_urls_uuid'), table_name='urls')
+    op.drop_table('urls')
     op.drop_index(op.f('ix_ten_x_uuid'), table_name='ten_x')
     op.drop_table('ten_x')
     op.drop_index(op.f('ix_tasks_uuid'), table_name='tasks')
@@ -1032,8 +1036,6 @@ def downgrade():
     op.drop_table('ontologies')
     op.drop_index(op.f('ix_medical_histories_uuid'), table_name='medical_histories')
     op.drop_table('medical_histories')
-    op.drop_index(op.f('ix_links_uuid'), table_name='links')
-    op.drop_table('links')
     op.drop_index(op.f('ix_growth_conditions_uuid'), table_name='growth_conditions')
     op.drop_table('growth_conditions')
     op.drop_index(op.f('ix_funders_uuid'), table_name='funders')
@@ -1051,6 +1053,7 @@ def downgrade():
     op.drop_index(op.f('ix_annotations_uuid'), table_name='annotations')
     op.drop_table('annotations')
     op.drop_index(op.f('ix_accessions_uuid'), table_name='accessions')
+    op.drop_index(op.f('ix_accessions_id'), table_name='accessions')
     op.drop_table('accessions')
     op.drop_index(op.f('ix_access_groups_uuid'), table_name='access_groups')
     op.drop_table('access_groups')

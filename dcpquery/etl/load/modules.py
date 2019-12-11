@@ -1,30 +1,33 @@
-import uuid
-from uuid import UUID
-
-from dcpquery import config
-from dcpquery.db.models.enums import StorageMethodEnum, PreservationMethodEnum, NutritionalStateEnum, WellQualityEnum, \
-    BarcodeReadEnum, AccessionTypeEnum
-from dcpquery.db.models.modules import Funder, Contributor, Accession, Ontology, Link, Publication, CauseOfDeath, \
-    MedicalHistory, TimeCourse, GrowthCondition, CellMorphology, PlateBasedSequencing, PurchasedReagent, TenX, \
-    PreservationStorage, Barcode, Task, Parameter
+from dcpquery.db.models.enums import (StorageMethodEnum, PreservationMethodEnum, NutritionalStateEnum, WellQualityEnum,
+                                      BarcodeReadEnum, AccessionTypeEnum)
+from dcpquery.db.models.modules import (Funder, Contributor, Accession, Ontology, URL_Object, Publication, CauseOfDeath,
+                                        MedicalHistory, TimeCourse, GrowthCondition, CellMorphology,
+                                        PlateBasedSequencing, PurchasedReagent, TenX,
+                                        PreservationStorage, Barcode, Task, Parameter)
 from dcpquery.etl.load.utils import check_data
 from dcpquery.etl.load.admins import get_or_create_user
 
 
 def get_or_create_accession(accession_id, type):
-    accession = Accession.create(id=accession_id, type=AccessionTypeEnum(type))
+    if not accession_id:
+        accession_id = type
+    try:
+        accession = Accession.get_or_create(id=accession_id, type=AccessionTypeEnum(type))
+    except Exception as e:
+        print(f"Issue with accession {type}, issue {e}")
     return accession
 
 
 @check_data
 def get_or_create_ontology(data):
+    ontology = data.get('ontology')
+    if not ontology:
+        ontology = data.get('text')
     try:
-        ontology = Ontology.get_or_create(text=data.get('text'), ontology=data.get('ontology'),
+        ontology = Ontology.get_or_create(text=data.get('text'), ontology=ontology,
                                           ontology_label=data.get('ontology_label'))
     except Exception as e:
-        import pdb
-        pdb.set_trace()
-        print(e)
+        print(f"Issue with ontology {data}, issue {e}")
     return ontology
 
 
@@ -48,15 +51,15 @@ def get_or_create_contributor(data):
 @check_data
 def get_or_create_publication(data):
     authors = " ".join(data.get('authors'))
-    publication_url = Link(url=data.get('url'))
+    publication_url = get_or_create_url(data.get('url'))
     publication = Publication.create(authors=authors, title=data.get('title'), doi=data.get('doi'), url=publication_url)
     return publication
 
 
 @check_data
-def get_or_create_url_link(data):
-    link = Link.create(url=data)
-    return link
+def get_or_create_url(data):
+    url = URL_Object.get_or_create(url=data)
+    return url
 
 
 @check_data
@@ -109,24 +112,30 @@ def get_or_create_growth_conditions(data):
 
 @check_data
 def get_or_create_cell_morphology(data):
-    cell_size_unit = get_or_create_ontology(data.get('cell_size_unit'))
-    cell_morph = CellMorphology.create(
-        cell_morphology=data.get('cell_morphology'),
-        cell_size=data.get('cell_size'),
-        cell_size_unit=cell_size_unit,
-        percent_cell_viability=data.get('pecent_cell_viability'),
-        cell_viability_method=data.get('cell_viability_method'),
-        cell_viability_result=data.get('cell_viability_result'),
-        percent_necrosis=data.get('percent_necrosis')
-    )
-    return cell_morph
+    try:
+        cell_size_unit = get_or_create_ontology(data.get('cell_size_unit'))
+        cell_morph = CellMorphology.create(
+            cell_morphology=data.get('cell_morphology'),
+            cell_size=data.get('cell_size'),
+            cell_size_unit=cell_size_unit,
+            percent_cell_viability=data.get('pecent_cell_viability'),
+            cell_viability_method=data.get('cell_viability_method'),
+            cell_viability_result=data.get('cell_viability_result'),
+            percent_necrosis=data.get('percent_necrosis')
+        )
+        return cell_morph
+
+    except Exception as e:
+        import pdb
+        pdb.set_trace()
 
 
 @check_data
 def get_or_create_plate_based_sequencing(data):
+    well_quality = WellQualityEnum(data.get('well_quality')) if data.get('well_quality') else None
     plate = PlateBasedSequencing.create(plate_label=data.get('plate_label'),
-                                        well_label=WellQualityEnum(data.get('well_label')),
-                                        well_quality=data['well_quality'])
+                                        well_label=data.get('well_label'),
+                                        well_quality=well_quality)
     return plate
 
 
