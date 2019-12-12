@@ -11,8 +11,8 @@ from dcpquery.etl.load.protocols import (get_or_create_dissociation_protocol,
                                          get_or_create_analysis_protocol, get_or_create_ipsc_induction_protocol)
 
 
-def handle_all_schema_types(schema_type, schema_version, data, track_uuids, links_data):
-    file_data = data.get('body')
+def handle_all_schema_types(schema_type, schema_version, file_data, track_uuids, links_data):
+    # file_data = data.get('body')
     if schema_type == 'cell_suspension':
         cell_suspension = get_or_create_cell_suspension(file_data)
         track_uuids[cell_suspension.uuid] = 'biomaterial'

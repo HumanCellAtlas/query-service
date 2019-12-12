@@ -3,7 +3,9 @@ import os, tempfile, logging
 from dcplib.etl import DSSExtractor
 
 from dcpquery.db.materialized_views import create_materialized_view_tables
+from dcpquery.etl.extract import extract_bundles, divide_chunks
 from dcpquery.etl.old_load import BundleLoader
+from dcpquery.etl.output import bundle_uuids
 from dcpquery.etl.transform import transform_bundle
 
 from .. import config
@@ -64,3 +66,11 @@ def etl_one_bundle(bundle_uuid, bundle_version):
     config.db_session.commit()
 
 
+def etl_bundles():
+    n = 50
+    x = list(divide_chunks(bundle_uuids, n))
+    for i in x:
+        bundles = extract_bundles(i)
+        for bundle in bundles:
+            BundleLoader().load_bundle(aggregate_metadata=bundle)
+    config.db_session.commit()
