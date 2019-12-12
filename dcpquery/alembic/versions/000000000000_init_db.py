@@ -1,4 +1,4 @@
-"""create tables
+"""init db
 
 Revision ID: f86d2cea09a9
 Revises:

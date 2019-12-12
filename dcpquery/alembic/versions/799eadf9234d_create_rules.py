@@ -1,7 +1,7 @@
 """Create Rules
 
 Revision ID: 799eadf9234d
-Revises: 93342c40c4a3
+Revises: f0034c4dcd2e
 Create Date: 2019-12-09 02:40:10.944907
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '799eadf9234d'
-down_revision = '93342c40c4a3'
+down_revision = 'f0034c4dcd2e'
 branch_labels = None
 depends_on = None
 
@@ -305,6 +305,7 @@ def upgrade():
                         DO INSTEAD NOTHING
                     """
                )
+
     op.execute("""
 
                     CREATE OR REPLACE RULE features_ignore_duplicate_inserts AS
@@ -312,7 +313,7 @@ def upgrade():
                             WHERE EXISTS (
                                 SELECT 1
                             FROM features
-                            WHERE uuid = NEW.uuid
+                            WHERE accession_id = NEW.accession_id
                         )
                         DO INSTEAD NOTHING
                     """
@@ -857,7 +858,7 @@ def upgrade():
                             FROM process_cell_join_table
                             WHERE process_uuid = NEW.process_uuid
                             AND connection_type=NEW.connection_type
-                            AND cell_uuid=NEW.cell_uuid
+                            AND cell_key=NEW.cell_key
                             AND project_uuid=NEW.project_uuid
                         )
                         DO INSTEAD NOTHING

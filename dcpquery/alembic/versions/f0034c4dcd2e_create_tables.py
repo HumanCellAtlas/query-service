@@ -1,8 +1,8 @@
-"""empty message
+"""Create Tables
 
-Revision ID: 93342c40c4a3
+Revision ID: f0034c4dcd2e
 Revises: 000000000000
-Create Date: 2019-12-10 13:03:35.096868
+Create Date: 2019-12-11 17:45:08.699539
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '93342c40c4a3'
+revision = 'f0034c4dcd2e'
 down_revision = '000000000000'
 branch_labels = None
 depends_on = None
@@ -59,6 +59,7 @@ def upgrade():
     sa.Column('white_list_file', sa.String(), nullable=True),
     sa.Column('barcode_offset', sa.Integer(), nullable=True),
     sa.Column('barcode_length', sa.Integer(), nullable=True),
+    sa.Column('barcode_string', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_barcodes_uuid'), 'barcodes', ['uuid'], unique=False)
@@ -90,6 +91,22 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index(op.f('ix_causes_of_death_uuid'), 'causes_of_death', ['uuid'], unique=False)
+    op.create_table('cells',
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('version_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('cellkey', sa.String(), nullable=False),
+    sa.Column('genes_detected', sa.Integer(), nullable=True),
+    sa.Column('total_umis', sa.Float(), nullable=True),
+    sa.Column('empty_drops_is_cell', sa.Boolean(), nullable=True),
+    sa.Column('barcode', sa.String(), nullable=True),
+    sa.Column('file_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('cell_suspension_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.PrimaryKeyConstraint('uuid', 'cellkey')
+    )
+    op.create_index(op.f('ix_cells_cellkey'), 'cells', ['cellkey'], unique=True)
+    op.create_index(op.f('ix_cells_uuid'), 'cells', ['uuid'], unique=False)
     op.create_table('familial_relationships',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
@@ -320,16 +337,21 @@ def upgrade():
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('id', sa.String(), nullable=True),
     sa.Column('type', sa.String(), nullable=True),
     sa.Column('name', sa.String(), nullable=True),
+    sa.Column('barcode', sa.String(), nullable=True),
     sa.Column('feature_start', sa.String(), nullable=True),
     sa.Column('feature_end', sa.String(), nullable=True),
-    sa.Column('chromosome', sa.Integer(), nullable=True),
+    sa.Column('chromosome', sa.String(), nullable=True),
     sa.Column('is_gene', sa.Boolean(), nullable=True),
     sa.Column('genus_species_id', sa.String(), nullable=True),
+    sa.Column('accession_id', sa.String(), nullable=False),
+    sa.ForeignKeyConstraint(['accession_id'], ['accessions.id'], ),
     sa.ForeignKeyConstraint(['genus_species_id'], ['ontologies.ontology'], ),
-    sa.PrimaryKeyConstraint('uuid')
+    sa.PrimaryKeyConstraint('uuid', 'accession_id')
     )
+    op.create_index(op.f('ix_features_accession_id'), 'features', ['accession_id'], unique=True)
     op.create_index(op.f('ix_features_uuid'), 'features', ['uuid'], unique=False)
     op.create_table('file_ontology_join_table',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
@@ -608,6 +630,20 @@ def upgrade():
     sa.ForeignKeyConstraint(['uuid'], ['protocols.uuid'], ),
     sa.PrimaryKeyConstraint('uuid')
     )
+    op.create_table('expressions',
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('version_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('expr_type', sa.Enum('TPM', 'COUNT', name='expressiontypeenum'), nullable=True),
+    sa.Column('expr_value', sa.Integer(), nullable=True),
+    sa.Column('cell_key', sa.String(), nullable=False),
+    sa.Column('feature_accession_id', sa.String(), nullable=False),
+    sa.ForeignKeyConstraint(['cell_key'], ['cells.cellkey'], ),
+    sa.ForeignKeyConstraint(['feature_accession_id'], ['features.accession_id'], ),
+    sa.PrimaryKeyConstraint('uuid', 'cell_key', 'feature_accession_id')
+    )
+    op.create_index(op.f('ix_expressions_uuid'), 'expressions', ['uuid'], unique=False)
     op.create_table('ipsc_induction_protocols',
     sa.Column('uuid', postgresql.UUID(), nullable=False),
     sa.Column('ispc_method', sa.Enum('LENTIVIRUS', 'SENDAI_VIRUS', 'GUN_PARTICLE', 'PB_TRANS', 'MIRNA_VIRAL', 'ADENOVIRUS', 'CRE_LOXP', 'PLASMID', 'RETROVIRAL', name='ispcmethodenum'), nullable=True),
@@ -666,6 +702,24 @@ def upgrade():
     op.create_index(op.f('ix_process_biomaterial_join_table_biomaterial_uuid'), 'process_biomaterial_join_table', ['biomaterial_uuid'], unique=False)
     op.create_index(op.f('ix_process_biomaterial_join_table_process_uuid'), 'process_biomaterial_join_table', ['process_uuid'], unique=False)
     op.create_index(op.f('ix_process_biomaterial_join_table_project_uuid'), 'process_biomaterial_join_table', ['project_uuid'], unique=False)
+    op.create_table('process_cell_join_table',
+    sa.Column('version_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('connection_type', sa.Enum('INPUT', 'OUTPUT', 'PROTOCOL', name='processconnectiontypeenum'), nullable=True),
+    sa.Column('cell_key', sa.String(), nullable=True),
+    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.ForeignKeyConstraint(['cell_key'], ['cells.cellkey'], ),
+    sa.ForeignKeyConstraint(['process_uuid'], ['processes.uuid'], ),
+    sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
+    sa.PrimaryKeyConstraint('uuid'),
+    sa.UniqueConstraint('process_uuid', 'connection_type', 'cell_key', 'project_uuid', name='process_cell_project_connection_type_uc')
+    )
+    op.create_index(op.f('ix_process_cell_join_table_cell_key'), 'process_cell_join_table', ['cell_key'], unique=False)
+    op.create_index(op.f('ix_process_cell_join_table_process_uuid'), 'process_cell_join_table', ['process_uuid'], unique=False)
+    op.create_index(op.f('ix_process_cell_join_table_project_uuid'), 'process_cell_join_table', ['project_uuid'], unique=False)
     op.create_table('process_file_join_table',
     sa.Column('version_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
@@ -847,23 +901,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid', 'cell_suspension_uuid', 'cell_type_ontology_id')
     )
     op.create_index(op.f('ix_cell_suspension_cell_type_ontology_join_table_uuid'), 'cell_suspension_cell_type_ontology_join_table', ['uuid'], unique=False)
-    op.create_table('cells',
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('version_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('genes_detected', sa.Integer(), nullable=True),
-    sa.Column('total_umis', sa.Integer(), nullable=True),
-    sa.Column('empty_drops_is_cell', sa.Boolean(), nullable=True),
-    sa.Column('barcode_uuid', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.Column('sequence_file_uuid', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.Column('cell_suspension_uuid', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.ForeignKeyConstraint(['barcode_uuid'], ['barcodes.uuid'], ),
-    sa.ForeignKeyConstraint(['cell_suspension_uuid'], ['cell_suspensions.uuid'], ),
-    sa.ForeignKeyConstraint(['sequence_file_uuid'], ['sequence_files.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid')
-    )
-    op.create_index(op.f('ix_cells_uuid'), 'cells', ['uuid'], unique=False)
     op.create_table('donor_organism_disease_ontology_join_table',
     sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('version_id', sa.Integer(), nullable=False),
@@ -888,55 +925,15 @@ def upgrade():
     sa.PrimaryKeyConstraint('uuid', 'specimen_uuid', 'disease_ontology_id')
     )
     op.create_index(op.f('ix_specimen_disease_ontology_join_table_uuid'), 'specimen_disease_ontology_join_table', ['uuid'], unique=False)
-    op.create_table('expressions',
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('version_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('expr_type', sa.String(), nullable=True),
-    sa.Column('expr_value', sa.Integer(), nullable=True),
-    sa.Column('cell_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('feature_uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.ForeignKeyConstraint(['cell_uuid'], ['cells.uuid'], ),
-    sa.ForeignKeyConstraint(['feature_uuid'], ['features.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid', 'cell_uuid', 'feature_uuid')
-    )
-    op.create_index(op.f('ix_expressions_uuid'), 'expressions', ['uuid'], unique=False)
-    op.create_table('process_cell_join_table',
-    sa.Column('version_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('uuid', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('connection_type', sa.Enum('INPUT', 'OUTPUT', 'PROTOCOL', name='processconnectiontypeenum'), nullable=True),
-    sa.Column('cell_uuid', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.Column('process_uuid', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.Column('project_uuid', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.ForeignKeyConstraint(['cell_uuid'], ['cells.uuid'], ),
-    sa.ForeignKeyConstraint(['process_uuid'], ['processes.uuid'], ),
-    sa.ForeignKeyConstraint(['project_uuid'], ['projects.uuid'], ),
-    sa.PrimaryKeyConstraint('uuid'),
-    sa.UniqueConstraint('process_uuid', 'connection_type', 'cell_uuid', 'project_uuid', name='process_cell_project_connection_type_uc')
-    )
-    op.create_index(op.f('ix_process_cell_join_table_cell_uuid'), 'process_cell_join_table', ['cell_uuid'], unique=False)
-    op.create_index(op.f('ix_process_cell_join_table_process_uuid'), 'process_cell_join_table', ['process_uuid'], unique=False)
-    op.create_index(op.f('ix_process_cell_join_table_project_uuid'), 'process_cell_join_table', ['project_uuid'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_index(op.f('ix_process_cell_join_table_project_uuid'), table_name='process_cell_join_table')
-    op.drop_index(op.f('ix_process_cell_join_table_process_uuid'), table_name='process_cell_join_table')
-    op.drop_index(op.f('ix_process_cell_join_table_cell_uuid'), table_name='process_cell_join_table')
-    op.drop_table('process_cell_join_table')
-    op.drop_index(op.f('ix_expressions_uuid'), table_name='expressions')
-    op.drop_table('expressions')
     op.drop_index(op.f('ix_specimen_disease_ontology_join_table_uuid'), table_name='specimen_disease_ontology_join_table')
     op.drop_table('specimen_disease_ontology_join_table')
     op.drop_index(op.f('ix_donor_organism_disease_ontology_join_table_uuid'), table_name='donor_organism_disease_ontology_join_table')
     op.drop_table('donor_organism_disease_ontology_join_table')
-    op.drop_index(op.f('ix_cells_uuid'), table_name='cells')
-    op.drop_table('cells')
     op.drop_index(op.f('ix_cell_suspension_cell_type_ontology_join_table_uuid'), table_name='cell_suspension_cell_type_ontology_join_table')
     op.drop_table('cell_suspension_cell_type_ontology_join_table')
     op.drop_index(op.f('ix_cell_line_publication_join_table_uuid'), table_name='cell_line_publication_join_table')
@@ -967,12 +964,18 @@ def downgrade():
     op.drop_index(op.f('ix_process_file_join_table_process_uuid'), table_name='process_file_join_table')
     op.drop_index(op.f('ix_process_file_join_table_file_uuid'), table_name='process_file_join_table')
     op.drop_table('process_file_join_table')
+    op.drop_index(op.f('ix_process_cell_join_table_project_uuid'), table_name='process_cell_join_table')
+    op.drop_index(op.f('ix_process_cell_join_table_process_uuid'), table_name='process_cell_join_table')
+    op.drop_index(op.f('ix_process_cell_join_table_cell_key'), table_name='process_cell_join_table')
+    op.drop_table('process_cell_join_table')
     op.drop_index(op.f('ix_process_biomaterial_join_table_project_uuid'), table_name='process_biomaterial_join_table')
     op.drop_index(op.f('ix_process_biomaterial_join_table_process_uuid'), table_name='process_biomaterial_join_table')
     op.drop_index(op.f('ix_process_biomaterial_join_table_biomaterial_uuid'), table_name='process_biomaterial_join_table')
     op.drop_table('process_biomaterial_join_table')
     op.drop_table('library_prep_protocols')
     op.drop_table('ipsc_induction_protocols')
+    op.drop_index(op.f('ix_expressions_uuid'), table_name='expressions')
+    op.drop_table('expressions')
     op.drop_table('enrichment_protocols')
     op.drop_table('donor_organism')
     op.drop_table('dissociation_protocols')
@@ -1006,6 +1009,7 @@ def downgrade():
     op.drop_index(op.f('ix_file_ontology_join_table_uuid'), table_name='file_ontology_join_table')
     op.drop_table('file_ontology_join_table')
     op.drop_index(op.f('ix_features_uuid'), table_name='features')
+    op.drop_index(op.f('ix_features_accession_id'), table_name='features')
     op.drop_table('features')
     op.drop_table('disease_ontologies')
     op.drop_index(op.f('ix_contributors_uuid'), table_name='contributors')
@@ -1044,6 +1048,9 @@ def downgrade():
     op.drop_table('files')
     op.drop_index(op.f('ix_familial_relationships_uuid'), table_name='familial_relationships')
     op.drop_table('familial_relationships')
+    op.drop_index(op.f('ix_cells_uuid'), table_name='cells')
+    op.drop_index(op.f('ix_cells_cellkey'), table_name='cells')
+    op.drop_table('cells')
     op.drop_index(op.f('ix_causes_of_death_uuid'), table_name='causes_of_death')
     op.drop_table('causes_of_death')
     op.drop_index(op.f('ix_biomaterials_uuid'), table_name='biomaterials')

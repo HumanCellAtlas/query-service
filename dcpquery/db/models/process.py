@@ -28,7 +28,7 @@ class Process(DCPModelMixin, SQLAlchemyBase):
     location = Column(String)
     deviation_from_protocol = Column(String)
     # todo figure out what operators are
-    # operators = relationship("Operators")  # ????
+    # operators = relationship("Operators")
     start_time = Column(DateTime)
     end_time = Column(DateTime)
     analysis = Column(Boolean)
@@ -120,7 +120,7 @@ class ProcessProtocolJoinTable(DCPModelMixin, SQLAlchemyBase):
         name='process_protocol_project_connection_type_uc'),)
 
 
-class ProcessCellJoinTable(DCPModelMixin, SQLAlchemyBase):  # will need to update process process join table generation
+class ProcessCellJoinTable(DCPModelMixin, SQLAlchemyBase):  # todo  update process process join table generation
     __tablename__ = "process_cell_join_table"
 
     def __init__(self, *args, **kwargs):
@@ -128,14 +128,14 @@ class ProcessCellJoinTable(DCPModelMixin, SQLAlchemyBase):  # will need to updat
 
     uuid = Column(UUID(as_uuid=True), primary_key=True)
     connection_type = Column(Enum(ProcessConnectionTypeEnum))
-    cell_uuid = Column(UUID(as_uuid=True), ForeignKey('cells.uuid'), index=True)
+    cell_key = Column(String, ForeignKey('cells.cellkey'), index=True)
     process_uuid = Column(UUID(as_uuid=True), ForeignKey('processes.uuid'), index=True)
     process = relationship(Process, foreign_keys=[process_uuid])
-    cell = relationship(Cell, foreign_keys=[cell_uuid])
+    cell = relationship(Cell, foreign_keys=[cell_key])
     project_uuid = Column(UUID(as_uuid=True), ForeignKey('projects.uuid'), index=True)
     project = relationship(Project)
     __table_args__ = (UniqueConstraint(
-        'process_uuid', 'connection_type', 'cell_uuid', 'project_uuid',
+        'process_uuid', 'connection_type', 'cell_key', 'project_uuid',
         name='process_cell_project_connection_type_uc'),)
 
 
