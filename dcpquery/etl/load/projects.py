@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 @check_data
 def get_or_create_project(data):
-    logger.info(f"Create Project: {data.get('project_core', {}).get('project_short_name')}")
     funder_objects = []
     contributor_objects = []
     publication_objects = []

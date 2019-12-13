@@ -26,7 +26,7 @@ def handle_all_schema_types(schema_type, schema_version, file_data, track_uuids,
         lib_prep_protocol = get_or_create_library_preparation_protocol(file_data)
         track_uuids[lib_prep_protocol.uuid] = 'protocol'
     if schema_type == 'links':
-        links_data = file_data
+        links_data.append(file_data['links'])
     if schema_type == 'process':
         process = get_or_create_process(file_data, analysis=False)
         track_uuids[process.uuid] = 'process'

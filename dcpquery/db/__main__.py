@@ -8,9 +8,9 @@ from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
 
 from .. import config
-from ..etl import dcpquery_etl_finalizer
+from ..etl import dcpquery_etl_finalizer, etl_bundles
 from dcpquery.db import commit_to_db
-from dcpquery.etl import transform_bundle, BundleLoader
+from dcpquery.etl import transform_bundle
 
 from . import init_db, drop_db, migrate_db
 
@@ -94,20 +94,7 @@ elif args.command == "drop":
 elif args.command == "migrate":
     migrate_db()
 elif args.command in {"load", "load-test"}:
-    if args.command == "load":
-        extractor_args = {}  # type: ignore
-    else:
-        extractor_args = {"query": args.test_query}
-
-    dss_client = DSSClient(swagger_url=args.dss_swagger_url)
-
-    DSSExtractor(staging_directory=".", dss_client=dss_client).extract(
-        transformer=transform_bundle,
-        loader=BundleLoader().load_bundle,
-        finalizer=dcpquery_etl_finalizer,
-        page_processor=commit_to_db,
-        **extractor_args
-    )
+    etl_bundles()
 elif args.command in {"connect", "run", "describe"}:
     db_url = str(config.db.url).replace("postgresql+psycopg2://", "postgres://")
     print(f"Connecting to {db_url}")
