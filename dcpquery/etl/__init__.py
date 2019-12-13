@@ -67,10 +67,13 @@ def etl_one_bundle(bundle_uuid, bundle_version):
 
 
 def etl_bundles():
-    n = 50
+    n = 100
+    counter = 0
     x = list(divide_chunks(bundle_uuids, n))
     for i in x:
+        print(counter)
         bundles = extract_bundles(i)
-        for bundle in bundles:
-            BundleLoader().load_bundle(aggregate_metadata=bundle)
+        for bundle in bundles['results']:
+            BundleLoader().load_bundle(aggregate_metadata=bundle['aggregate_metadata'])
+        counter += 1
     config.db_session.commit()

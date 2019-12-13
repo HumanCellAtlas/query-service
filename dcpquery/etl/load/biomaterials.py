@@ -214,7 +214,7 @@ def get_or_create_organoid(data):
     accessions_list = get_accessions(data)
     model_organ = get_or_create_ontology(data.get('model_organ'))
     age = int(data.get('age')) if data.get('age') else None
-    genus_species = get_or_create_ontology(data.get('genus_species'))
+    genus_species = get_or_create_ontology(data.get('genus_species', [None])[0])
     model_organ_part = get_or_create_ontology(data.get('model_organ_part'))
     age_unit = get_or_create_ontology(data.get('age_unit'))
 

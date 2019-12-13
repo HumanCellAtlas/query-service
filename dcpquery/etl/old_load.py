@@ -17,15 +17,20 @@ class BundleLoader:
     def load_bundle(self, aggregate_metadata):
         track_uuids = {}
         links_data = {}
-        import pdb
-        pdb.set_trace()
+
         for key in aggregate_metadata:
             schema_type = key
-
-            files = aggregate_metadata.key
+            files = aggregate_metadata[key]
+            if type(files) == dict:
+                files = [files]
             for file in files:
-                assert schema_type == file.get('describedBy', '').split('/')[-1]
-                schema_version = file.get('describedBy', '').split('/')[-2]
+                try:
+                    assert schema_type == file.get('describedBy', '').split('/')[-1]
+                    schema_version = file.get('describedBy', '').split('/')[-2]
+                except Exception as e:
+                    import pdb
+                    pdb.set_trace()
+                    print(e)
                 track_uuids, links_data = handle_all_schema_types(schema_type, schema_version, file, track_uuids,
                                                                   links_data)
         links = links_data['links']
