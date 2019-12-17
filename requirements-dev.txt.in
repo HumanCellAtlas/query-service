@@ -6,7 +6,9 @@ chalice
 coverage
 furl
 flake8
+loompy
 mypy
+numpy-groupies == 0.9.9
 recommonmark
 sqlalchemy-utils
 sphinx

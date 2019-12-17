@@ -11,7 +11,7 @@ cd /mnt
 export AWS_DEFAULT_REGION=us-east-1 DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8
 source /etc/profile
 
-apt-get install -qqy --no-install-suggests --no-install-recommends jq moreutils gettext make virtualenv zip unzip httpie git xz-utils postgresql
+apt-get install -qqy --no-install-suggests --no-install-recommends jq moreutils gettext make virtualenv zip unzip httpie git xz-utils
 
 virtualenv --python=python3 .venv
 source .venv/bin/activate

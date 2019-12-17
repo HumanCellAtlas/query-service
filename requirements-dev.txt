@@ -35,6 +35,7 @@ Flask==1.1.1
 furl==2.1.0
 google-auth==1.9.0
 google-auth-oauthlib==0.4.1
+h5py==2.10.0
 hca==6.5.1
 idna==2.8
 imagesize==1.1.0
@@ -46,11 +47,16 @@ jmespath==0.9.4
 jsonpointer==1.14
 jsonschema==2.6.0
 keymaker==1.1.0
+llvmlite==0.30.0
+loompy==3.0.6
 Mako==1.1.0
 MarkupSafe==1.1.1
 mccabe==0.6.1
 mypy==0.750
 mypy-extensions==0.4.3
+numba==0.46.0
+numpy==1.17.4
+numpy-groupies==0.9.9
 oauthlib==3.1.0
 openapi-spec-validator==0.2.8
 orderedmultidict==1.0.1
@@ -77,6 +83,7 @@ requests-http-signature==0.1.0
 requests-oauthlib==1.3.0
 rsa==3.4.2
 s3transfer==0.1.13
+scipy==1.4.0
 six==1.13.0
 snowballstemmer==2.0.0
 Sphinx==2.3.0
