@@ -27,18 +27,18 @@ def handle_matrices():
         'https://data.humancellatlas.org/project-assets/project-matrices/cddab57b-6868-4be4-806f-395ed9dd635a.homo_sapiens.loom',  # noqa
         'https://data.humancellatlas.org/project-assets/project-matrices/116965f3-f094-4769-9d28-ae675c1b569c.homo_sapiens.loom'  # noqa
     ]
-    # with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
-    #     futures = {}
-    #     for url in file_urls:
-    #         matrix_uuid = '2043c65a-1cf8-4828-a656-9e247d4e64f1'
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        futures = {}
+        for url in file_urls:
+            matrix_uuid = '2043c65a-1cf8-4828-a656-9e247d4e64f1'
 
     print(file_urls)
 
 
 def handle_matrix(file_url, matrix_uuid):
+    file_url = 'https://data.humancellatlas.org/project-assets/project-matrices/abe1a013-af7a-45ed-8c26-f3793c24a1f4.homo_sapiens.loom'  # noqa
+    matrix_uuid = 'abe1a013-af7a-45ed-8c26-f3793c24a1f4'
     try:
-        file_url = 'https://data.humancellatlas.org/project-assets/project-matrices/abe1a013-af7a-45ed-8c26-f3793c24a1f4.homo_sapiens.loom'  # noqa
-        matrix_uuid = 'abe1a013-af7a-45ed-8c26-f3793c24a1f4'
         get_loom_file(file_url, matrix_uuid)
         ds = loompy.connect(f'{matrix_uuid}.loom')
         read_loom_file(ds)
@@ -46,6 +46,8 @@ def handle_matrix(file_url, matrix_uuid):
         print(e)
     finally:
         ds.close()
+        import os
+        os.remove(f"{matrix_uuid}.loom")
 
 
 def get_loom_file(file_url, bundle_uuid):
@@ -54,9 +56,9 @@ def get_loom_file(file_url, bundle_uuid):
     urlretrieve(file_url, dst)
 
 
-def read_loom_file(file_name):
+def read_loom_file(ds):
     try:
-        ds = loompy.connect(file_name)
+        # ds = loompy.connect(file_name)
         cells = create_cells(ds)  # 267360
         genes = create_genes(ds)  # 58347
         for (ix, selection, view) in ds.scan(axis=1):
