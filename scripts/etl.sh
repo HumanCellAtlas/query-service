@@ -19,8 +19,8 @@ if [ ! -d query-service ]; then
 git clone https://github.com/HumanCellAtlas/query-service.git
 fi
 cd query-service
-#git fetch # uncomment out to use a branch other than master
-#git checkout dunitz-json-flattening # uncomment out to use a branch other than master
+git fetch # uncomment out to use a branch other than master
+git checkout dcp-data-model # uncomment out to use a branch other than master
 pip install --quiet -r requirements-dev.txt
 
 source environment # set to env scripts/launch_etl_job.sh called in
@@ -28,5 +28,3 @@ source environment # set to env scripts/launch_etl_job.sh called in
 S3_CACHE_URL=s3://${SERVICE_S3_BUCKET}/etl/cache.xz
 aws s3 cp $S3_CACHE_URL - | tar -xJ || true
 scripts/db_ctl load --db remote
-# TODO: ETL cache should have a facility for purging deleted metadata
-tar -cJ bundle_manifests bundles files | aws s3 cp - $S3_CACHE_URL

@@ -1,6 +1,14 @@
 import enum
 
 
+class AnnotationTypeEnum(enum.Enum):
+    pass
+
+
+class AnnotationSourceEnum(enum.Enum):
+    pass
+
+
 class NormothermicRegionalPerfusionEnum(enum.Enum):
     YES = "yes"
     NO = "no"

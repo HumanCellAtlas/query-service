@@ -42,11 +42,11 @@ class Process(DCPModelMixin, SQLAlchemyBase):
     # todo https://docs.sqlalchemy.org/en/13/orm/self_referential.html
     # direct_child_processes = relationship("Process", secondary="process_self_join_table")
     # direct_parent_processes = relationship("Process", secondary="process_self_join_table")
-    projects = relationship("Project", secondary="process_project_join_table")
+    projects = relationship("Project", secondary="process_project_join_table", backref='process_projects')
     files = relationship("DCPFile", secondary="process_file_join_table")
     cells = relationship("Cell", secondary="process_cell_join_table")
     protocols = relationship("Protocol", secondary="process_protocol_join_table")
-    biomaterials = relationship("Biomaterial", secondary="process_biomaterial_join_table")
+    process_biomaterials = relationship("Biomaterial", secondary="process_biomaterial_join_table")
 
 
 # join table keeping here for now to check on graph

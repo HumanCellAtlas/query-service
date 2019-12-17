@@ -22,6 +22,9 @@ class Cell(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __repr__(self):
+        return self.cellkey
+
     cellkey = Column(String, primary_key=True, index=True, unique=True)
     genes_detected = Column(Integer)
     total_umis = Column(Float)
@@ -86,6 +89,9 @@ class Feature(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return self.accession_id
 
     id = Column(String)
     type = Column(String)  # todo make an enum?

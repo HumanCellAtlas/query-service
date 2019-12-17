@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Enum
+from sqlalchemy import Column, String, Enum, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from dcpquery.db.models.base import DCPModelMixin

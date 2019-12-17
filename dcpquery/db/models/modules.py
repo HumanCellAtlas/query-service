@@ -11,7 +11,8 @@ from dcpquery.db.models import SQLAlchemyBase
 from dcpquery.db.models.admin import User
 from dcpquery.db.models.base import DCPModelMixin
 from dcpquery.db.models.enums import (AccessionTypeEnum, StorageMethodEnum,
-                                      PreservationMethodEnum, NutritionalStateEnum, BarcodeReadEnum, WellQualityEnum)
+                                      PreservationMethodEnum, NutritionalStateEnum, BarcodeReadEnum, WellQualityEnum,
+                                      AnnotationTypeEnum, AnnotationSourceEnum)
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class Contributor(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
     institution = Column(String)  # make table or enum?
     lab = Column(String)  # make table?
@@ -38,6 +40,9 @@ class Publication(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __repr__(self):
+        return self.title
+
     authors = Column(String)
     # authors = relationship("User", secondary="publication_author_join_table")
     title = Column(String)
@@ -52,6 +57,10 @@ class URL_Object(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return self.url
+
 
     url = Column(String, unique=True, primary_key=True)
 
@@ -104,6 +113,9 @@ class Accession(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __repr__(self):
+        return self.id
+
     type = Column(Enum(AccessionTypeEnum))
     id = Column(String, primary_key=True, index=True, unique=True)
 
@@ -141,6 +153,9 @@ class Ontology(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return self.ontology
 
     uuid = Column(UUID, primary_key=False)
     text = Column(String)
@@ -182,19 +197,15 @@ class Ontology(DCPModelMixin, SQLAlchemyBase):
             config.db_session.rollback()
 
 
-class AnnotationTypeEnum(enum.Enum):
-    pass
-
-
-class AnnotationSourceEnum(enum.Enum):
-    pass
-
 
 class Annotation(DCPModelMixin, SQLAlchemyBase):
     __tablename__ = "annotations"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return self.id
 
     type = Column(Enum(AnnotationTypeEnum))
     source = Column(Enum(AnnotationSourceEnum))
@@ -232,6 +243,9 @@ class PreservationStorage(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return self.storage_method
 
     storage_method = Column(Enum(StorageMethodEnum))
     preservation_method = Column(Enum(PreservationMethodEnum))
@@ -275,6 +289,10 @@ class CauseOfDeath(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __repr__(self):
+        return self.cause_of_death
+
+
     cause_of_death = Column(String)
     time_of_death = Column(DateTime)
     cold_perfused = Column(Boolean)
@@ -309,6 +327,10 @@ class CellMorphology(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return self.cell_morphology if self.cell_morphology else 'NONE'
+
 
     cell_morphology = Column(String)
     cell_viability_method = Column(String)
@@ -395,6 +417,10 @@ class PurchasedReagent(DCPModelMixin, SQLAlchemyBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __repr__(self):
+        return self.retail_name
+
+
     retail_name = Column(String)
     catalog_number = Column(String)
     manufacturer = Column(String)
@@ -409,6 +435,9 @@ class Task(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.name
 
     name = Column(String)
     docker_image = Column(String)
@@ -427,6 +456,9 @@ class Parameter(DCPModelMixin, SQLAlchemyBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.name
 
     name = Column(String)
     value = Column(String)

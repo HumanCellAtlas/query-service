@@ -23,6 +23,6 @@ class Project(DCPModelMixin, SQLAlchemyBase):
     accessions = relationship("Accession", secondary="project_accession_join_table")
     access_control_groups = relationship("AccessGroup", secondary="project_access_group_join_table")
     body = Column(MutableDict.as_mutable(JSONB))
-    processes = relationship("Process", secondary="process_project_join_table")
+    processes = relationship("Process", secondary="process_project_join_table", backref='project_processes')
 
 
