@@ -1,3 +1,4 @@
+import concurrent
 import os, tempfile, logging
 
 from dcplib.etl import DSSExtractor
@@ -50,14 +51,34 @@ def dcpquery_etl_finalizer(extractor):
     update_process_join_table()
 
 
-def etl_bundles():
-    n = 100
-    counter = 0
-    x = list(divide_chunks(bundle_uuids, n))
-    for i in x:
-        print(counter)
-        bundles = extract_bundles(i)
-        for bundle in bundles['results']:
-            load_bundle(bundle=bundle)
-        counter += 1
-    config.db_session.commit()
+def etl_bundles(test=False):
+    if test:
+        n = 50
+        counter = 0
+        x = list(divide_chunks(bundle_uuids, n))
+        for i in x:
+            print(counter)
+            bundles = extract_bundles(i)
+            for bundle in bundles['results']:
+                load_bundle(bundle=bundle)
+            config.db_session.commit()
+            counter += 1
+            if counter > 5:
+                return
+
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=250) as executor:
+            futures = []
+            n = 10
+            counter = 0
+            x = list(divide_chunks(bundle_uuids, n))
+            for i in x:
+                f = executor.submit(extract_bundles, i)
+                futures.append(f)
+            for future in concurrent.futures.as_completed(futures):
+                logger.info(counter)
+                bundles = future.result()
+                for bundle in bundles['results']:
+                    load_bundle(bundle=bundle)
+                counter += 1
+                config.db_session.commit()

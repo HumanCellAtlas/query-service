@@ -94,7 +94,10 @@ elif args.command == "drop":
 elif args.command == "migrate":
     migrate_db()
 elif args.command in {"load", "load-test"}:
-    etl_bundles()
+    test = False
+    if args.command == "load-test":
+        test=True
+    etl_bundles(test=test)
 elif args.command in {"connect", "run", "describe"}:
     db_url = str(config.db.url).replace("postgresql+psycopg2://", "postgres://")
     print(f"Connecting to {db_url}")

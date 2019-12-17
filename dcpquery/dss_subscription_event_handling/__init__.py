@@ -1,6 +1,6 @@
 from dcpquery import config
 from dcpquery.db.models import Bundle, BundleFileLink, File, ProjectFileLink, Project
-from dcpquery.etl import etl_one_bundle, logger
+from dcpquery.etl import logger
 
 
 def drop_one_bundle(bundle_uuid, bundle_version):
@@ -46,7 +46,7 @@ def process_bundle_event(dss_event):
     logger.info(f"Processing DSS event: {dss_event}")
     if dss_event["event_type"] == "CREATE":
         logger.info(f"Processing DSS CREATE event: {dss_event}")
-        etl_one_bundle(**dss_event["match"])
+        # etl_one_bundle(**dss_event["match"])
     elif dss_event["event_type"] in {"TOMBSTONE", "DELETE"}:
         logger.info(f"Processing DSS DELETE or TOMBSTONE event: {dss_event}")
         drop_one_bundle(**dss_event["match"])
