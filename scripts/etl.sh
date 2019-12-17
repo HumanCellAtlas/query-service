@@ -21,6 +21,7 @@ fi
 cd query-service
 git fetch # uncomment out to use a branch other than master
 git checkout dcp-data-model # uncomment out to use a branch other than master
+git pull
 pip install --quiet -r requirements-dev.txt
 
 source environment # set to env scripts/launch_etl_job.sh called in

@@ -53,32 +53,26 @@ def dcpquery_etl_finalizer(extractor):
 
 def etl_bundles(test=False):
     if test:
+        max_workers = 2
         n = 50
+        counter_limit = 5
+    else:
+        max_workers = 250
+        n = 50
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = []
         counter = 0
         x = list(divide_chunks(bundle_uuids, n))
         for i in x:
-            print(counter)
-            bundles = extract_bundles(i)
+            f = executor.submit(extract_bundles, i)
+            futures.append(f)
+        for future in concurrent.futures.as_completed(futures):
+            logger.info(counter)
+            bundles = future.result()
             for bundle in bundles['results']:
                 load_bundle(bundle=bundle)
             config.db_session.commit()
             counter += 1
-            if counter > 5:
-                return
-
-    else:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=250) as executor:
-            futures = []
-            n = 10
-            counter = 0
-            x = list(divide_chunks(bundle_uuids, n))
-            for i in x:
-                f = executor.submit(extract_bundles, i)
-                futures.append(f)
-            for future in concurrent.futures.as_completed(futures):
-                logger.info(counter)
-                bundles = future.result()
-                for bundle in bundles['results']:
-                    load_bundle(bundle=bundle)
-                counter += 1
-                config.db_session.commit()
+            if counter_limit:
+                if counter > counter_limit:
+                    return
