@@ -103,7 +103,7 @@ elif args.command == "migrate":
     migrate_db()
 elif args.command == "load-matrix":
     logger.info(config.db_url)
-    handle_matrix()
+    handle_matrix(file_url='123', matrix_uuid='13')
 elif args.command in {"load", "load-test"}:
     test = False
     if args.command == "load-test":
