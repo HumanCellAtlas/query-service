@@ -1,3 +1,4 @@
+import concurrent
 import logging
 
 import loompy as loompy
@@ -10,7 +11,50 @@ from dcpquery.db.models.modules import Ontology, Accession
 logger = logging.getLogger(__name__)
 
 
-def handle_matrix(file_name):
+def handle_matrices():
+    file_urls = [
+        'https://data.humancellatlas.org/project-assets/project-matrices/4a95101c-9ffc-4f30-a809-f04518a23803.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/005d611a-14d5-4fbf-846e-571a1f874f70.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/cc95ff89-2e68-4a08-a234-480eca21ce79.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/c4077b3c-5c98-4d26-a614-246d12c2e5d7.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/091cf39b-01bc-42e5-9437-f419a66c8a45.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/f83165c5-e2ea-4d15-a5cf-33f3550bffde.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/f8aa201c-4ff1-45a4-890e-840d63459ca2.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/abe1a013-af7a-45ed-8c26-f3793c24a1f4.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/2043c65a-1cf8-4828-a656-9e247d4e64f1.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/cddab57b-6868-4be4-806f-395ed9dd635a.homo_sapiens.loom',  # noqa
+        'https://data.humancellatlas.org/project-assets/project-matrices/116965f3-f094-4769-9d28-ae675c1b569c.homo_sapiens.loom'  # noqa
+    ]
+    # with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
+    #     futures = {}
+    #     for url in file_urls:
+    #         matrix_uuid = '2043c65a-1cf8-4828-a656-9e247d4e64f1'
+
+    print(file_urls)
+
+
+def handle_matrix(file_url, matrix_uuid):
+    try:
+        file_url = 'https://data.humancellatlas.org/project-assets/project-matrices/abe1a013-af7a-45ed-8c26-f3793c24a1f4.homo_sapiens.loom'  # noqa
+        matrix_uuid = 'abe1a013-af7a-45ed-8c26-f3793c24a1f4'
+        get_loom_file(file_url, matrix_uuid)
+        ds = loompy.connect(f'{matrix_uuid}.loom')
+        read_loom_file(ds)
+    except Exception as e:
+        print(e)
+    finally:
+        ds.close()
+
+
+def get_loom_file(file_url, bundle_uuid):
+    from urllib.request import urlretrieve
+    dst = f"{bundle_uuid}.loom"
+    urlretrieve(file_url, dst)
+
+
+def read_loom_file(file_name):
     try:
         ds = loompy.connect(file_name)
         cells = create_cells(ds)  # 267360
@@ -37,9 +81,9 @@ def handle_matrix(file_name):
                 config.db_session.commit()
                 gene_counter += 1
                 if gene_counter % 10000 == 0:
-                    print(f"Here we are {gene_counter}, {cell_key}")
+                    logger.info(f"Here we are {gene_counter}, {cell_key}")
     except Exception as e:
-        print(e)
+        logger.info(e)
     finally:
         ds.close()
 
@@ -105,7 +149,7 @@ def get_or_create_cell(barcode, key, genes_detected, total_umis, empty_drops_is_
             total_umis=float(total_umis),
             empty_drops_is_cell=empty_drops_is_cell,
             barcode=str(barcode),  # String in matrix service
-            file_uuid=str(sequence_file_uuid), # todo add join table once matrices and metadata loaded in
+            file_uuid=str(sequence_file_uuid),  # todo add join table once matrices and metadata loaded in
             cell_suspension_uuid=str(cell_suspension_uuid),  # not sure if actually necessary bc can walk graph
             # bundle_uuid=bundle_uuid  # remove
         )

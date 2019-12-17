@@ -7,12 +7,15 @@ import os, sys, argparse, logging, json
 from hca.dss import DSSClient
 from dcplib.etl import DSSExtractor
 
+from dcpquery.etl.load.cells import handle_matrix
 from .. import config
 from ..etl import dcpquery_etl_finalizer, etl_bundles
 from dcpquery.db import commit_to_db
 from dcpquery.etl import transform_bundle
 
 from . import init_db, drop_db, migrate_db
+
+logger = logging.getLogger(__name__)
 
 fmi_test_query = {
     "query": {
@@ -41,6 +44,8 @@ default_test_query = {
 config.configure_logging()
 common_opts_parser = argparse.ArgumentParser(add_help=False)
 common_opts_parser.add_argument("--db", choices={"local", "remote"}, default="local")
+common_opts_parser.add_argument("--load-matrix")
+
 common_opts_parser.add_argument("--dss-swagger-url", default=f"https://{config.dss_host}/v1/swagger.json")
 common_opts_parser.add_argument("--dry-run", action="store_true",
                                 help="Print commands that would be executed without running them")
@@ -51,6 +56,8 @@ subparsers.add_parser("init", help="Initialize database table schema and rules",
 subparsers.add_parser("drop", help="Drop database (destroys data)", parents=[common_opts_parser])
 subparsers.add_parser("load", help="Load all metadata from data store (runs ETL)", parents=[common_opts_parser])
 subparsers.add_parser("load-test", help="Load metadata test set from DSS (runs ETL)", parents=[common_opts_parser])
+subparsers.add_parser("load-matrix", help="Load matrix test set", parents=[common_opts_parser])
+
 subparsers.add_parser("connect", help="Connect to the database and open interactive psql shell",
                       parents=[common_opts_parser])
 subparsers.add_parser("describe", help="Connect to the database and describe vital statistics",
@@ -82,6 +89,7 @@ if not args.dry_run:
 
 if args.command == "alembic":
     from alembic.config import CommandLine
+
     alembic_cli = CommandLine("db_ctl")
     alembic_opts = alembic_cli.parser.parse_args(args.alembic_args)
     if not hasattr(alembic_opts, "cmd"):
@@ -93,10 +101,13 @@ elif args.command == "drop":
     drop_db(dry_run=args.dry_run)
 elif args.command == "migrate":
     migrate_db()
+elif args.command == "load-matrix":
+    logger.info(config.db_url)
+    handle_matrix()
 elif args.command in {"load", "load-test"}:
     test = False
     if args.command == "load-test":
-        test=True
+        test = True
     etl_bundles(test=test)
 elif args.command in {"connect", "run", "describe"}:
     db_url = str(config.db.url).replace("postgresql+psycopg2://", "postgres://")

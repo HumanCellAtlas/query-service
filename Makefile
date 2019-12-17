@@ -105,6 +105,9 @@ init-db:
 migrate-db:
 	python -m $(APP_NAME).db migrate
 
+load-matrix:
+	python -m $(APP_NAME).db load-matrix
+
 drop-db:
 	python -m $(APP_NAME).db drop
 
