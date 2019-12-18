@@ -69,11 +69,12 @@ class DCPQueryConfig:
 
     @property
     def db_url(self):
-        if self.local_mode:
-            db_user = getpass.getuser()
-            db_password = ""
-            db_host = ""
-        else:
+        try:
+            # if self.local_mode:
+            #     db_user = getpass.getuser()
+            #     db_password = ""
+            #     db_host = ""
+            # else:
             db_user = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/username").value.strip()
             db_password = AwsSecret(f"{self.app_name}/{os.environ['STAGE']}/postgresql/password").value.strip()
             if self.readonly_db:
@@ -81,7 +82,11 @@ class DCPQueryConfig:
             else:
                 db_host_secret_name = f"{self.app_name}/{os.environ['STAGE']}/postgresql/hostname"
             db_host = AwsSecret(db_host_secret_name).value.strip()
-        db_name = self.app_name
+            db_name = self.app_name
+        except Exception as e:
+            import pdb
+            pdb.set_trace()
+            print(e)
 
         return f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
 
