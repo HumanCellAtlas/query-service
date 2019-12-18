@@ -59,6 +59,7 @@ def etl_bundles(test=False):
     else:
         max_workers = 250
         n = 50
+        counter_limit = None
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         counter = 0
@@ -73,6 +74,6 @@ def etl_bundles(test=False):
                 load_bundle(bundle=bundle)
             config.db_session.commit()
             counter += 1
-            if counter_limit:
+            if counter_limit is not None:
                 if counter > counter_limit:
                     return

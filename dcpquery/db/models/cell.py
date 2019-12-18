@@ -80,6 +80,18 @@ class Expression(DCPModelMixin, SQLAlchemyBase):
     cell = relationship(Cell, foreign_keys=[cell_key])
     feature = relationship("Feature", foreign_keys=[feature_accession_id])
 
+    @classmethod
+    def create(cls, uuid=None, **kw):
+        if not uuid:
+                uuid = str(uuid4())
+        row = cls(uuid=uuid, **kw)
+        try:
+            config.db_session.add(row)
+        except Exception as e:
+            logger.info(f"Issue {e} inserting expression, {uuid}, {kw}")
+            config.db_session.rollback()
+            pass
+        return row
 
 # just call gene?
 class Feature(DCPModelMixin, SQLAlchemyBase):

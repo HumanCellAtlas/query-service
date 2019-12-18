@@ -39,8 +39,9 @@ def handle_matrix(file_url, matrix_uuid):
     file_url = 'https://data.humancellatlas.org/project-assets/project-matrices/abe1a013-af7a-45ed-8c26-f3793c24a1f4.homo_sapiens.loom'  # noqa
     matrix_uuid = 'abe1a013-af7a-45ed-8c26-f3793c24a1f4'
     try:
-        get_loom_file(file_url, matrix_uuid)
-        ds = loompy.connect(f'{matrix_uuid}.loom')
+        # get_loom_file(file_url, matrix_uuid)
+        # ds = loompy.connect(f'{matrix_uuid}.loom')
+        ds = loompy.connect('loom_file.file')
         read_loom_file(ds)
     except Exception as e:
         print(e)
@@ -58,9 +59,8 @@ def get_loom_file(file_url, bundle_uuid):
 
 def read_loom_file(ds):
     try:
-        # ds = loompy.connect(file_name)
         cells = ds.ca.CellID  # 267360
-        genes = ds.row_attrs.Gene  # 58347
+        genes = create_genes(ds)  # 58347
         for (ix, selection, view) in ds.scan(axis=1):
             cell_start = ix
             gene_counter = 0
@@ -78,12 +78,11 @@ def read_loom_file(ds):
                             cell_key=cell_key,
                             feature_accession_id=feature_accession_id
                         )
-                        config.db_session.add(expression)
                     cell_counter += 1
                 config.db_session.commit()
                 gene_counter += 1
                 if gene_counter % 10000 == 0:
-                    logger.info(f"Here we are {gene_counter}, {cell_key}")
+                    logger.info(f"Here we are {gene_counter}, {cell_start+cell_counter}")
     except Exception as e:
         logger.info(e)
     finally:
@@ -183,7 +182,7 @@ def get_or_create_feature(id, accession, type, name, start, end, chromosome, is_
         feature_end=str(end),
         chromosome=str(chromosome),
         is_gene=is_gene,
-        genus_species_id_=str(genus_species),
+        genus_species_id=str(genus_species),
         accession_id=str(accession)
     )
     return feature

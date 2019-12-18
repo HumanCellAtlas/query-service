@@ -28,4 +28,4 @@ source environment # set to env scripts/launch_etl_job.sh called in
 #export DSS_HOST='manually set url"
 S3_CACHE_URL=s3://${SERVICE_S3_BUCKET}/etl/cache.xz
 aws s3 cp $S3_CACHE_URL - | tar -xJ || true
-scripts/db_ctl load-matrix --db remote
+scripts/db_ctl load --db remote
