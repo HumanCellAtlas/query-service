@@ -62,8 +62,6 @@ class Cell(DCPModelMixin, SQLAlchemyBase):
             return cls.create(cellkey=cellkey, **kw)
         except Exception as e:
             logger.info(f"SOMETHING WENT WRONG: CLS: {cls}, exception: {e} {kw}")
-            import pdb
-            pdb.set_trace()
             config.db_session.rollback()
             pass
 

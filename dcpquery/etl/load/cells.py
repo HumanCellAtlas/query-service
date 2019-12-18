@@ -59,8 +59,8 @@ def get_loom_file(file_url, bundle_uuid):
 def read_loom_file(ds):
     try:
         # ds = loompy.connect(file_name)
-        cells = create_cells(ds)  # 267360
-        genes = create_genes(ds)  # 58347
+        cells = ds.ca.CellID  # 267360
+        genes = ds.row_attrs.Gene  # 58347
         for (ix, selection, view) in ds.scan(axis=1):
             cell_start = ix
             gene_counter = 0
@@ -107,9 +107,9 @@ def create_cells(ds):
             cells.append(cell.cellkey)
             if i % 1000 == 0:
                 config.db_session.commit()
-                print(f"Cells processed {i}")
+                logger.info(f"Cells processed {i}")
         except Exception as e:
-            print(e)
+            logger.info(e)
         i += 1
 
     return cells
@@ -133,7 +133,7 @@ def create_genes(ds):
         genes.append(gene.accession.id)
         if i % 1000 == 0:
             config.db_session.commit()
-            print(f"genes created: {i}")
+            logger.info(f"genes created: {i}")
         i += 1
     return genes
 
@@ -171,8 +171,6 @@ def get_or_create_expression(expr_type, expr_value, cell_key, feature_accession_
 
 
 def get_or_create_feature(id, accession, type, name, start, end, chromosome, is_gene, genus_species):
-    ontology = Ontology.get_by_label(ontology_label=str(genus_species))
-    accession = Accession.get_or_create(id=str(accession))
     if is_gene == 1:
         is_gene = True
     if is_gene == 0:
@@ -185,7 +183,7 @@ def get_or_create_feature(id, accession, type, name, start, end, chromosome, is_
         feature_end=str(end),
         chromosome=str(chromosome),
         is_gene=is_gene,
-        genus_species=ontology,
-        accession=accession
+        genus_species_id_=str(genus_species),
+        accession_id=str(accession)
     )
     return feature
