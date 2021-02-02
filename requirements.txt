@@ -27,7 +27,7 @@ hca==6.4.0
 idna==2.8
 inflection==0.3.1
 itsdangerous==1.1.0
-Jinja2==2.10.3
+Jinja2==2.11.3
 jmespath==0.9.4
 jsonpointer==1.14
 jsonschema==2.6.0
